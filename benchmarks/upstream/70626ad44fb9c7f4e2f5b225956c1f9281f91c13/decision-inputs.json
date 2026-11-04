@@ -1,0 +1,1679 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "case_id": "decision-001",
+      "split": "development",
+      "scope": "simulated_decision_evidence",
+      "events": [
+        {
+          "event_id": "e0",
+          "start_s": 0,
+          "end_s": 20,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g0",
+          "ridge": [
+            {
+              "time_s": 0,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 10,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 20,
+              "frequency_hz": 120
+            }
+          ]
+        },
+        {
+          "event_id": "e1",
+          "start_s": 100,
+          "end_s": 120,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g1",
+          "ridge": [
+            {
+              "time_s": 100,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 110,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 120,
+              "frequency_hz": 120
+            }
+          ]
+        }
+      ],
+      "candidates": [
+        {
+          "lat": 40.0,
+          "lon": -100.0,
+          "score": -1.0,
+          "score_kind": "negative_robust_ridge_loss_hz",
+          "event_ids": [
+            "e0",
+            "e1"
+          ],
+          "flight_ids": [
+            "a",
+            "b"
+          ],
+          "recording_start_utc": "2026-09-21T14:13:20Z",
+          "uncertainty": {
+            "radius_m": 70.0,
+            "kind": "sensitivity",
+            "method": "fixture_full_perturbation"
+          }
+        }
+      ],
+      "coverage": {
+        "search_complete": true,
+        "data_status": "available",
+        "limitations": [
+          "Aircraft capture is incomplete."
+        ]
+      },
+      "matching_diagnostics": {
+        "clock_locked": true,
+        "alternatives_evaluated": true,
+        "refinement_boundary_limited": false,
+        "sensitivity": {
+          "complete": true,
+          "boundary_limited": false,
+          "sources": [
+            "frequency",
+            "clock",
+            "altitude",
+            "sound_speed"
+          ],
+          "radius_m": 70.0
+        },
+        "e0": {
+          "rmse_hz": 0.7,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        },
+        "e1": {
+          "rmse_hz": 0.7,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        }
+      }
+    },
+    {
+      "case_id": "decision-002",
+      "split": "development",
+      "scope": "simulated_decision_evidence",
+      "events": [],
+      "candidates": [],
+      "coverage": {
+        "search_complete": true,
+        "data_status": "available",
+        "limitations": [
+          "Aircraft capture is incomplete."
+        ]
+      },
+      "matching_diagnostics": {
+        "clock_locked": true,
+        "alternatives_evaluated": true,
+        "refinement_boundary_limited": false,
+        "sensitivity": {
+          "complete": true,
+          "boundary_limited": false,
+          "sources": [
+            "frequency",
+            "clock",
+            "altitude",
+            "sound_speed"
+          ],
+          "radius_m": 70.0
+        },
+        "e0": {
+          "rmse_hz": 0.7,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        },
+        "e1": {
+          "rmse_hz": 0.7,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        }
+      }
+    },
+    {
+      "case_id": "decision-003",
+      "split": "development",
+      "scope": "simulated_decision_evidence",
+      "events": [
+        {
+          "event_id": "e0",
+          "start_s": 0,
+          "end_s": 20,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g0",
+          "ridge": [
+            {
+              "time_s": 0,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 10,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 20,
+              "frequency_hz": 120
+            }
+          ]
+        },
+        {
+          "event_id": "e1",
+          "start_s": 100,
+          "end_s": 120,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g1",
+          "ridge": [
+            {
+              "time_s": 100,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 110,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 120,
+              "frequency_hz": 120
+            }
+          ]
+        }
+      ],
+      "candidates": [
+        {
+          "lat": 40.0,
+          "lon": -100.0,
+          "score": -1.0,
+          "score_kind": "negative_robust_ridge_loss_hz",
+          "event_ids": [
+            "e0",
+            "e1"
+          ],
+          "flight_ids": [
+            "a",
+            "b"
+          ],
+          "recording_start_utc": "2026-09-21T14:13:20Z",
+          "uncertainty": {
+            "radius_m": 70.0,
+            "kind": "sensitivity",
+            "method": "fixture_full_perturbation"
+          }
+        }
+      ],
+      "coverage": {
+        "search_complete": true,
+        "data_status": "unavailable",
+        "limitations": [
+          "Aircraft capture is incomplete."
+        ]
+      },
+      "matching_diagnostics": {
+        "clock_locked": true,
+        "alternatives_evaluated": true,
+        "refinement_boundary_limited": false,
+        "sensitivity": {
+          "complete": true,
+          "boundary_limited": false,
+          "sources": [
+            "frequency",
+            "clock",
+            "altitude",
+            "sound_speed"
+          ],
+          "radius_m": 70.0
+        },
+        "e0": {
+          "rmse_hz": 0.7,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        },
+        "e1": {
+          "rmse_hz": 0.7,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        }
+      }
+    },
+    {
+      "case_id": "decision-004",
+      "split": "development",
+      "scope": "simulated_decision_evidence",
+      "events": [
+        {
+          "event_id": "e0",
+          "start_s": 0,
+          "end_s": 20,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g0",
+          "ridge": [
+            {
+              "time_s": 0,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 10,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 20,
+              "frequency_hz": 120
+            }
+          ]
+        },
+        {
+          "event_id": "e1",
+          "start_s": 100,
+          "end_s": 120,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g1",
+          "ridge": [
+            {
+              "time_s": 100,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 110,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 120,
+              "frequency_hz": 120
+            }
+          ]
+        }
+      ],
+      "candidates": [
+        {
+          "lat": 40.0,
+          "lon": -100.0,
+          "score": -1.0,
+          "score_kind": "negative_robust_ridge_loss_hz",
+          "event_ids": [
+            "e0",
+            "e1"
+          ],
+          "flight_ids": [
+            "a",
+            "b"
+          ],
+          "recording_start_utc": "2026-09-21T14:13:20Z",
+          "uncertainty": {
+            "radius_m": 70.0,
+            "kind": "sensitivity",
+            "method": "fixture_full_perturbation"
+          }
+        },
+        {
+          "lat": 45,
+          "lon": -100.0,
+          "score": -1.4,
+          "score_kind": "negative_robust_ridge_loss_hz",
+          "event_ids": [
+            "e0",
+            "e1"
+          ],
+          "flight_ids": [
+            "a",
+            "b"
+          ],
+          "recording_start_utc": "2026-09-21T14:13:20Z",
+          "uncertainty": {
+            "radius_m": 70.0,
+            "kind": "sensitivity",
+            "method": "fixture_full_perturbation"
+          }
+        }
+      ],
+      "coverage": {
+        "search_complete": true,
+        "data_status": "available",
+        "limitations": [
+          "Aircraft capture is incomplete."
+        ]
+      },
+      "matching_diagnostics": {
+        "clock_locked": true,
+        "alternatives_evaluated": true,
+        "refinement_boundary_limited": false,
+        "sensitivity": {
+          "complete": true,
+          "boundary_limited": false,
+          "sources": [
+            "frequency",
+            "clock",
+            "altitude",
+            "sound_speed"
+          ],
+          "radius_m": 70.0
+        },
+        "e0": {
+          "rmse_hz": 0.7,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        },
+        "e1": {
+          "rmse_hz": 0.7,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        }
+      }
+    },
+    {
+      "case_id": "decision-005",
+      "split": "development",
+      "scope": "simulated_decision_evidence",
+      "events": [
+        {
+          "event_id": "e0",
+          "start_s": 0,
+          "end_s": 20,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g0",
+          "ridge": [
+            {
+              "time_s": 0,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 10,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 20,
+              "frequency_hz": 120
+            }
+          ]
+        },
+        {
+          "event_id": "e1",
+          "start_s": 100,
+          "end_s": 120,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g0",
+          "ridge": [
+            {
+              "time_s": 100,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 110,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 120,
+              "frequency_hz": 120
+            }
+          ]
+        }
+      ],
+      "candidates": [
+        {
+          "lat": 40.0,
+          "lon": -100.0,
+          "score": -1.0,
+          "score_kind": "negative_robust_ridge_loss_hz",
+          "event_ids": [
+            "e0",
+            "e1"
+          ],
+          "flight_ids": [
+            "a",
+            "a"
+          ],
+          "recording_start_utc": "2026-09-21T14:13:20Z",
+          "uncertainty": {
+            "radius_m": 70.0,
+            "kind": "sensitivity",
+            "method": "fixture_full_perturbation"
+          }
+        }
+      ],
+      "coverage": {
+        "search_complete": true,
+        "data_status": "available",
+        "limitations": [
+          "Aircraft capture is incomplete."
+        ]
+      },
+      "matching_diagnostics": {
+        "clock_locked": true,
+        "alternatives_evaluated": true,
+        "refinement_boundary_limited": false,
+        "sensitivity": {
+          "complete": true,
+          "boundary_limited": false,
+          "sources": [
+            "frequency",
+            "clock",
+            "altitude",
+            "sound_speed"
+          ],
+          "radius_m": 70.0
+        },
+        "e0": {
+          "rmse_hz": 0.7,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        },
+        "e1": {
+          "rmse_hz": 0.7,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        }
+      }
+    },
+    {
+      "case_id": "decision-006",
+      "split": "development",
+      "scope": "simulated_decision_evidence",
+      "events": [
+        {
+          "event_id": "e0",
+          "start_s": 0,
+          "end_s": 20,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g0",
+          "ridge": [
+            {
+              "time_s": 0,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 10,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 20,
+              "frequency_hz": 120
+            }
+          ]
+        },
+        {
+          "event_id": "e1",
+          "start_s": 100,
+          "end_s": 120,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g1",
+          "ridge": [
+            {
+              "time_s": 100,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 110,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 120,
+              "frequency_hz": 120
+            }
+          ]
+        }
+      ],
+      "candidates": [
+        {
+          "lat": 40.0,
+          "lon": -100.0,
+          "score": -1.0,
+          "score_kind": "negative_robust_ridge_loss_hz",
+          "event_ids": [
+            "e0",
+            "e1"
+          ],
+          "flight_ids": [
+            "a",
+            "b"
+          ],
+          "recording_start_utc": "2026-09-21T14:13:20Z",
+          "uncertainty": {
+            "radius_m": 70.0,
+            "kind": "sensitivity",
+            "method": "fixture_full_perturbation"
+          }
+        }
+      ],
+      "coverage": {
+        "search_complete": true,
+        "data_status": "available",
+        "limitations": [
+          "Aircraft capture is incomplete."
+        ]
+      },
+      "matching_diagnostics": {
+        "clock_locked": true,
+        "alternatives_evaluated": true,
+        "refinement_boundary_limited": false,
+        "sensitivity": {
+          "complete": true,
+          "boundary_limited": false,
+          "sources": [
+            "frequency",
+            "clock",
+            "altitude",
+            "sound_speed"
+          ],
+          "radius_m": 70.0
+        },
+        "e0": {
+          "rmse_hz": 0.7,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        },
+        "e1": {
+          "rmse_hz": 7,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        }
+      }
+    },
+    {
+      "case_id": "decision-007",
+      "split": "development",
+      "scope": "simulated_decision_evidence",
+      "events": [
+        {
+          "event_id": "e0",
+          "start_s": 0,
+          "end_s": 20,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g0",
+          "ridge": [
+            {
+              "time_s": 0,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 10,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 20,
+              "frequency_hz": 120
+            }
+          ]
+        },
+        {
+          "event_id": "e1",
+          "start_s": 100,
+          "end_s": 120,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g1",
+          "ridge": [
+            {
+              "time_s": 100,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 110,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 120,
+              "frequency_hz": 120
+            }
+          ]
+        }
+      ],
+      "candidates": [
+        {
+          "lat": 40.0,
+          "lon": -100.0,
+          "score": -1.0,
+          "score_kind": "negative_robust_ridge_loss_hz",
+          "event_ids": [
+            "e0",
+            "e1"
+          ],
+          "flight_ids": [
+            "a",
+            "b"
+          ],
+          "recording_start_utc": "2026-09-21T14:13:20Z",
+          "uncertainty": {
+            "radius_m": 70.0,
+            "kind": "sensitivity",
+            "method": "fixture_full_perturbation"
+          }
+        }
+      ],
+      "coverage": {
+        "search_complete": true,
+        "data_status": "available",
+        "limitations": [
+          "Aircraft capture is incomplete."
+        ]
+      },
+      "matching_diagnostics": {
+        "clock_locked": true,
+        "alternatives_evaluated": true,
+        "refinement_boundary_limited": false,
+        "sensitivity": {
+          "complete": true,
+          "boundary_limited": false,
+          "sources": [
+            "altitude"
+          ],
+          "radius_m": 70.0
+        },
+        "e0": {
+          "rmse_hz": 0.7,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        },
+        "e1": {
+          "rmse_hz": 0.7,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        }
+      }
+    },
+    {
+      "case_id": "decision-008",
+      "split": "development",
+      "scope": "simulated_decision_evidence",
+      "events": [
+        {
+          "event_id": "e0",
+          "start_s": 0,
+          "end_s": 20,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g0",
+          "ridge": [
+            {
+              "time_s": 0,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 10,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 20,
+              "frequency_hz": 120
+            }
+          ]
+        },
+        {
+          "event_id": "e1",
+          "start_s": 100,
+          "end_s": 120,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g1",
+          "ridge": [
+            {
+              "time_s": 100,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 110,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 120,
+              "frequency_hz": 120
+            }
+          ]
+        }
+      ],
+      "candidates": [
+        {
+          "lat": 40.0,
+          "lon": -100.0,
+          "score": -1.0,
+          "score_kind": "negative_robust_ridge_loss_hz",
+          "event_ids": [
+            "e0",
+            "e1"
+          ],
+          "flight_ids": [
+            "a",
+            "b"
+          ],
+          "recording_start_utc": "2026-09-21T14:13:20Z",
+          "uncertainty": {
+            "radius_m": 70.0,
+            "kind": "sensitivity",
+            "method": "fixture_full_perturbation"
+          }
+        }
+      ],
+      "coverage": {
+        "search_complete": true,
+        "data_status": "available",
+        "limitations": [
+          "Aircraft capture is incomplete."
+        ]
+      },
+      "matching_diagnostics": {
+        "clock_locked": true,
+        "alternatives_evaluated": true,
+        "refinement_boundary_limited": false,
+        "sensitivity": {
+          "complete": true,
+          "boundary_limited": false,
+          "sources": [
+            "frequency",
+            "clock",
+            "altitude",
+            "sound_speed"
+          ],
+          "radius_m": 70.0
+        },
+        "e0": {
+          "rmse_hz": 0.7,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        }
+      }
+    },
+    {
+      "case_id": "decision-009",
+      "split": "held_out",
+      "scope": "simulated_decision_evidence",
+      "events": [
+        {
+          "event_id": "e0",
+          "start_s": 0,
+          "end_s": 20,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g0",
+          "ridge": [
+            {
+              "time_s": 0,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 10,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 20,
+              "frequency_hz": 120
+            }
+          ]
+        },
+        {
+          "event_id": "e1",
+          "start_s": 100,
+          "end_s": 120,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g1",
+          "ridge": [
+            {
+              "time_s": 100,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 110,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 120,
+              "frequency_hz": 120
+            }
+          ]
+        }
+      ],
+      "candidates": [
+        {
+          "lat": 40.0,
+          "lon": -100.0,
+          "score": -1.0,
+          "score_kind": "negative_robust_ridge_loss_hz",
+          "event_ids": [
+            "e0",
+            "e1"
+          ],
+          "flight_ids": [
+            "a",
+            "b"
+          ],
+          "recording_start_utc": "2026-09-21T14:13:20Z",
+          "uncertainty": {
+            "radius_m": 70.0,
+            "kind": "sensitivity",
+            "method": "fixture_full_perturbation"
+          }
+        }
+      ],
+      "coverage": {
+        "search_complete": true,
+        "data_status": "available",
+        "limitations": [
+          "Aircraft capture is incomplete."
+        ]
+      },
+      "matching_diagnostics": {
+        "clock_locked": true,
+        "alternatives_evaluated": true,
+        "refinement_boundary_limited": false,
+        "sensitivity": {
+          "complete": true,
+          "boundary_limited": false,
+          "sources": [
+            "frequency",
+            "clock",
+            "altitude",
+            "sound_speed"
+          ],
+          "radius_m": 70.0
+        },
+        "e0": {
+          "rmse_hz": 0.7999999999999999,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        },
+        "e1": {
+          "rmse_hz": 0.7999999999999999,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        }
+      }
+    },
+    {
+      "case_id": "decision-010",
+      "split": "held_out",
+      "scope": "simulated_decision_evidence",
+      "events": [],
+      "candidates": [],
+      "coverage": {
+        "search_complete": true,
+        "data_status": "available",
+        "limitations": [
+          "Aircraft capture is incomplete."
+        ]
+      },
+      "matching_diagnostics": {
+        "clock_locked": true,
+        "alternatives_evaluated": true,
+        "refinement_boundary_limited": false,
+        "sensitivity": {
+          "complete": true,
+          "boundary_limited": false,
+          "sources": [
+            "frequency",
+            "clock",
+            "altitude",
+            "sound_speed"
+          ],
+          "radius_m": 70.0
+        },
+        "e0": {
+          "rmse_hz": 0.7999999999999999,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        },
+        "e1": {
+          "rmse_hz": 0.7999999999999999,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        }
+      }
+    },
+    {
+      "case_id": "decision-011",
+      "split": "held_out",
+      "scope": "simulated_decision_evidence",
+      "events": [
+        {
+          "event_id": "e0",
+          "start_s": 0,
+          "end_s": 20,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g0",
+          "ridge": [
+            {
+              "time_s": 0,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 10,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 20,
+              "frequency_hz": 120
+            }
+          ]
+        },
+        {
+          "event_id": "e1",
+          "start_s": 100,
+          "end_s": 120,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g1",
+          "ridge": [
+            {
+              "time_s": 100,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 110,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 120,
+              "frequency_hz": 120
+            }
+          ]
+        }
+      ],
+      "candidates": [
+        {
+          "lat": 40.0,
+          "lon": -100.0,
+          "score": -1.0,
+          "score_kind": "negative_robust_ridge_loss_hz",
+          "event_ids": [
+            "e0",
+            "e1"
+          ],
+          "flight_ids": [
+            "a",
+            "b"
+          ],
+          "recording_start_utc": "2026-09-21T14:13:20Z",
+          "uncertainty": {
+            "radius_m": 70.0,
+            "kind": "sensitivity",
+            "method": "fixture_full_perturbation"
+          }
+        }
+      ],
+      "coverage": {
+        "search_complete": true,
+        "data_status": "unavailable",
+        "limitations": [
+          "Aircraft capture is incomplete."
+        ]
+      },
+      "matching_diagnostics": {
+        "clock_locked": true,
+        "alternatives_evaluated": true,
+        "refinement_boundary_limited": false,
+        "sensitivity": {
+          "complete": true,
+          "boundary_limited": false,
+          "sources": [
+            "frequency",
+            "clock",
+            "altitude",
+            "sound_speed"
+          ],
+          "radius_m": 70.0
+        },
+        "e0": {
+          "rmse_hz": 0.7999999999999999,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        },
+        "e1": {
+          "rmse_hz": 0.7999999999999999,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        }
+      }
+    },
+    {
+      "case_id": "decision-012",
+      "split": "held_out",
+      "scope": "simulated_decision_evidence",
+      "events": [
+        {
+          "event_id": "e0",
+          "start_s": 0,
+          "end_s": 20,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g0",
+          "ridge": [
+            {
+              "time_s": 0,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 10,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 20,
+              "frequency_hz": 120
+            }
+          ]
+        },
+        {
+          "event_id": "e1",
+          "start_s": 100,
+          "end_s": 120,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g1",
+          "ridge": [
+            {
+              "time_s": 100,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 110,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 120,
+              "frequency_hz": 120
+            }
+          ]
+        }
+      ],
+      "candidates": [
+        {
+          "lat": 40.0,
+          "lon": -100.0,
+          "score": -1.0,
+          "score_kind": "negative_robust_ridge_loss_hz",
+          "event_ids": [
+            "e0",
+            "e1"
+          ],
+          "flight_ids": [
+            "a",
+            "b"
+          ],
+          "recording_start_utc": "2026-09-21T14:13:20Z",
+          "uncertainty": {
+            "radius_m": 70.0,
+            "kind": "sensitivity",
+            "method": "fixture_full_perturbation"
+          }
+        },
+        {
+          "lat": 45,
+          "lon": -100.0,
+          "score": -1.5,
+          "score_kind": "negative_robust_ridge_loss_hz",
+          "event_ids": [
+            "e0",
+            "e1"
+          ],
+          "flight_ids": [
+            "a",
+            "b"
+          ],
+          "recording_start_utc": "2026-09-21T14:13:20Z",
+          "uncertainty": {
+            "radius_m": 70.0,
+            "kind": "sensitivity",
+            "method": "fixture_full_perturbation"
+          }
+        }
+      ],
+      "coverage": {
+        "search_complete": true,
+        "data_status": "available",
+        "limitations": [
+          "Aircraft capture is incomplete."
+        ]
+      },
+      "matching_diagnostics": {
+        "clock_locked": true,
+        "alternatives_evaluated": true,
+        "refinement_boundary_limited": false,
+        "sensitivity": {
+          "complete": true,
+          "boundary_limited": false,
+          "sources": [
+            "frequency",
+            "clock",
+            "altitude",
+            "sound_speed"
+          ],
+          "radius_m": 70.0
+        },
+        "e0": {
+          "rmse_hz": 0.7999999999999999,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        },
+        "e1": {
+          "rmse_hz": 0.7999999999999999,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        }
+      }
+    },
+    {
+      "case_id": "decision-013",
+      "split": "held_out",
+      "scope": "simulated_decision_evidence",
+      "events": [
+        {
+          "event_id": "e0",
+          "start_s": 0,
+          "end_s": 20,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g0",
+          "ridge": [
+            {
+              "time_s": 0,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 10,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 20,
+              "frequency_hz": 120
+            }
+          ]
+        },
+        {
+          "event_id": "e1",
+          "start_s": 100,
+          "end_s": 120,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g0",
+          "ridge": [
+            {
+              "time_s": 100,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 110,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 120,
+              "frequency_hz": 120
+            }
+          ]
+        }
+      ],
+      "candidates": [
+        {
+          "lat": 40.0,
+          "lon": -100.0,
+          "score": -1.0,
+          "score_kind": "negative_robust_ridge_loss_hz",
+          "event_ids": [
+            "e0",
+            "e1"
+          ],
+          "flight_ids": [
+            "a",
+            "a"
+          ],
+          "recording_start_utc": "2026-09-21T14:13:20Z",
+          "uncertainty": {
+            "radius_m": 70.0,
+            "kind": "sensitivity",
+            "method": "fixture_full_perturbation"
+          }
+        }
+      ],
+      "coverage": {
+        "search_complete": true,
+        "data_status": "available",
+        "limitations": [
+          "Aircraft capture is incomplete."
+        ]
+      },
+      "matching_diagnostics": {
+        "clock_locked": true,
+        "alternatives_evaluated": true,
+        "refinement_boundary_limited": false,
+        "sensitivity": {
+          "complete": true,
+          "boundary_limited": false,
+          "sources": [
+            "frequency",
+            "clock",
+            "altitude",
+            "sound_speed"
+          ],
+          "radius_m": 70.0
+        },
+        "e0": {
+          "rmse_hz": 0.7999999999999999,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        },
+        "e1": {
+          "rmse_hz": 0.7999999999999999,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        }
+      }
+    },
+    {
+      "case_id": "decision-014",
+      "split": "held_out",
+      "scope": "simulated_decision_evidence",
+      "events": [
+        {
+          "event_id": "e0",
+          "start_s": 0,
+          "end_s": 20,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g0",
+          "ridge": [
+            {
+              "time_s": 0,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 10,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 20,
+              "frequency_hz": 120
+            }
+          ]
+        },
+        {
+          "event_id": "e1",
+          "start_s": 100,
+          "end_s": 120,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g1",
+          "ridge": [
+            {
+              "time_s": 100,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 110,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 120,
+              "frequency_hz": 120
+            }
+          ]
+        }
+      ],
+      "candidates": [
+        {
+          "lat": 40.0,
+          "lon": -100.0,
+          "score": -1.0,
+          "score_kind": "negative_robust_ridge_loss_hz",
+          "event_ids": [
+            "e0",
+            "e1"
+          ],
+          "flight_ids": [
+            "a",
+            "b"
+          ],
+          "recording_start_utc": "2026-09-21T14:13:20Z",
+          "uncertainty": {
+            "radius_m": 70.0,
+            "kind": "sensitivity",
+            "method": "fixture_full_perturbation"
+          }
+        }
+      ],
+      "coverage": {
+        "search_complete": true,
+        "data_status": "available",
+        "limitations": [
+          "Aircraft capture is incomplete."
+        ]
+      },
+      "matching_diagnostics": {
+        "clock_locked": true,
+        "alternatives_evaluated": true,
+        "refinement_boundary_limited": false,
+        "sensitivity": {
+          "complete": true,
+          "boundary_limited": false,
+          "sources": [
+            "frequency",
+            "clock",
+            "altitude",
+            "sound_speed"
+          ],
+          "radius_m": 70.0
+        },
+        "e0": {
+          "rmse_hz": 0.7999999999999999,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        },
+        "e1": {
+          "rmse_hz": 7.1,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        }
+      }
+    },
+    {
+      "case_id": "decision-015",
+      "split": "held_out",
+      "scope": "simulated_decision_evidence",
+      "events": [
+        {
+          "event_id": "e0",
+          "start_s": 0,
+          "end_s": 20,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g0",
+          "ridge": [
+            {
+              "time_s": 0,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 10,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 20,
+              "frequency_hz": 120
+            }
+          ]
+        },
+        {
+          "event_id": "e1",
+          "start_s": 100,
+          "end_s": 120,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g1",
+          "ridge": [
+            {
+              "time_s": 100,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 110,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 120,
+              "frequency_hz": 120
+            }
+          ]
+        }
+      ],
+      "candidates": [
+        {
+          "lat": 40.0,
+          "lon": -100.0,
+          "score": -1.0,
+          "score_kind": "negative_robust_ridge_loss_hz",
+          "event_ids": [
+            "e0",
+            "e1"
+          ],
+          "flight_ids": [
+            "a",
+            "b"
+          ],
+          "recording_start_utc": "2026-09-21T14:13:20Z",
+          "uncertainty": {
+            "radius_m": 70.0,
+            "kind": "sensitivity",
+            "method": "fixture_full_perturbation"
+          }
+        }
+      ],
+      "coverage": {
+        "search_complete": true,
+        "data_status": "available",
+        "limitations": [
+          "Aircraft capture is incomplete."
+        ]
+      },
+      "matching_diagnostics": {
+        "clock_locked": true,
+        "alternatives_evaluated": true,
+        "refinement_boundary_limited": false,
+        "sensitivity": {
+          "complete": true,
+          "boundary_limited": false,
+          "sources": [
+            "altitude"
+          ],
+          "radius_m": 70.0
+        },
+        "e0": {
+          "rmse_hz": 0.7999999999999999,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        },
+        "e1": {
+          "rmse_hz": 0.7999999999999999,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        }
+      }
+    },
+    {
+      "case_id": "decision-016",
+      "split": "held_out",
+      "scope": "simulated_decision_evidence",
+      "events": [
+        {
+          "event_id": "e0",
+          "start_s": 0,
+          "end_s": 20,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g0",
+          "ridge": [
+            {
+              "time_s": 0,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 10,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 20,
+              "frequency_hz": 120
+            }
+          ]
+        },
+        {
+          "event_id": "e1",
+          "start_s": 100,
+          "end_s": 120,
+          "band_hz": [
+            90,
+            200
+          ],
+          "harmonic_group_id": "g1",
+          "ridge": [
+            {
+              "time_s": 100,
+              "frequency_hz": 140
+            },
+            {
+              "time_s": 110,
+              "frequency_hz": 130
+            },
+            {
+              "time_s": 120,
+              "frequency_hz": 120
+            }
+          ]
+        }
+      ],
+      "candidates": [
+        {
+          "lat": 40.0,
+          "lon": -100.0,
+          "score": -1.0,
+          "score_kind": "negative_robust_ridge_loss_hz",
+          "event_ids": [
+            "e0",
+            "e1"
+          ],
+          "flight_ids": [
+            "a",
+            "b"
+          ],
+          "recording_start_utc": "2026-09-21T14:13:20Z",
+          "uncertainty": {
+            "radius_m": 70.0,
+            "kind": "sensitivity",
+            "method": "fixture_full_perturbation"
+          }
+        }
+      ],
+      "coverage": {
+        "search_complete": true,
+        "data_status": "available",
+        "limitations": [
+          "Aircraft capture is incomplete."
+        ]
+      },
+      "matching_diagnostics": {
+        "clock_locked": true,
+        "alternatives_evaluated": true,
+        "refinement_boundary_limited": false,
+        "sensitivity": {
+          "complete": true,
+          "boundary_limited": false,
+          "sources": [
+            "frequency",
+            "clock",
+            "altitude",
+            "sound_speed"
+          ],
+          "radius_m": 70.0
+        },
+        "e0": {
+          "rmse_hz": 0.7999999999999999,
+          "outlier_fraction": 0.1,
+          "support_fraction": 1.0,
+          "drift_at_bound": false
+        }
+      }
+    }
+  ]
+}

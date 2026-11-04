@@ -1,0 +1,12 @@
+{
+  "upstream_platform": {
+    "coordinate": [40.8766, -73.5247],
+    "source": "https://app.osprey-watch.org/nest/3916",
+    "precision": "Rounded public platform coordinate, not surveyed microphone truth"
+  },
+  "reported_video": {
+    "coordinate": [40.8764657, -73.5249506],
+    "source": "Original explanatory video, visible winning row at 21:40; output/source-evidence captures",
+    "precision": "Reported numerical estimate, not surveyed microphone truth"
+  }
+}

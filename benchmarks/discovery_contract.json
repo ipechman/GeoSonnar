@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "frozen_before_production_evaluation": true,
+  "upstream_commit": "70626ad44fb9c7f4e2f5b225956c1f9281f91c13",
+  "primary_synthetic": {
+    "case_count": 14,
+    "generator": "Pinned upstream make_benchmark_controls emission-domain signal and random seeds, adapted only for receipts and process isolation",
+    "seeds": {"development": 892741, "public_held_out": 219305},
+    "kinds_per_split": ["noise", "stationary", "non_aircraft_sweep", "harmonic", "overlap", "short", "mp3"],
+    "expected_total_source_events": 8,
+    "group_interval_iou_minimum": 0.3,
+    "maximum_missed_events": 0,
+    "maximum_unmatched_groups": 0,
+    "maximum_matched_ridge_median_absolute_error_hz": 5.0,
+    "ridge_metric": "Per matched group, median over observed ridge points of absolute difference to nearest declared source harmonic at the same receiver time. No interpolation over missing observations.",
+    "location_verified_must_be_false": true
+  },
+  "extensions": {
+    "case_count": 4,
+    "missing_fundamental": {"expected_groups": 1, "minimum_harmonic_count": 2},
+    "interrupted": {"expected_groups": 1, "minimum_fragment_count": 2, "no_observed_samples_inside_s": [60, 67]},
+    "switching_stationary": {"expected_groups": 0},
+    "weak_partial": {"discovery_outcome": "diagnostic_only", "location_verified_must_be_false": true},
+    "scope": "Separate semantic controls adapted from pinned discovery unit tests; the weak partial event has no promised discovery sensitivity."
+  },
+  "real_corpus": {
+    "expected_recording_count": 40,
+    "manifest_sha256": "b82799b1540c5a6de8fa6c0bc63e2b887bdfc3e196b7ee2871aae158b83574bd",
+    "input_encoding": "192 kbps MP3, stripped metadata, opaque sequential filename",
+    "native_inputs": ["audio", "selected_channel_0", "native_default_settings"],
+    "required_execution_failures": 0,
+    "required_schema_failures": 0,
+    "location_verified_must_be_false": true,
+    "metrics": ["completed_recordings", "recordings_with_proposals", "recordings_without_proposals", "proposal_groups", "ridge_records", "runtime_s"],
+    "event_precision_or_recall_gate": null,
+    "limitation": "The corpus comprises published aircraft-positive clips. Without independent event time labels tied to audio sample zero, proposal counts are descriptive and cannot establish event precision/recall. Upstream proposals are never truth. Technical execution success does not mean all aircraft were detected."
+  },
+  "evaluation_separation": "Generate/save labels before native execution; pass only audio paths; load labels after all corresponding predictions complete. Procedural isolation on one filesystem, not an inaccessible holdout.",
+  "failure_policy": "Missing, malformed, duplicate or failed cases remain failures; no silent skipping or threshold adjustment. Public deterministic synthetic controls are software regressions, not independent real accuracy."
+}

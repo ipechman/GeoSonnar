@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "case_manifest": "../data/cases/original-native/case.json",
+  "steps": [
+    {
+      "id": "rank",
+      "action": {
+        "kind": "rank",
+        "input": {"source": "file", "path": "../output/native-data/replay-002/search/search_input.json"}
+      }
+    },
+    {
+      "id": "overlays",
+      "action": {
+        "kind": "overlays",
+        "input": {"source": "file", "path": "../output/native-data/replay-002/search/search_input.json"},
+        "results": {"source": "step", "step_id": "rank", "artifact": "results.json"},
+        "top": 3
+      }
+    }
+  ]
+}

@@ -1,0 +1,1841 @@
+{
+  "schema_version": 1,
+  "upstream": {
+    "repository": "1337isnot1337/DOPPLERGEIST",
+    "commit": "70626ad44fb9c7f4e2f5b225956c1f9281f91c13",
+    "pinned_at_utc": "2026-11-03",
+    "source_receipt": "upstream/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/source-receipt.json"
+  },
+  "purpose": "Static semantic coverage catalog. No entry is a test pass. Executed results belong in generated validation reports.",
+  "scope_note": "GeoSonnar ports applicable contracts to its Rust implementation. Executing or reading upstream outputs does not demonstrate GeoSonnar passed them. Unsupported features and external scientific gates remain explicit.",
+  "score_compatibility": "GeoSonnar lower-is-better traced-ridge RMSE/piecewise-linear tracks differs from upstream robust higher-is-better/Hermite models. Never import upstream score thresholds without matching score semantics.",
+  "families": [
+    {
+      "id": "propagation_physics",
+      "scope": "Analytic numerical contracts",
+      "sources": [
+        {
+          "path": "tests/test_physics.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_physics.py"
+        },
+        {
+          "path": "tests/test_motion_support.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_motion_support.py"
+        }
+      ],
+      "semantics": [
+        "Closed-form straight motion agrees with retarded-time model at relative and large Unix epochs.",
+        "Do not extrapolate beyond source trajectories; reject non-subsonic motion and unresolved solver results.",
+        "Upstream also tests all local CPAs and Hermite interior-speed extrema."
+      ],
+      "thresholds": {
+        "arrival_residual_s": 3e-07,
+        "predicted_frequency_error_hz": 3e-06,
+        "cpa_time_error_s": 0.001,
+        "cpa_distance_error_m": 0.001
+      },
+      "geosonnar_mapping": [
+        "src/physics.rs",
+        "tests/physics_validation.rs",
+        "tests/single_validation.rs"
+      ],
+      "support": "native_linear_contracts_validated",
+      "gaps": [
+        "Measured-velocity Hermite interpolation and its continuous extrema/indexing contracts remain unsupported; native tests validate the linear trajectory backend."
+      ]
+    },
+    {
+      "id": "shared_clock_and_scoring",
+      "scope": "Configured event/flight association",
+      "sources": [
+        {
+          "path": "tests/test_locked_scoring.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_locked_scoring.py"
+        },
+        {
+          "path": "tests/test_matching.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_matching.py"
+        },
+        {
+          "path": "tests/test_association.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_association.py"
+        },
+        {
+          "path": "tests/test_search_invariants.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_search_invariants.py"
+        }
+      ],
+      "semantics": [
+        "Use one shared recording clock; never realign separate events independently.",
+        "Retain fixed observation samples and reject incomplete trajectory support.",
+        "Enumerate local passes, including repeated passes of one aircraft. Harmonic grouping is a separate requirement.",
+        "The upstream silence heuristic distinguishes selected passes from unselected closer traffic."
+      ],
+      "geosonnar_mapping": [
+        "src/physics.rs",
+        "src/verification.rs",
+        "src/single.rs",
+        "tests/search_validation.rs",
+        "tests/physics_validation.rs"
+      ],
+      "support": "partial",
+      "gaps": [
+        "Pair ranking supports two supplied events; arbitrary event-count association and harmonic grouping remain absent.",
+        "Robust source-tone drift fitting and the optional silence heuristic are not implemented."
+      ]
+    },
+    {
+      "id": "codec_timing",
+      "scope": "Encoder/decoder sample timing only",
+      "sources": [
+        {
+          "path": "scripts/verify_methodology.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/verify_methodology.py"
+        },
+        {
+          "path": "docs/E2E_VERIFICATION.md",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/docs/E2E_VERIFICATION.md"
+        },
+        {
+          "path": "tests/test_methodology_verifier.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_methodology_verifier.py"
+        },
+        {
+          "path": "tests/test_mp3_smoke.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_mp3_smoke.py"
+        }
+      ],
+      "semantics": [
+        "Five MP 3 encoding variants independently decoded to 4 kHz mono.",
+        "Four gapless variants must satisfy timing and duration limits.",
+        "No-Xing control is diagnostic; measurement failure still fails its lane.",
+        "Silence, unrelated audio, truncated pilots and excessive shifts must not pass."
+      ],
+      "thresholds": {
+        "required_max_pilot_offset_s": 0.002,
+        "required_max_duration_difference_s": 0.002,
+        "minimum_pilot_correlation": 0.8
+      },
+      "geosonnar_mapping": [
+        "analysis/benchmark_audio.py",
+        "tests/audio_validation.rs",
+        "src/audio.rs",
+        "src/media.rs"
+      ],
+      "support": "native_adapter_validated",
+      "gaps": []
+    },
+    {
+      "id": "regional_two_event",
+      "scope": "Real source-informed development replay",
+      "sources": [
+        {
+          "path": "scripts/verify_pipeline_replay.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/verify_pipeline_replay.py"
+        },
+        {
+          "path": "scripts/ci_checkpoint_replay.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/ci_checkpoint_replay.py"
+        },
+        {
+          "path": "docs/CI_VERIFICATION_2026-11-02.md",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/docs/CI_VERIFICATION_2026-11-02.md"
+        },
+        {
+          "path": "evidence/verification/physical-20261103/real-release-parquet/report.json",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/evidence/verification/physical-20261103/real-release-parquet/report.json"
+        }
+      ],
+      "semantics": [
+        "Run real search before opening evaluation coordinate.",
+        "Pin input, code and binary hashes; retain runtime, flights, clock, failures and metric.",
+        "Historical upstream receiver error 43.85847078233993 m at 100 m threshold; this is not independently surveyed truth."
+      ],
+      "thresholds": {
+        "historical_horizontal_error_m": 100,
+        "report_tiers_m": [
+          100,
+          500,
+          1000
+        ]
+      },
+      "geosonnar_mapping": [
+        "cases/reference_search.json",
+        "analysis/import_reference.py",
+        "src/verification.rs"
+      ],
+      "support": "native_replay",
+      "gaps": [
+        "Supplied ridges, source-informed region and alternative RMSE/linear interpolation make this a ported semantic regression, not bit-for-bit scoring equivalence."
+      ]
+    },
+    {
+      "id": "known_clock_faint",
+      "scope": "Real single-event development diagnostic",
+      "sources": [
+        {
+          "path": "evidence/configs/source/reproduce-faint-alltypes-local.json",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/evidence/configs/source/reproduce-faint-alltypes-local.json"
+        },
+        {
+          "path": "evidence/results/reference-faint-alltypes-local/evaluation.json",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/evidence/results/reference-faint-alltypes-local/evaluation.json"
+        },
+        {
+          "path": "scripts/benchmark_matching.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_matching.py"
+        }
+      ],
+      "semantics": [
+        "Use one real faint ridge and full all-types faint-window tracks.",
+        "Recording clock inherited from previous fit; it is not trusted external timing.",
+        "Upstream historical error 357.4686768823865 m misses 100 m; retain this failure."
+      ],
+      "thresholds": {
+        "historical_horizontal_error_m": 100,
+        "upstream_passed_historical_threshold": false,
+        "report_tiers_m": [
+          100,
+          500,
+          1000
+        ]
+      },
+      "geosonnar_mapping": [
+        "benchmarks/cases/reference-faint.json",
+        "src/single.rs",
+        "tests/single_validation.rs",
+        "analysis/benchmark_faint.py"
+      ],
+      "support": "native_replay_available",
+      "gaps": [
+        "Native fixed-ridge RMSE is distinct from upstream weighted/robust scoring.",
+        "Benchmark result cannot establish independent single-event accuracy."
+      ]
+    },
+    {
+      "id": "frozen_audit",
+      "scope": "Historical report evaluation, not rerunning producer",
+      "sources": [
+        {
+          "path": "benchmarks/frozen-manifest.json",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/benchmarks/frozen-manifest.json"
+        },
+        {
+          "path": "benchmarks/truth/frozen-labels.json",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/benchmarks/truth/frozen-labels.json"
+        },
+        {
+          "path": "scripts/evaluate_frozen.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/evaluate_frozen.py"
+        }
+      ],
+      "semantics": [
+        "Retain all 48 frozen development cases:40 annotation-assisted feature cases,6 real reference variants,2 configured synthetic cases.",
+        "Three exploratory reports incomplete; count execution failures instead of omitting them.",
+        "Feature-only and unresolved-localization outputs remain inconclusive; no current real case eligible for independent accuracy."
+      ],
+      "geosonnar_mapping": [
+        "benchmarks/upstream/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/frozen-manifest.json"
+      ],
+      "support": "catalogued_not_reexecuted",
+      "gaps": [
+        "Reading upstream reports is not a GeoSonnar producer benchmark pass."
+      ]
+    },
+    {
+      "id": "decision_controls",
+      "scope": "Simulated decision evidence only",
+      "sources": [
+        {
+          "path": "benchmarks/decision-inputs.json",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/benchmarks/decision-inputs.json"
+        },
+        {
+          "path": "benchmarks/truth/decision-labels.json",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/benchmarks/truth/decision-labels.json"
+        },
+        {
+          "path": "docs/CONFIDENCE.md",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/docs/CONFIDENCE.md"
+        },
+        {
+          "path": "tests/test_confidence.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_confidence.py"
+        },
+        {
+          "path": "tests/test_decision_invariants.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_decision_invariants.py"
+        }
+      ],
+      "semantics": [
+        "Sixteen fixed simulated-evidence controls: eight development cases and eight public held-out fixtures.",
+        "Each split contains one engineered supported case and seven inconclusive outcomes.",
+        "Produce native decisions before opening labels; verify expected status and reason instead of forcing a location."
+      ],
+      "thresholds": {
+        "minimum_independent_flyovers": 2,
+        "maximum_event_rmse_hz": 3,
+        "maximum_outlier_fraction": 0.25,
+        "minimum_track_support_fraction": 0.95,
+        "robust_loss_near_tie_hz_per_event": 0.5,
+        "support_score_near_tie_units_per_group": 0.2,
+        "current_precision_target_m": 1000
+      },
+      "geosonnar_mapping": [
+        "src/decision.rs",
+        "tests/decision_validation.rs",
+        "benchmarks/upstream/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/decision-inputs.json"
+      ],
+      "support": "native_fixture_policy_validated",
+      "gaps": [
+        "Passing constructed decision fixtures does not calibrate real acoustic false-localization risk."
+      ]
+    },
+    {
+      "id": "finite_search_decision",
+      "scope": "Finite grid/pruning/retained-mode accounting",
+      "sources": [
+        {
+          "path": "docs/FINITE_SEARCH_DECISION.md",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/docs/FINITE_SEARCH_DECISION.md"
+        },
+        {
+          "path": "tests/test_finite_search.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_finite_search.py"
+        },
+        {
+          "path": "tests/test_finite_bridge_independent.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_finite_bridge_independent.py"
+        },
+        {
+          "path": "tests/test_finite_evidence_independent.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_finite_evidence_independent.py"
+        },
+        {
+          "path": "tests/test_unknown_score_bounds.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_unknown_score_bounds.py"
+        }
+      ],
+      "semantics": [
+        "Every retained mode represented and assessed; preserve global alternatives and unknown trial classifications.",
+        "Account for every pruning/retention drop with a conservative score ceiling.",
+        "Near ties must fit actual returned radius; failed leading sensitivity cannot be repaired by enlarging radius."
+      ],
+      "geosonnar_mapping": [
+        "src/decision.rs validates supplied finite-search ledgers, mode mappings and retention bounds",
+        "tests/decision_validation.rs tests missing modes, score bounds and finite envelope unions",
+        "src/verification.rs retains ranked local hypotheses"
+      ],
+      "support": "partial",
+      "gaps": [
+        "Native decision consumption of supplied finite evidence is implemented. Native search does not yet produce the upstream finite retention ledger, global mode coverage or conservative discarded-score bounds, so its raw ranked output cannot pass this policy automatically."
+      ]
+    },
+    {
+      "id": "retention_performance",
+      "scope": "Performance/equality, not localization accuracy",
+      "sources": [
+        {
+          "path": "scripts/benchmark_finite_retention.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_finite_retention.py"
+        },
+        {
+          "path": "scripts/benchmark_ridge_fit_reuse.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_ridge_fit_reuse.py"
+        },
+        {
+          "path": "scripts/benchmark_real_clock_batch.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_real_clock_batch.py"
+        },
+        {
+          "path": "scripts/benchmark_acoustic_sieve.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_acoustic_sieve.py"
+        },
+        {
+          "path": "scripts/benchmark_real_tile_workers.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_real_tile_workers.py"
+        }
+      ],
+      "semantics": [
+        "Retain the exact top 100 of 131,072 invented scored modes, accounting for every discarded mode and exact duplicate.",
+        "Require identical numerical results and bookkeeping for cached, uncached and optimized reference paths.",
+        "Measure wall time, CPU, memory and fit counts; do not copy machine-specific speed thresholds."
+      ],
+      "geosonnar_mapping": [
+        "regional native runtime measurement"
+      ],
+      "support": "not_implemented",
+      "gaps": [
+        "No comparable optimization ledger/cache/parallel-tile implementation yet."
+      ]
+    },
+    {
+      "id": "discovery_controls",
+      "scope": "Automatic acoustic proposals only",
+      "sources": [
+        {
+          "path": "scripts/make_benchmark_controls.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/make_benchmark_controls.py"
+        },
+        {
+          "path": "scripts/run_benchmark.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/run_benchmark.py"
+        },
+        {
+          "path": "scripts/evaluate_benchmark.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/evaluate_benchmark.py"
+        },
+        {
+          "path": "tests/test_discovery.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_discovery.py"
+        },
+        {
+          "path": "benchmarks/README.md",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/benchmarks/README.md"
+        }
+      ],
+      "semantics": [
+        "Fourteen controls cover noise, stationary tone, ascending non-aircraft sweep, moving source, overlapping events, truncated clips and MP3 across two splits.",
+        "Use no manual acoustic hints; keep truth unavailable to the search.",
+        "Merge harmonics and match event intervals at IoU 0.3. The published frozen run detected eight events with zero misses or false alarms.",
+        "These controls have no historical track corpus, so an accepted location would be unsupported."
+      ],
+      "thresholds": {
+        "event_iou": 0.3
+      },
+      "geosonnar_mapping": [
+        "src/discovery.rs",
+        "src/discovery_groups.rs",
+        "tests/discovery_groups_validation.rs",
+        "tests/discovery_io_validation.rs",
+        "analysis/benchmark_discovery.py",
+        "benchmarks/discovery_contract.json"
+      ],
+      "support": "native_discovery_adapter",
+      "gaps": [
+        "Detection is acoustic proposal generation, not aircraft identity or location verification. Native defaults use a 2.048-second radix-2 window rather than upstream 2.0 seconds; exact grid/uncertainty are recorded. See generated discovery reports for executed controls."
+      ]
+    },
+    {
+      "id": "multievent",
+      "scope": "Automatic 3/4/6-flyover association",
+      "sources": [
+        {
+          "path": "scripts/make_multi_event_case.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/make_multi_event_case.py"
+        },
+        {
+          "path": "scripts/make_multievent_benchmark.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/make_multievent_benchmark.py"
+        },
+        {
+          "path": "benchmarks/MULTIEVENT.md",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/benchmarks/MULTIEVENT.md"
+        },
+        {
+          "path": "tests/test_all_events.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_all_events.py"
+        },
+        {
+          "path": "tests/test_multi_event_renderer.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_multi_event_renderer.py"
+        }
+      ],
+      "semantics": [
+        "Use every independently supported event with one location and clock; never silently keep only the first two.",
+        "The supplementary four-event fixture has 520 seconds, 1,812 trajectory rows, 12 opaque flights and three candidate regions. Its discovery result was four detections, zero misses and zero false alarms."
+      ],
+      "geosonnar_mapping": [
+        "src/verification.rs currently supports two configured events"
+      ],
+      "support": "not_implemented",
+      "gaps": [
+        "No variable-event association or automatic discovery."
+      ]
+    },
+    {
+      "id": "real_forty_features",
+      "scope": "Manual harmonic-band feature extraction",
+      "sources": [
+        {
+          "path": "scripts/benchmark_real_features.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_real_features.py"
+        },
+        {
+          "path": "evidence/results/real-feature-benchmark/cases.json",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/evidence/results/real-feature-benchmark/cases.json"
+        },
+        {
+          "path": "benchmarks/README.md",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/benchmarks/README.md"
+        }
+      ],
+      "semantics": [
+        "Run all 40 real Livermore recordings using supplied harmonic bands; preserve the historical 33 detections and seven misses.",
+        "Feature detections are not geolocation because precise recorder coordinates and sample-zero UTC are not established."
+      ],
+      "geosonnar_mapping": [
+        "future audio feature adapter"
+      ],
+      "support": "not_run_feature_gap",
+      "gaps": [
+        "The original 40-recording corpus and a native comparable automatic ridge extractor are not available in the current project."
+      ]
+    },
+    {
+      "id": "real_forty_discovery",
+      "scope": "Automatic whole-recording discovery without timing",
+      "sources": [
+        {
+          "path": "scripts/benchmark_real_discovery.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_real_discovery.py"
+        },
+        {
+          "path": "benchmarks/real-discovery-20261103.csv",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/benchmarks/real-discovery-20261103.csv"
+        },
+        {
+          "path": "benchmarks/README.md",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/benchmarks/README.md"
+        }
+      ],
+      "semantics": [
+        "Encode all 40 recordings to 192 kbps MP3 with opaque filenames and no manual hints.",
+        "The historical run produced proposals in 36 clips, none in four clips, and 136 groups; every job requested a recording time.",
+        "A proposal in a positive recording does not establish event-level detection precision."
+      ],
+      "geosonnar_mapping": [
+        "analysis/benchmark_discovery.py",
+        "data/research/zenodo-23424278/recording-manifest.json",
+        "data/research/zenodo-23424278/annotation-timing-audit.json"
+      ],
+      "support": "native_discovery_adapter",
+      "gaps": [
+        "Native audio-only inference on all40 fixed recordings is supported. Execution/proposal metrics are not event precision or recall: publisher UTC annotations do not establish audio sample zero. Generated run reports are execution evidence; this catalog is not a pass."
+      ]
+    },
+    {
+      "id": "nasa_supplied_tracks",
+      "scope": "Real measured pressure/GPS development experiment",
+      "sources": [
+        {
+          "path": "benchmarks/nasa-session-cases-20261103.json",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/benchmarks/nasa-session-cases-20261103.json"
+        },
+        {
+          "path": "scripts/download_nasa_cases.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/download_nasa_cases.py"
+        },
+        {
+          "path": "scripts/benchmark_nasa_session.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_nasa_session.py"
+        },
+        {
+          "path": "benchmarks/nasa-session-results-20261103.csv",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/benchmarks/nasa-session-results-20261103.csv"
+        }
+      ],
+      "semantics": [
+        "Use four original MAT files, channel 2, and synchronized seconds of day; do not invent an absolute recording date.",
+        "Default proposal counts were 0/0/1/0; the shorter-window comparison yielded 0/0/0/0.",
+        "The Edge 065 diagnostic candidate had 474 m error but unconfirmed source identity; no case was an accepted localization."
+      ],
+      "geosonnar_mapping": [
+        "future real supplied-trajectory adapter"
+      ],
+      "support": "not_run_feature_gap",
+      "gaps": [
+        "Original MAT pressure/GPS inputs, automatic discovery and source-drift adapters remain absent."
+      ]
+    },
+    {
+      "id": "wsu_supplied_track",
+      "scope": "Real low-speed multirotor development experiment",
+      "sources": [
+        {
+          "path": "scripts/benchmark_wsu_session.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_wsu_session.py"
+        },
+        {
+          "path": "benchmarks/README.md",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/benchmarks/README.md"
+        }
+      ],
+      "semantics": [
+        "Use the complete 246.8-second recording with device 1/channel 1 selected before inspection.",
+        "Published alignment maps audio time 82 seconds to flight-log time 3.9 seconds; measured trajectory support spans audio times 78.1 to 241.1 seconds.",
+        "Four proposals at 60 to 82 seconds yielded zero supported fits out of 4,992 attempts. The expected outcome is no_supported_fit with no accepted coordinate."
+      ],
+      "geosonnar_mapping": [
+        "future real supplied-trajectory adapter"
+      ],
+      "support": "not_run_feature_gap",
+      "gaps": [
+        "The original 284.3 MB WAV, telemetry adapter and automatic discovery are absent."
+      ]
+    },
+    {
+      "id": "real_audio_screening",
+      "scope": "Candidate recording discovery, not validated localization",
+      "sources": [
+        {
+          "path": "scripts/benchmark_aerosonic_scan.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_aerosonic_scan.py"
+        },
+        {
+          "path": "scripts/benchmark_risoux_scan.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_risoux_scan.py"
+        },
+        {
+          "path": "scripts/benchmark_vireo_scan.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_vireo_scan.py"
+        },
+        {
+          "path": "docs/ECLIPSE_FIELD_CORPUS.md",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/docs/ECLIPSE_FIELD_CORPUS.md"
+        },
+        {
+          "path": "benchmarks/README.md",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/benchmarks/README.md"
+        }
+      ],
+      "semantics": [
+        "Preserve acoustic/source screens and unresolved clock/location uncertainty.",
+        "Corpus leads do not satisfy independent recording/location gate."
+      ],
+      "geosonnar_mapping": [
+        "no equivalent corpus intake"
+      ],
+      "support": "not_run_feature_gap",
+      "gaps": [
+        "Not a geolocation acceptance suite;requires provider-specific corpus ingestion."
+      ]
+    },
+    {
+      "id": "acquisition_and_normalization",
+      "scope": "Source integrity, coverage and geometry preservation",
+      "sources": [
+        {
+          "path": "tests/test_data_access.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_data_access.py"
+        },
+        {
+          "path": "tests/test_ingest_adsblol_day.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_ingest_adsblol_day.py"
+        },
+        {
+          "path": "tests/test_missing_velocity.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_missing_velocity.py"
+        },
+        {
+          "path": "tests/test_index_geometry_invariants.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_index_geometry_invariants.py"
+        },
+        {
+          "path": "tests/test_terrain.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_terrain.py"
+        }
+      ],
+      "semantics": [
+        "Preserve measured velocity components, including zero values; record inferred and missing components.",
+        "Continuous segment indexing must preserve the complete curve rather than only sampled coordinate boxes.",
+        "Record altitude datum, geoid, terrain coverage and gaps explicitly."
+      ],
+      "geosonnar_mapping": [
+        "src/acquisition.rs",
+        "src/normalization.rs",
+        "tests/normalization_validation.rs",
+        "analysis/import_reference.py"
+      ],
+      "support": "partial",
+      "gaps": [
+        "ADSB.aero simplified API ingestion differs from upstream raw ADSB.lol ingestion.",
+        "Imported native velocity columns are retained in provenance but unused by the linear backend.",
+        "There is no continuous spatial index."
+      ]
+    },
+    {
+      "id": "cache_provenance_and_restore",
+      "scope": "Reproducibility and restore contracts",
+      "sources": [
+        {
+          "path": "tests/test_artifact_restore.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_artifact_restore.py"
+        },
+        {
+          "path": "tests/test_checkpoint_restore.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_checkpoint_restore.py"
+        },
+        {
+          "path": "tests/test_provenance.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_provenance.py"
+        },
+        {
+          "path": "tests/test_pipeline_replay.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_pipeline_replay.py"
+        }
+      ],
+      "semantics": [
+        "Verify content hashes before restoring or reusing cached data.",
+        "Bind effective inputs, parameters, source and executable identity to each receipt.",
+        "Preserve failures and use new result directories for benchmark runs."
+      ],
+      "geosonnar_mapping": [
+        "src/acquisition.rs",
+        "analysis/extract_reference_archive.py",
+        "validation runner"
+      ],
+      "support": "partial",
+      "gaps": [
+        "GeoSonnar receipts mustbe evaluated locally;upstream receipts do not certifythisimplementation."
+      ]
+    },
+    {
+      "id": "national_tiled_scale",
+      "scope": "Finite resource measurement without locationtruth",
+      "sources": [
+        {
+          "path": "scripts/benchmark_national_search.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_national_search.py"
+        },
+        {
+          "path": "tests/test_tiled_search.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_tiled_search.py"
+        },
+        {
+          "path": "tests/test_tiled_support.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_tiled_support.py"
+        },
+        {
+          "path": "tests/test_bounded_model_coverage.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_bounded_model_coverage.py"
+        }
+      ],
+      "semantics": [
+        "Exercise full-CONUS enumeration against a declared flight index using the upstream default 20 km grid, constant ground and analytic ridge.",
+        "This fixture measures resources and finite coverage, not localization accuracy or recall.",
+        "Exhausted budgets and unsupported sources must preserve incomplete scope."
+      ],
+      "geosonnar_mapping": [
+        "src/search_setup.rs deliberatelylocal"
+      ],
+      "support": "not_implemented",
+      "gaps": [
+        "A national spatial index, tiled scheduling, resume and full coverage accounting are not implemented."
+      ]
+    },
+    {
+      "id": "http_and_browser_pipeline",
+      "scope": "Product execution acceptance",
+      "sources": [
+        {
+          "path": "scripts/verify_upload_http.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/verify_upload_http.py"
+        },
+        {
+          "path": "scripts/verify_real_upload_browser.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/verify_real_upload_browser.py"
+        },
+        {
+          "path": "tests/test_service.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_service.py"
+        },
+        {
+          "path": "tests/test_verify_upload_http.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_verify_upload_http.py"
+        },
+        {
+          "path": "tests/test_real_upload_verification.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_real_upload_verification.py"
+        },
+        {
+          "path": "benchmarks/real-http-2026-11-03/summary.json",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/benchmarks/real-http-2026-11-03/summary.json"
+        }
+      ],
+      "semantics": [
+        "Execute actual intake, discovery, acquisition, association, search, refinement and decision stages.",
+        "The undated control must request recording time and must not satisfy full-pipeline acceptance.",
+        "The real upstream reference replay remains inconclusive/search_incomplete; its leading diagnostic point was about 65,999 m from the reference."
+      ],
+      "geosonnar_mapping": [
+        "CLI workbench only"
+      ],
+      "support": "not_implemented",
+      "gaps": [
+        "An HTTP service, browser upload workflow, automatic pipeline and GUI are not implemented."
+      ]
+    },
+    {
+      "id": "resume_and_concurrency",
+      "scope": "Operational reliability",
+      "sources": [
+        {
+          "path": "tests/test_job_resume.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_job_resume.py"
+        },
+        {
+          "path": "tests/test_upload_concurrency.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_upload_concurrency.py"
+        },
+        {
+          "path": "tests/test_real_parallel_index.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_real_parallel_index.py"
+        },
+        {
+          "path": "tests/test_real_parallel_retention.py",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_real_parallel_retention.py"
+        }
+      ],
+      "semantics": [
+        "Resume interrupted jobs only when inputs and completed work identities agree.",
+        "Concurrent uploads and workers must preserve artifact ownership and metadata."
+      ],
+      "geosonnar_mapping": [
+        "Acquisition cache only"
+      ],
+      "support": "not_implemented",
+      "gaps": [
+        "A job system and parallel search scheduler are not implemented."
+      ]
+    },
+    {
+      "id": "independent_real_acceptance",
+      "scope": "External scientific acceptance gate",
+      "sources": [
+        {
+          "path": "benchmarks/README.md",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/benchmarks/README.md"
+        },
+        {
+          "path": "docs/CONFIDENCE.md",
+          "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/docs/CONFIDENCE.md"
+        }
+      ],
+      "semantics": [
+        "Require three independently timed recordings across two known public or consented recorder locations.",
+        "Establish recorder-coordinate uncertainty, sample-zero UTC and an independent flight archive.",
+        "The upstream repository states that none of its existing real cases qualifies; this gate stays open."
+      ],
+      "geosonnar_mapping": [
+        "currentregionaldevelopmentreplay"
+      ],
+      "support": "evidence_unavailable",
+      "gaps": [
+        "The downloaded video coordinate and fitted clock are development references, not independently surveyed and timed ground truth."
+      ]
+    }
+  ],
+  "frozen_case_inventory": [
+    {
+      "case_id": "feature-N86LP_R01",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N9393T_R02",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N788BM_R03",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N784MB_R04",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N413AK_R05",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N373DF_R06",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N814SR_R07",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N2933A_R08",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N60RS_R11",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N4040_R12",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N795MM_R13",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N248LF_R14",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N913TC_R15",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N413AK_R16",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N500MG_R17",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N621KS_R18",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N4004R_R19",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N394FX_R20",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N563FX_R21",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N916KT_R22",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N310MG_R23",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N9658K_R24",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N8085W_R27",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N7RR_R30",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N172EL_R35",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N748SP_R36",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N61NG_R37",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N456CS_R38",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N3012N_R40",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N757AH_R41",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N1387U_R44",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N451EE_R45",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N759NC_R46",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N662EZ_R48",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N413AK_R49",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N958JX_R50",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N451EE_R51",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N231DT_R57",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N67WL_R59",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N7PG_R60",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "reference",
+      "split": "development",
+      "scope": "regional_source_informed_reference"
+    },
+    {
+      "case_id": "reference-faint-alltypes-local",
+      "split": "development",
+      "scope": "regional_source_informed_reference"
+    },
+    {
+      "case_id": "reference-faint-local",
+      "split": "development",
+      "scope": "regional_source_informed_reference"
+    },
+    {
+      "case_id": "reference-faint-recovered-clock",
+      "split": "development",
+      "scope": "regional_source_informed_reference"
+    },
+    {
+      "case_id": "reference-local",
+      "split": "development",
+      "scope": "regional_source_informed_reference"
+    },
+    {
+      "case_id": "reference-local-fast",
+      "split": "development",
+      "scope": "regional_source_informed_reference"
+    },
+    {
+      "case_id": "synthetic-known-minute",
+      "split": "development",
+      "scope": "manual_synthetic_localization"
+    },
+    {
+      "case_id": "synthetic-two-events",
+      "split": "development",
+      "scope": "manual_synthetic_localization"
+    }
+  ],
+  "decision_case_inventory": [
+    {
+      "case_id": "decision-001",
+      "split": "development",
+      "scope": "simulated_decision_evidence"
+    },
+    {
+      "case_id": "decision-002",
+      "split": "development",
+      "scope": "simulated_decision_evidence"
+    },
+    {
+      "case_id": "decision-003",
+      "split": "development",
+      "scope": "simulated_decision_evidence"
+    },
+    {
+      "case_id": "decision-004",
+      "split": "development",
+      "scope": "simulated_decision_evidence"
+    },
+    {
+      "case_id": "decision-005",
+      "split": "development",
+      "scope": "simulated_decision_evidence"
+    },
+    {
+      "case_id": "decision-006",
+      "split": "development",
+      "scope": "simulated_decision_evidence"
+    },
+    {
+      "case_id": "decision-007",
+      "split": "development",
+      "scope": "simulated_decision_evidence"
+    },
+    {
+      "case_id": "decision-008",
+      "split": "development",
+      "scope": "simulated_decision_evidence"
+    },
+    {
+      "case_id": "decision-009",
+      "split": "held_out",
+      "scope": "simulated_decision_evidence"
+    },
+    {
+      "case_id": "decision-010",
+      "split": "held_out",
+      "scope": "simulated_decision_evidence"
+    },
+    {
+      "case_id": "decision-011",
+      "split": "held_out",
+      "scope": "simulated_decision_evidence"
+    },
+    {
+      "case_id": "decision-012",
+      "split": "held_out",
+      "scope": "simulated_decision_evidence"
+    },
+    {
+      "case_id": "decision-013",
+      "split": "held_out",
+      "scope": "simulated_decision_evidence"
+    },
+    {
+      "case_id": "decision-014",
+      "split": "held_out",
+      "scope": "simulated_decision_evidence"
+    },
+    {
+      "case_id": "decision-015",
+      "split": "held_out",
+      "scope": "simulated_decision_evidence"
+    },
+    {
+      "case_id": "decision-016",
+      "split": "held_out",
+      "scope": "simulated_decision_evidence"
+    }
+  ],
+  "datasets": {
+    "reference_region": {
+      "local_file": "data/dopplergeist/2026-09-08/reference-region.parquet",
+      "bytes": 32823780,
+      "sha256": "fa4e2b82849b3ea8c22ffbe50d4f8f00b7bb3727486307feeaab4821562718a0",
+      "available": true
+    },
+    "reference_faint": {
+      "local_file": "data/dopplergeist/2026-09-08/conus-alltypes-faint-window.parquet",
+      "bytes": 68141282,
+      "sha256": "b43c7cd878d8378bede0705046c9034bed4741930a1669a544688859675c6154",
+      "available": true
+    },
+    "terrain": {
+      "available": true,
+      "local_files": [
+        "data/dopplergeist/terrain/Copernicus_DSM_COG_10_N40_00_W074_00_DEM.tif",
+        "data/dopplergeist/terrain/us_nga_egm96_15.tif"
+      ],
+      "notes": "Surface DSM + EGM96 and assumed3m microphone;not surveyed terraintruth."
+    },
+    "forty_passages": {
+      "source": "https://zenodo.org/records/23424278",
+      "license": "CC BY 4.0; Praveen Pathak",
+      "archive_bytes": 283208311,
+      "archive_url": "https://github.com/1337isnot1337/DOPPLERGEIST/releases/download/checkpoint-2026-11-02/data-research.tar.gz",
+      "available": false,
+      "location_truth_eligible": false
+    },
+    "nasa": {
+      "source_url": "https://data.nasa.gov/docs/datasets/rfk401li/small_uav_acoustics.zip",
+      "total_selected_member_bytes": 136038997,
+      "members": [
+        {
+          "case_id": "cub_flyover_107",
+          "archive_member": "data/cub_flyover_107.mat",
+          "size_bytes": 41935404,
+          "sha256": "908ba29a68891fb6cb13087cbea9caf74f8385082d78842e1b91165e174365df",
+          "selection_stage": "initial_first_lexical_by_fixed_wing_family",
+          "publisher_protocol": {
+            "vehicle": "Cub",
+            "condition": "cruise",
+            "nominal_agl_m": 10,
+            "nominal_speed_mps": 25,
+            "notes": "pilot descending towards mics under low power - not ideal flight trajectory"
+          }
+        },
+        {
+          "case_id": "edge_flyover_038",
+          "archive_member": "data/edge_flyover_038.mat",
+          "size_bytes": 35247930,
+          "sha256": "81e02d387845614c4f9eea8761ec35211edcb5456a28d1b1c21dffb41fbd8cc8",
+          "selection_stage": "initial_first_lexical_by_fixed_wing_family",
+          "publisher_protocol": {
+            "vehicle": "Edge",
+            "condition": "cruise",
+            "nominal_agl_m": 20,
+            "nominal_speed_mps": 25,
+            "notes": ""
+          }
+        },
+        {
+          "case_id": "edge_flyover_065",
+          "publisher_protocol": {
+            "vehicle": "Edge",
+            "condition": "high speed",
+            "nominal_agl_m": 100,
+            "nominal_speed_mps": 40,
+            "notes": "high speed pass, propeller plane in bg at start"
+          },
+          "size_bytes": 25249619,
+          "sha256": "d06b708a460da233c550099698e5b69dadfbbe4f5404f77c30f32e1808717ccc",
+          "archive_member": "data/edge_flyover_065.mat",
+          "selection_stage": "all_publisher_high_speed_edge_members"
+        },
+        {
+          "case_id": "edge_flyover_066",
+          "publisher_protocol": {
+            "vehicle": "Edge",
+            "condition": "high speed",
+            "nominal_agl_m": 75,
+            "nominal_speed_mps": 40,
+            "notes": "high speed pass"
+          },
+          "size_bytes": 33606044,
+          "sha256": "0d4a1f7415e42f38ca64087400182e104ed7efface36de3cd7ed669aec9ad9bf",
+          "archive_member": "data/edge_flyover_066.mat",
+          "selection_stage": "all_publisher_high_speed_edge_members"
+        }
+      ],
+      "available": false,
+      "location_truth_eligible": false
+    },
+    "wsu": {
+      "source_url": "https://rds.westernsydney.edu.au/Centres/ICNS/2026/Jahir_Rodriguez",
+      "original_wav_bytes": 284313644,
+      "available": false,
+      "location_truth_eligible": false
+    }
+  },
+  "upstream_test_file_count": 71,
+  "upstream_test_files": [
+    {
+      "path": "tests/test_all_events.py",
+      "git_blob_sha1": "622653e321eca552c5e7cc75529a08f60dca6183",
+      "bytes": 9353,
+      "family": "multievent",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_artifact_restore.py",
+      "git_blob_sha1": "4629de104161483a3b979906db409ee971dae490",
+      "bytes": 2380,
+      "family": "cache_provenance_and_restore",
+      "inspection": "source_read"
+    },
+    {
+      "path": "tests/test_association.py",
+      "git_blob_sha1": "fba27324b09c18509492b7e8343dc7f43a36034a",
+      "bytes": 4185,
+      "family": "shared_clock_and_scoring",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_audio.py",
+      "git_blob_sha1": "87ee15029797cb1df427a0e20ad63599f4db25a3",
+      "bytes": 910,
+      "family": "codec_timing",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_automatic.py",
+      "git_blob_sha1": "557e13c28b1bfea509ff781c809fdbdacbd2b6d2",
+      "bytes": 15906,
+      "family": "http_and_browser_pipeline",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_automatic_finite.py",
+      "git_blob_sha1": "36c215de2bbe9c0b1c2b53885c5a6424f59a2050",
+      "bytes": 6316,
+      "family": "finite_search_decision",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_automatic_profile.py",
+      "git_blob_sha1": "3b97b5f588e772b4e9656620bfc56b5a2bc50afc",
+      "bytes": 7293,
+      "family": "http_and_browser_pipeline",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_automatic_support.py",
+      "git_blob_sha1": "80004be68762c10599e1de7ce487e14aa95099c4",
+      "bytes": 1892,
+      "family": "http_and_browser_pipeline",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_benchmark_timing.py",
+      "git_blob_sha1": "46ebfbb030e6bde661160816b83694323df92670",
+      "bytes": 1289,
+      "family": "codec_timing",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_bounded_model_coverage.py",
+      "git_blob_sha1": "b21cc9df95c9eb91eccd2c1c9fa4e3fbb07ba115",
+      "bytes": 6202,
+      "family": "national_tiled_scale",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_camera_capture.py",
+      "git_blob_sha1": "ce9d70aa09a1dc29bbf49f91869a379de1f37e8c",
+      "bytes": 5246,
+      "family": "http_and_browser_pipeline",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_checkpoint_restore.py",
+      "git_blob_sha1": "fd942fa099c4c55bb083c40e6b1e6b9448d83930",
+      "bytes": 5641,
+      "family": "cache_provenance_and_restore",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_ci_checkpoint_replay.py",
+      "git_blob_sha1": "62a0e8f48f51cfa875e09b0ca11b57a5a913e5ef",
+      "bytes": 11204,
+      "family": "cache_provenance_and_restore",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_confidence.py",
+      "git_blob_sha1": "41b82d67436ed22acdc5eadbac3c9a35f979303d",
+      "bytes": 15928,
+      "family": "decision_controls",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_contracts.py",
+      "git_blob_sha1": "0867be2d646eb814e993ce16a37603ae3ced7631",
+      "bytes": 6646,
+      "family": "http_and_browser_pipeline",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_data_access.py",
+      "git_blob_sha1": "b4e4ef6170277fecf972439aa0756b5d5032c5b7",
+      "bytes": 12610,
+      "family": "acquisition_and_normalization",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_decision_invariants.py",
+      "git_blob_sha1": "16bb6edb9f2d05fb260df7439e7788ebe6f408df",
+      "bytes": 7859,
+      "family": "decision_controls",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_discovery.py",
+      "git_blob_sha1": "f075a2bf884d19ef65a15f53e6588d7bd3f570c7",
+      "bytes": 5920,
+      "family": "discovery_controls",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_evaluation.py",
+      "git_blob_sha1": "768f1d11719619bfe35a7935092e887a334869eb",
+      "bytes": 7585,
+      "family": "decision_controls",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_filters.py",
+      "git_blob_sha1": "34e8dcd849293b36c024bd04e38dc0d1b4aba3e5",
+      "bytes": 1754,
+      "family": "shared_clock_and_scoring",
+      "inspection": "source_read"
+    },
+    {
+      "path": "tests/test_finite_bridge_independent.py",
+      "git_blob_sha1": "4affadb93d89e113fa9724564888d25e85a29c4a",
+      "bytes": 6148,
+      "family": "finite_search_decision",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_finite_evidence_independent.py",
+      "git_blob_sha1": "9f0510233888db599d2911e1e53336562abe8934",
+      "bytes": 5680,
+      "family": "finite_search_decision",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_finite_search.py",
+      "git_blob_sha1": "fd6dbc485275087f4383f9a2f69d76902d947b0a",
+      "bytes": 6754,
+      "family": "finite_search_decision",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_index_geometry_invariants.py",
+      "git_blob_sha1": "86567ab85acff0f88bed3bf193c80df6a2be5e1e",
+      "bytes": 4315,
+      "family": "acquisition_and_normalization",
+      "inspection": "source_read"
+    },
+    {
+      "path": "tests/test_ingest_adsblol_day.py",
+      "git_blob_sha1": "af66bf1fbc14e1b47c7e02f93c857d3fbb900c2a",
+      "bytes": 3589,
+      "family": "acquisition_and_normalization",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_intake.py",
+      "git_blob_sha1": "fe9da8e7905cb60a8ca343892528eea4b33cc29d",
+      "bytes": 7395,
+      "family": "http_and_browser_pipeline",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_job_resume.py",
+      "git_blob_sha1": "80a65f14fe6d1d6de86191107e805da83f4b32a9",
+      "bytes": 2943,
+      "family": "resume_and_concurrency",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_locked_scoring.py",
+      "git_blob_sha1": "38f152bf725afdc05dea0d5975e8148bde356cf5",
+      "bytes": 1328,
+      "family": "shared_clock_and_scoring",
+      "inspection": "source_read"
+    },
+    {
+      "path": "tests/test_matching.py",
+      "git_blob_sha1": "bab299a1a6e0c0e75864b6b842b365310c57e4c3",
+      "bytes": 15735,
+      "family": "shared_clock_and_scoring",
+      "inspection": "source_read"
+    },
+    {
+      "path": "tests/test_methodology_verifier.py",
+      "git_blob_sha1": "528982b41d906363588327c8177367010475dbfb",
+      "bytes": 1492,
+      "family": "codec_timing",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_missing_velocity.py",
+      "git_blob_sha1": "0121fdbf2bb3dd0347661ff105fec1be88b23c00",
+      "bytes": 7890,
+      "family": "acquisition_and_normalization",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_motion_support.py",
+      "git_blob_sha1": "dd9a53e1c7ca09bba909d823e1741c121f424a71",
+      "bytes": 7399,
+      "family": "propagation_physics",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_mp3_smoke.py",
+      "git_blob_sha1": "dded78fbf2bf83788a2203d7cad2ac8ba15f3525",
+      "bytes": 900,
+      "family": "codec_timing",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_multi_event_renderer.py",
+      "git_blob_sha1": "990439ecca5cfce636ca6baa6c4456959687c09b",
+      "bytes": 1739,
+      "family": "multievent",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_physics.py",
+      "git_blob_sha1": "3071ded681df0d0a9c74534d12f4878ca7a7af6c",
+      "bytes": 3563,
+      "family": "propagation_physics",
+      "inspection": "source_read"
+    },
+    {
+      "path": "tests/test_pipeline_replay.py",
+      "git_blob_sha1": "07b0af9eed54346c671bed7bd468111876e88143",
+      "bytes": 3434,
+      "family": "cache_provenance_and_restore",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_provenance.py",
+      "git_blob_sha1": "c0d3cfc1e7d685ad44814a6427c0701637ad2af7",
+      "bytes": 8927,
+      "family": "cache_provenance_and_restore",
+      "inspection": "source_read"
+    },
+    {
+      "path": "tests/test_real_acoustic_screen.py",
+      "git_blob_sha1": "a61918da05a3afa8111acac5b66427ff3b3a6fff",
+      "bytes": 5717,
+      "family": "discovery_controls",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_real_acquisition_bounds.py",
+      "git_blob_sha1": "51057f0f63c9d205d73558a8dfd67a05ab78fa0f",
+      "bytes": 1712,
+      "family": "http_and_browser_pipeline",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_real_association_budget.py",
+      "git_blob_sha1": "1dc227314101885fbfb5552e7b741bb877fea2fa",
+      "bytes": 4355,
+      "family": "shared_clock_and_scoring",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_real_association_clock_window.py",
+      "git_blob_sha1": "da5943290e98b6812e04f5d439c674e38fa7b19c",
+      "bytes": 2909,
+      "family": "shared_clock_and_scoring",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_real_batch_ridge.py",
+      "git_blob_sha1": "5d9b403e3726b9a84b1db732b91ff4024dbaa4d8",
+      "bytes": 4552,
+      "family": "discovery_controls",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_real_clock_batch.py",
+      "git_blob_sha1": "28e4bc8e959796defddb8e6f22b124d81a1f8fcf",
+      "bytes": 4665,
+      "family": "shared_clock_and_scoring",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_real_cpa_edge.py",
+      "git_blob_sha1": "8a2c7352f240bbbaceedb619c8601b076a469163",
+      "bytes": 3675,
+      "family": "national_tiled_scale",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_real_cpa_spatial_sieve.py",
+      "git_blob_sha1": "9d8bc87f42feb5dce41e4f08d7fa51ee89825739",
+      "bytes": 3768,
+      "family": "national_tiled_scale",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_real_empty_tile.py",
+      "git_blob_sha1": "ead1e2f15affa89029ec62dc8ce34ab07a27ed9c",
+      "bytes": 2347,
+      "family": "national_tiled_scale",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_real_fixed_clock_filter.py",
+      "git_blob_sha1": "16cf377de5dabab820a85f9cb1fd80fdfff9650a",
+      "bytes": 2717,
+      "family": "shared_clock_and_scoring",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_real_fixed_clock_pair_screen.py",
+      "git_blob_sha1": "d9203dff9eb8013c4d115abb220401f5bb4b3a26",
+      "bytes": 3604,
+      "family": "shared_clock_and_scoring",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_real_fixed_clock_single_trial.py",
+      "git_blob_sha1": "b168cefafc3bfb68e748a553075eeb7684e8af36",
+      "bytes": 2196,
+      "family": "shared_clock_and_scoring",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_real_flight_selection.py",
+      "git_blob_sha1": "c2378c79422d4acc5d4c1be3559daa8ba70a2cfb",
+      "bytes": 7235,
+      "family": "shared_clock_and_scoring",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_real_index_staging.py",
+      "git_blob_sha1": "3cd1f66dba08f158df353dba12a5bd5271ed9097",
+      "bytes": 829,
+      "family": "national_tiled_scale",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_real_pair_fixed_clock.py",
+      "git_blob_sha1": "867eec18e1ab892269b837ab42de510d58925833",
+      "bytes": 1721,
+      "family": "shared_clock_and_scoring",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_real_parallel_index.py",
+      "git_blob_sha1": "f3a96c494cebbb9dc1f643f763d7f58135908c40",
+      "bytes": 1792,
+      "family": "national_tiled_scale",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_real_parallel_retention.py",
+      "git_blob_sha1": "48f389faefe90670efc3313cf4f72eb5a748d157",
+      "bytes": 19960,
+      "family": "finite_search_decision",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_real_parallel_terrain_adoption.py",
+      "git_blob_sha1": "f54d15862457630bb89c10684f8ef9ee4068be1a",
+      "bytes": 1462,
+      "family": "acquisition_and_normalization",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_real_retention_floor.py",
+      "git_blob_sha1": "071686302881310498a165346b4679b4c8bdc55d",
+      "bytes": 1428,
+      "family": "finite_search_decision",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_real_score_ceiling_validation.py",
+      "git_blob_sha1": "86c6cf8bfdbce17922e9ee130a98b6071f0cd3b8",
+      "bytes": 5406,
+      "family": "finite_search_decision",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_real_tiled_cpa_edge.py",
+      "git_blob_sha1": "dd9a1c9e8b81b1a0020b4132b9b90a9bd125bf1d",
+      "bytes": 3493,
+      "family": "national_tiled_scale",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_real_upload_verification.py",
+      "git_blob_sha1": "dd77b1346a1c21d401572c15d763539fc2365f9a",
+      "bytes": 2657,
+      "family": "http_and_browser_pipeline",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_ridge_fit_cache.py",
+      "git_blob_sha1": "4f1a6b5763dd30db7997e3dc27ec458b858de087",
+      "bytes": 7864,
+      "family": "shared_clock_and_scoring",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_scoring_assessment.py",
+      "git_blob_sha1": "744594289bd5e9655bb54efa40bdc67585f04afb",
+      "bytes": 4195,
+      "family": "shared_clock_and_scoring",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_search_invariants.py",
+      "git_blob_sha1": "043e8fc8314f2e4c55300d1f450330a927f41001",
+      "bytes": 2929,
+      "family": "shared_clock_and_scoring",
+      "inspection": "source_read"
+    },
+    {
+      "path": "tests/test_service.py",
+      "git_blob_sha1": "246de826bb11664dc9d41d149bc200461f824955",
+      "bytes": 5822,
+      "family": "http_and_browser_pipeline",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_terrain.py",
+      "git_blob_sha1": "9c9cfda5b7268af2c98e54ea7ceb908527388ba3",
+      "bytes": 890,
+      "family": "acquisition_and_normalization",
+      "inspection": "source_read"
+    },
+    {
+      "path": "tests/test_tiled_search.py",
+      "git_blob_sha1": "c1e982ca26f42a4908497a56b3ffa9e181a9a868",
+      "bytes": 21508,
+      "family": "national_tiled_scale",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_tiled_support.py",
+      "git_blob_sha1": "378f79e1d2079b16a97f3be4be3f81ec93f735f6",
+      "bytes": 12903,
+      "family": "national_tiled_scale",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_trajectory_motion_audit.py",
+      "git_blob_sha1": "258e73d264d9182c34fac53185c8e6d77ef45464",
+      "bytes": 4296,
+      "family": "propagation_physics",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_unknown_score_bounds.py",
+      "git_blob_sha1": "fe0d6953d53b0b67abec0981be96934fa5941c30",
+      "bytes": 8356,
+      "family": "finite_search_decision",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_upload_concurrency.py",
+      "git_blob_sha1": "e1801b443b813ad83d81c1ddf77a8bd4972bb6ae",
+      "bytes": 3981,
+      "family": "resume_and_concurrency",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_verify_bounded_search.py",
+      "git_blob_sha1": "6b62eb261a9604e23925221ad7dc3f180ae1f4b3",
+      "bytes": 12109,
+      "family": "national_tiled_scale",
+      "inspection": "filename_catalogued_only"
+    },
+    {
+      "path": "tests/test_verify_upload_http.py",
+      "git_blob_sha1": "8293873fa9ead4499ba8a7a7f7d37e736dc2b611",
+      "bytes": 54081,
+      "family": "http_and_browser_pipeline",
+      "inspection": "filename_catalogued_only"
+    }
+  ],
+  "upstream_benchmark_scripts": [
+    {
+      "path": "scripts/benchmark_acoustic_sieve.py",
+      "bytes": 6812,
+      "git_blob_sha1": "5d87f6975b90a6729eec3df758e28efe4aaaabd9",
+      "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_acoustic_sieve.py"
+    },
+    {
+      "path": "scripts/benchmark_aerosonic_scan.py",
+      "bytes": 4341,
+      "git_blob_sha1": "916eff659cbefb08e635744e2ae269ae4f70ce30",
+      "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_aerosonic_scan.py"
+    },
+    {
+      "path": "scripts/benchmark_finite_retention.py",
+      "bytes": 4094,
+      "git_blob_sha1": "6e5aa052a2f3706521013cef3e9d2546bc9cce56",
+      "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_finite_retention.py"
+    },
+    {
+      "path": "scripts/benchmark_matching.py",
+      "bytes": 4367,
+      "git_blob_sha1": "fe95b24c64b8d7a49b16a3da1e3496925b478b0e",
+      "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_matching.py"
+    },
+    {
+      "path": "scripts/benchmark_nasa_session.py",
+      "bytes": 23445,
+      "git_blob_sha1": "16dca490a3585ead8cd2a1d2d9f36cc2af06ca12",
+      "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_nasa_session.py"
+    },
+    {
+      "path": "scripts/benchmark_national_search.py",
+      "bytes": 2496,
+      "git_blob_sha1": "5bba55a260c3a93762edf1088cd3ac81ca4650ca",
+      "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_national_search.py"
+    },
+    {
+      "path": "scripts/benchmark_real_clock_batch.py",
+      "bytes": 3245,
+      "git_blob_sha1": "3a772f4df8f129b543ad74e43d915e460ee56fbc",
+      "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_real_clock_batch.py"
+    },
+    {
+      "path": "scripts/benchmark_real_discovery.py",
+      "bytes": 4418,
+      "git_blob_sha1": "4f756e0e87219400a8ba6f8e338506dee5bee220",
+      "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_real_discovery.py"
+    },
+    {
+      "path": "scripts/benchmark_real_features.py",
+      "bytes": 3333,
+      "git_blob_sha1": "bc28ab4fcdd1ae6c53db858f837efc031db9439a",
+      "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_real_features.py"
+    },
+    {
+      "path": "scripts/benchmark_real_tile_workers.py",
+      "bytes": 5561,
+      "git_blob_sha1": "798f41c3ff77363530bf4f6eddc3b237fa17701e",
+      "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_real_tile_workers.py"
+    },
+    {
+      "path": "scripts/benchmark_ridge_fit_reuse.py",
+      "bytes": 5324,
+      "git_blob_sha1": "9c3b7b16b18f759c99b7c9c2d6abb2deee855677",
+      "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_ridge_fit_reuse.py"
+    },
+    {
+      "path": "scripts/benchmark_risoux_scan.py",
+      "bytes": 6644,
+      "git_blob_sha1": "c2deef8ae84be000eea0e87490bd51ffac9fb6de",
+      "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_risoux_scan.py"
+    },
+    {
+      "path": "scripts/benchmark_vireo_scan.py",
+      "bytes": 4934,
+      "git_blob_sha1": "ad23441fba3a03b75276f1330ab23e7affb24f3f",
+      "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_vireo_scan.py"
+    },
+    {
+      "path": "scripts/benchmark_wsu_session.py",
+      "bytes": 16301,
+      "git_blob_sha1": "d32c253a65ccdcf43860f5e64ff8c8c21fb8f9cf",
+      "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_wsu_session.py"
+    }
+  ],
+  "recommendation": "Next implement automatic ridge/event discovery plus harmonic grouping, then validate it on the real40-recording corpus while preserving abstentions; keep GUI downstream of reproducible producer behavior.",
+  "status_updated_after_native_integration": true
+}

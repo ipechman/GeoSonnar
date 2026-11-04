@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "source_input": "output\\regional\\search_input.json",
+  "source_sha256": "cf371ed8ca8a0990ca1c1851a35dc2e6ef482c38d643703e9ca48158c7f67937",
+  "fixture": "benchmarks\\fixtures\\simplified-reference-pair-incomplete.json",
+  "fixture_sha256": "5ea64d13ac425a8fb40af92f7c6275ff62479fe7e35d22f2c5422ef4f8fd94d2",
+  "selection_rule": "All source track parts whose leading ICAO24 identifier is a1dfeb or ace391, sorted by full track ID. No position/time edits, no truncation, no interpolation, no parameter changes.",
+  "track_count": 10,
+  "trajectory_vertices": 195,
+  "observer_count": 483,
+  "ridge_sample_counts": [
+    189,
+    105
+  ],
+  "selected_track_ids": [
+    "a1dfeb:2026-09-08T19:09:17Z#path0#part0",
+    "a1dfeb:2026-09-08T19:09:17Z#path0#part2",
+    "a1dfeb:2026-09-08T19:09:17Z#path0#part3",
+    "a1dfeb:2026-09-08T19:09:17Z#path0#part4",
+    "a1dfeb:2026-09-08T20:32:04Z#path0#part0",
+    "a1dfeb:2026-09-08T20:32:04Z#path0#part1",
+    "a1dfeb:2026-09-08T20:32:04Z#path0#part2",
+    "a1dfeb:2026-09-08T20:32:04Z#path0#part4",
+    "ace391:2026-09-08T21:00:33Z#path0#part0",
+    "ace391:2026-09-08T22:12:02Z#path0#part0"
+  ],
+  "scope": "Source-informed real-data support contract; no independent accuracy claim."
+}

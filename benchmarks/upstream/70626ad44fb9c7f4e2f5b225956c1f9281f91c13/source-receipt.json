@@ -1,0 +1,209 @@
+{
+  "schema_version": 1,
+  "upstream_repository": "1337isnot1337/DOPPLERGEIST",
+  "upstream_commit": "70626ad44fb9c7f4e2f5b225956c1f9281f91c13",
+  "retrieval": "GitHub connector fetch; UTF-8 source contents; no upstream code executed",
+  "files": [
+    {
+      "source_path": "benchmarks/decision-inputs.json",
+      "local_path": "decision-inputs.json",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/benchmarks/decision-inputs.json",
+      "git_blob_sha1": "cfb8e13c5c9ad5ef688d44dd81d7177b8e926edb",
+      "expected_bytes": 39437,
+      "bytes": 39437,
+      "sha256": "ec03004a8f650b78dad113e954fbb90af4517ff855adffedc4d06fb96ab4025f",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "benchmarks/truth/decision-labels.json",
+      "local_path": "truth/decision-labels.json",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/benchmarks/truth/decision-labels.json",
+      "git_blob_sha1": "d9876e743588121260d1f6d7d0f11cc8a400f3d5",
+      "expected_bytes": 2205,
+      "bytes": 2205,
+      "sha256": "2aed460a842b0e3cc9bbcfab63f1fc8e3d113bc75f7778238933e84ec68da1dd",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "tests/data/reference-cpa-real.json",
+      "local_path": "reference-cpa-real.json",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/data/reference-cpa-real.json",
+      "git_blob_sha1": "429fccf666e8066b5e32ec2434545037e3e05d64",
+      "expected_bytes": 7778,
+      "bytes": 7778,
+      "sha256": "7fc9584ac842bc83164d59c2c9d68d9d191d3dbe925dbf5181f3be951084e934",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "tests/data/reference-retention-real.json",
+      "local_path": "reference-retention-real.json",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/data/reference-retention-real.json",
+      "git_blob_sha1": "2b0eef39e096d3f2a904a70a01d94f7090056e14",
+      "expected_bytes": 3085,
+      "bytes": 3085,
+      "sha256": "30dc9288f2c370234dd0d60f0697fa3a153038679309ed8bfdea957648117189",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "LICENSE",
+      "local_path": "LICENSE",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/LICENSE",
+      "git_blob_sha1": "85b1e05a2c6cafdd7878f3abcb36426026f3f1f8",
+      "expected_bytes": 1068,
+      "bytes": 1068,
+      "sha256": "d67bb714970197d5020e9772d7234ba4b214411518a1950ef1ea5f26ab2393f4",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "benchmarks/README.md",
+      "local_path": "README-benchmarks.md",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/benchmarks/README.md",
+      "git_blob_sha1": "836b1df047f71e79e80247e9db048b2b3655f447",
+      "expected_bytes": 22232,
+      "bytes": 22232,
+      "sha256": "b6ad8177adc9bcbdc5c2912a19633598339fce27800d445c93c9dd64707d5e1d",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "benchmarks/frozen-manifest.json",
+      "local_path": "frozen-manifest.json",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/benchmarks/frozen-manifest.json",
+      "git_blob_sha1": "c84473c465f8c02c009053961b1756e1817fef36",
+      "expected_bytes": 6440,
+      "bytes": 6440,
+      "sha256": "b14fd8139cd7feb6a4f09cfbdfdfecbea046f69306b2e6164dbcf860a4e791d0",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "benchmarks/truth/frozen-labels.json",
+      "local_path": "truth/frozen-labels.json",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/benchmarks/truth/frozen-labels.json",
+      "git_blob_sha1": "90faae9496c501df36311efd880783cfb5bb620c",
+      "expected_bytes": 10890,
+      "bytes": 10890,
+      "sha256": "a56c2e839c0cc1cd528fac2fea648e6b0b532d9e00197c8dd15ddf4cf44e41b1",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "docs/CONFIDENCE.md",
+      "local_path": "docs/CONFIDENCE.md",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/docs/CONFIDENCE.md",
+      "git_blob_sha1": "0f0b2696508b4706a58c3f4cf4f79b872967ae1d",
+      "expected_bytes": 8630,
+      "bytes": 8630,
+      "sha256": "0235743a41e719ed205923b0aeb3778fd32c5570685540ec2e8f6b552dc0bf5f",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "docs/FINITE_SEARCH_DECISION.md",
+      "local_path": "docs/FINITE_SEARCH_DECISION.md",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/docs/FINITE_SEARCH_DECISION.md",
+      "git_blob_sha1": "abbee53ecafa6ceea173b852c19a0e8d382a0dde",
+      "expected_bytes": 8872,
+      "bytes": 8872,
+      "sha256": "ac319198f39f2eceef5c9cddde70d4f5379ebf787c0a79d00e4cc5f2f67d0b6b",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "docs/E2E_VERIFICATION.md",
+      "local_path": "docs/E2E_VERIFICATION.md",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/docs/E2E_VERIFICATION.md",
+      "git_blob_sha1": "f4aff386524ec6d17e1b46fcbcb46f5b1c0b94f3",
+      "expected_bytes": 3202,
+      "bytes": 3202,
+      "sha256": "a1503e8a7367703ffb4a791ec1c78304b06f1919b9c4ff8a4cdbb6675fad3d8d",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "docs/MOTION_SUPPORT.md",
+      "local_path": "docs/MOTION_SUPPORT.md",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/docs/MOTION_SUPPORT.md",
+      "git_blob_sha1": "42593ddbe529ce62c20a50c4354906b5949557af",
+      "expected_bytes": 4035,
+      "bytes": 4035,
+      "sha256": "c0fa8ec8bc3b1ec94845819dda1df5aac6021278dee259d9045f9345d705e8bd",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "benchmarks/nasa-session-cases-20261103.json",
+      "local_path": "nasa-session-cases.json",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/benchmarks/nasa-session-cases-20261103.json",
+      "git_blob_sha1": "3af5cbdfa766d8d70c7d0831028f131481a8845e",
+      "expected_bytes": 3024,
+      "bytes": 3024,
+      "sha256": "f4f0bcf078f00c47ba11cc0cf532639eef659d9944cc0149b1d78231ff80402e",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "evidence/configs/source/reproduce-faint-alltypes-local.json",
+      "local_path": "configs/source/reproduce-faint-alltypes-local.json",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/evidence/configs/source/reproduce-faint-alltypes-local.json",
+      "git_blob_sha1": "63ce059b9422e42f2b069ed5b49fd2abc2611772",
+      "expected_bytes": 1056,
+      "bytes": 1056,
+      "sha256": "49256b88aa7e9bbbc9d8df714a101bc8814946098e2236eb1024061085890608",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "evidence/results/reference-faint-alltypes-local/event-1.csv",
+      "local_path": "results/reference-faint-alltypes-local/event-1.csv",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/evidence/results/reference-faint-alltypes-local/event-1.csv",
+      "git_blob_sha1": "3687296f2e30434180f8b5c1e0856fc11ab31672",
+      "expected_bytes": 17502,
+      "bytes": 17502,
+      "sha256": "8d4ac720d8f24a8fa6286bf92034ce0d60f9aae1eec1206ebfef42a95276fc70",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "evidence/results/reference-faint-alltypes-local/measured-events.json",
+      "local_path": "results/reference-faint-alltypes-local/measured-events.json",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/evidence/results/reference-faint-alltypes-local/measured-events.json",
+      "git_blob_sha1": "c271bf1c812393ceee4ee2cd3315febe9878c6ab",
+      "expected_bytes": 347,
+      "bytes": 347,
+      "sha256": "e424d65cc980fd5f25c13ed3742f9c06c9c53f9c3004fb38b409376a648d9939",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "evidence/results/reference-faint-alltypes-local/report.json",
+      "local_path": "results/reference-faint-alltypes-local/report.json",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/evidence/results/reference-faint-alltypes-local/report.json",
+      "git_blob_sha1": "dd56ef0e6b6edb974ad64a55e51c77271ee68026",
+      "expected_bytes": 3429,
+      "bytes": 3429,
+      "sha256": "25ad9c88a0ba4b8e3e00e9c3443fb7dd7f7e11545c35b6592414e0369573092d",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "evidence/results/reference-faint-alltypes-local/evaluation.json",
+      "local_path": "results/reference-faint-alltypes-local/evaluation.json",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/evidence/results/reference-faint-alltypes-local/evaluation.json",
+      "git_blob_sha1": "17a161868ec21ab585ada9b26b9b25012ecc1d36",
+      "expected_bytes": 335,
+      "bytes": 335,
+      "sha256": "45435dd3ee385eb1ea97c86578b8a0a3d3518828b5b042500e394f5beb6eb599",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "evidence/configs/source/reproduce-local.json",
+      "local_path": "configs/source/reproduce-local.json",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/evidence/configs/source/reproduce-local.json",
+      "git_blob_sha1": "a8ece95bffdc8cc6f6b2937ca619b07103e189d9",
+      "expected_bytes": 1450,
+      "bytes": 1450,
+      "sha256": "d397fa1102d33af564f1414141a879d8394be7a1d04b941e3b9e88915646b541",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "evidence/results/real-feature-benchmark/cases.json",
+      "local_path": "results/real-feature-benchmark/cases.json",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/evidence/results/real-feature-benchmark/cases.json",
+      "git_blob_sha1": "e77c24e421873eb35593c45831fd2cfae11b8a59",
+      "expected_bytes": 41114,
+      "bytes": 41114,
+      "sha256": "0df7ca118f5946e86339b8086616b8fb8e865714887e609d6238f72c7ba9ee8b",
+      "git_blob_verified": true
+    }
+  ],
+  "all_git_blobs_verified": true
+}

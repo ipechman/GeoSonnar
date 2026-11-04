@@ -1,0 +1,326 @@
+{
+  "schema_version": 1,
+  "packages": [
+    {
+      "name": "accesskit",
+      "version": "0.24.1",
+      "reason": "The published crate omits its upstream license text. Retrieved from the exact repository revision in the published crate's .cargo_vcs_info.json. Includes the Chromium license referenced by common/src/lib.rs and the upstream author list.",
+      "files": [
+        {
+          "path": "rust-supplements/accesskit-a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE-APACHE",
+          "source_url": "https://raw.githubusercontent.com/AccessKit/accesskit/a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "rust-supplements/accesskit-a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE-MIT",
+          "source_url": "https://raw.githubusercontent.com/AccessKit/accesskit/a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "rust-supplements/accesskit-a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE.chromium",
+          "source_url": "https://raw.githubusercontent.com/AccessKit/accesskit/a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE.chromium",
+          "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308"
+        },
+        {
+          "path": "rust-supplements/accesskit-a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/AUTHORS",
+          "source_url": "https://raw.githubusercontent.com/AccessKit/accesskit/a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/AUTHORS",
+          "sha256": "3bab8c36f6a85657504aaefb37c7ff34e29b8c917290f3d28a1f0920c992e502"
+        }
+      ]
+    },
+    {
+      "name": "accesskit_consumer",
+      "version": "0.35.0",
+      "reason": "The published crate omits its upstream license text. Retrieved from the exact repository revision in the published crate's .cargo_vcs_info.json. Includes the Chromium license referenced by the crate's source headers and the upstream author list.",
+      "files": [
+        {
+          "path": "rust-supplements/accesskit-1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-APACHE",
+          "source_url": "https://raw.githubusercontent.com/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "rust-supplements/accesskit-1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-MIT",
+          "source_url": "https://raw.githubusercontent.com/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "rust-supplements/accesskit-1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE.chromium",
+          "source_url": "https://raw.githubusercontent.com/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE.chromium",
+          "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308"
+        },
+        {
+          "path": "rust-supplements/accesskit-1bbcf100942bac96c2c3a4a91cb67b0b20201a24/AUTHORS",
+          "source_url": "https://raw.githubusercontent.com/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/AUTHORS",
+          "sha256": "3bab8c36f6a85657504aaefb37c7ff34e29b8c917290f3d28a1f0920c992e502"
+        }
+      ]
+    },
+    {
+      "name": "accesskit_windows",
+      "version": "0.32.1",
+      "reason": "The published crate omits its upstream license text. Retrieved from the exact repository revision in the published crate's .cargo_vcs_info.json. Includes the Chromium license referenced by the crate's source headers and the upstream author list.",
+      "files": [
+        {
+          "path": "rust-supplements/accesskit-1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-APACHE",
+          "source_url": "https://raw.githubusercontent.com/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "rust-supplements/accesskit-1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-MIT",
+          "source_url": "https://raw.githubusercontent.com/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "rust-supplements/accesskit-1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE.chromium",
+          "source_url": "https://raw.githubusercontent.com/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE.chromium",
+          "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308"
+        },
+        {
+          "path": "rust-supplements/accesskit-1bbcf100942bac96c2c3a4a91cb67b0b20201a24/AUTHORS",
+          "source_url": "https://raw.githubusercontent.com/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/AUTHORS",
+          "sha256": "3bab8c36f6a85657504aaefb37c7ff34e29b8c917290f3d28a1f0920c992e502"
+        }
+      ]
+    },
+    {
+      "name": "accesskit_winit",
+      "version": "0.32.2",
+      "reason": "The published crate omits its upstream license text. Retrieved from the exact repository revision in the published crate's .cargo_vcs_info.json. This crate declares Apache-2.0; includes the upstream author list.",
+      "files": [
+        {
+          "path": "rust-supplements/accesskit-1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-APACHE",
+          "source_url": "https://raw.githubusercontent.com/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "rust-supplements/accesskit-1bbcf100942bac96c2c3a4a91cb67b0b20201a24/AUTHORS",
+          "source_url": "https://raw.githubusercontent.com/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/AUTHORS",
+          "sha256": "3bab8c36f6a85657504aaefb37c7ff34e29b8c917290f3d28a1f0920c992e502"
+        }
+      ]
+    },
+    {
+      "name": "clipboard-win",
+      "version": "5.4.3",
+      "reason": "The published crate omits its upstream license text. Retrieved from the exact repository revision in the published crate's .cargo_vcs_info.json.",
+      "files": [
+        {
+          "path": "rust-supplements/clipboard-win-ed27008ae5d1f10cfbb266de039f0fb35fd05a56/LICENSE",
+          "source_url": "https://raw.githubusercontent.com/DoumanAsh/clipboard-win/ed27008ae5d1f10cfbb266de039f0fb35fd05a56/LICENSE",
+          "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+        }
+      ]
+    },
+    {
+      "name": "ecolor",
+      "version": "0.35.0",
+      "reason": "The published crate omits its upstream license text. Retrieved from the exact repository revision in the published crate's .cargo_vcs_info.json.",
+      "files": [
+        {
+          "path": "rust-supplements/egui-6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-APACHE",
+          "source_url": "https://raw.githubusercontent.com/emilk/egui/6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+        },
+        {
+          "path": "rust-supplements/egui-6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-MIT",
+          "source_url": "https://raw.githubusercontent.com/emilk/egui/6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-MIT",
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+        }
+      ]
+    },
+    {
+      "name": "eframe",
+      "version": "0.35.0",
+      "reason": "The published crate omits its upstream license text. Retrieved from the exact repository revision in the published crate's .cargo_vcs_info.json.",
+      "files": [
+        {
+          "path": "rust-supplements/egui-6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-APACHE",
+          "source_url": "https://raw.githubusercontent.com/emilk/egui/6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+        },
+        {
+          "path": "rust-supplements/egui-6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-MIT",
+          "source_url": "https://raw.githubusercontent.com/emilk/egui/6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-MIT",
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+        }
+      ]
+    },
+    {
+      "name": "egui",
+      "version": "0.35.0",
+      "reason": "The published crate omits its upstream license text. Retrieved from the exact repository revision in the published crate's .cargo_vcs_info.json.",
+      "files": [
+        {
+          "path": "rust-supplements/egui-6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-APACHE",
+          "source_url": "https://raw.githubusercontent.com/emilk/egui/6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+        },
+        {
+          "path": "rust-supplements/egui-6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-MIT",
+          "source_url": "https://raw.githubusercontent.com/emilk/egui/6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-MIT",
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+        }
+      ]
+    },
+    {
+      "name": "egui-wgpu",
+      "version": "0.35.0",
+      "reason": "The published crate omits its upstream license text. Its .cargo_vcs_info.json identifies the same exact egui repository revision as these already verified license documents (6f15dc0e16b26edce1fc2a05212eaf7e749c1d05).",
+      "files": [
+        {
+          "path": "rust-supplements/egui-6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-APACHE",
+          "source_url": "https://raw.githubusercontent.com/emilk/egui/6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+        },
+        {
+          "path": "rust-supplements/egui-6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-MIT",
+          "source_url": "https://raw.githubusercontent.com/emilk/egui/6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-MIT",
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+        }
+      ]
+    },
+    {
+      "name": "egui-winit",
+      "version": "0.35.0",
+      "reason": "The published crate omits its upstream license text. Retrieved from the exact repository revision in the published crate's .cargo_vcs_info.json.",
+      "files": [
+        {
+          "path": "rust-supplements/egui-6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-APACHE",
+          "source_url": "https://raw.githubusercontent.com/emilk/egui/6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+        },
+        {
+          "path": "rust-supplements/egui-6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-MIT",
+          "source_url": "https://raw.githubusercontent.com/emilk/egui/6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-MIT",
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+        }
+      ]
+    },
+    {
+      "name": "egui_glow",
+      "version": "0.35.0",
+      "reason": "The published crate omits its upstream license text. Retrieved from the exact repository revision in the published crate's .cargo_vcs_info.json.",
+      "files": [
+        {
+          "path": "rust-supplements/egui-6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-APACHE",
+          "source_url": "https://raw.githubusercontent.com/emilk/egui/6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+        },
+        {
+          "path": "rust-supplements/egui-6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-MIT",
+          "source_url": "https://raw.githubusercontent.com/emilk/egui/6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-MIT",
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+        }
+      ]
+    },
+    {
+      "name": "emath",
+      "version": "0.35.0",
+      "reason": "The published crate omits its upstream license text. Retrieved from the exact repository revision in the published crate's .cargo_vcs_info.json.",
+      "files": [
+        {
+          "path": "rust-supplements/egui-6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-APACHE",
+          "source_url": "https://raw.githubusercontent.com/emilk/egui/6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+        },
+        {
+          "path": "rust-supplements/egui-6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-MIT",
+          "source_url": "https://raw.githubusercontent.com/emilk/egui/6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-MIT",
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+        }
+      ]
+    },
+    {
+      "name": "epaint",
+      "version": "0.35.0",
+      "reason": "The published crate omits its upstream license text. Retrieved from the exact repository revision in the published crate's .cargo_vcs_info.json.",
+      "files": [
+        {
+          "path": "rust-supplements/egui-6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-APACHE",
+          "source_url": "https://raw.githubusercontent.com/emilk/egui/6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+        },
+        {
+          "path": "rust-supplements/egui-6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-MIT",
+          "source_url": "https://raw.githubusercontent.com/emilk/egui/6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-MIT",
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+        }
+      ]
+    },
+    {
+      "name": "epaint_default_fonts",
+      "version": "0.35.0",
+      "reason": "The published crate includes its font-specific notices but omits the MIT/Apache-2.0 crate license texts. Retrieved from the exact repository revision in the published crate's .cargo_vcs_info.json. These supplement, and do not replace, the bundled OFL-1.1 and Ubuntu-font-1.0 font notices.",
+      "files": [
+        {
+          "path": "rust-supplements/egui-6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-APACHE",
+          "source_url": "https://raw.githubusercontent.com/emilk/egui/6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+        },
+        {
+          "path": "rust-supplements/egui-6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-MIT",
+          "source_url": "https://raw.githubusercontent.com/emilk/egui/6f15dc0e16b26edce1fc2a05212eaf7e749c1d05/LICENSE-MIT",
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+        }
+      ]
+    },
+    {
+      "name": "gl_generator",
+      "version": "0.14.0",
+      "reason": "The published crate omits its upstream license text. Retrieved from the exact repository revision in the published crate's .cargo_vcs_info.json. The repository moved from brendanzab/gl-rs to rust-windowing/gl-rs; the revision is unchanged.",
+      "files": [
+        {
+          "path": "rust-supplements/gl-rs-ea503e8d5fb6d73c6030e6191ce738cd3bf3433e/LICENSE",
+          "source_url": "https://raw.githubusercontent.com/rust-windowing/gl-rs/ea503e8d5fb6d73c6030e6191ce738cd3bf3433e/LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        }
+      ]
+    },
+    {
+      "name": "hexf-parse",
+      "version": "0.2.1",
+      "reason": "Neither the published crate nor the repository tree at its .cargo_vcs_info.json revision includes a standalone license document. The exact parse/Cargo.toml declares CC0-1.0. Preserve that declaration plus the official Creative Commons CC0 1.0 text from the Creative Commons legal-tools repository, verified against immutable Git blob 0e259d42c996742e9e3cba14c677129b2c1b6311. The legal text is supplied by Creative Commons, not represented as a missing hexf LICENSE file.",
+      "files": [
+        {
+          "path": "rust-supplements/hexf-4225763d744183d720f575ae96d04161b4d08ea0/Cargo.toml",
+          "source_url": "https://raw.githubusercontent.com/lifthrasiir/hexf/4225763d744183d720f575ae96d04161b4d08ea0/parse/Cargo.toml",
+          "sha256": "4a56dbdbc12054fd33b7a2634a45cbbe6fe12f5e6f4081002cbfa527f7220c70"
+        },
+        {
+          "path": "rust-supplements/hexf-4225763d744183d720f575ae96d04161b4d08ea0/CC0-1.0.txt",
+          "source_url": "https://api.github.com/repos/creativecommons/cc-legal-tools-data/git/blobs/0e259d42c996742e9e3cba14c677129b2c1b6311",
+          "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+        }
+      ]
+    },
+    {
+      "name": "khronos_api",
+      "version": "3.1.0",
+      "reason": "The published crate omits its upstream license text. Retrieved from the exact repository revision in the published crate's .cargo_vcs_info.json. The repository moved from brendanzab/gl-rs to rust-windowing/gl-rs; the revision is unchanged.",
+      "files": [
+        {
+          "path": "rust-supplements/gl-rs-f150967b1c44ae888e6676f93f639ebc82771bdc/LICENSE",
+          "source_url": "https://raw.githubusercontent.com/rust-windowing/gl-rs/f150967b1c44ae888e6676f93f639ebc82771bdc/LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        }
+      ]
+    },
+    {
+      "name": "profiling",
+      "version": "1.0.18",
+      "reason": "The published crate omits its upstream license text. Retrieved from the exact repository revision in the published crate's .cargo_vcs_info.json.",
+      "files": [
+        {
+          "path": "rust-supplements/profiling-8271551172eb6fa4cba47369aedd93790c623df9/LICENSE-APACHE",
+          "source_url": "https://raw.githubusercontent.com/aclysma/profiling/8271551172eb6fa4cba47369aedd93790c623df9/LICENSE-APACHE",
+          "sha256": "10d30a673cd5e9349bdc02aeb48f14b3386d27d0da32df8f0a555d4aa16aa551"
+        },
+        {
+          "path": "rust-supplements/profiling-8271551172eb6fa4cba47369aedd93790c623df9/LICENSE-MIT",
+          "source_url": "https://raw.githubusercontent.com/aclysma/profiling/8271551172eb6fa4cba47369aedd93790c623df9/LICENSE-MIT",
+          "sha256": "c8167fdeeed46d3f244d3f85c5bf998ce889343691c32be2c61a8bc4b5c08333"
+        }
+      ]
+    }
+  ]
+}

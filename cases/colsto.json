@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "case_id": "colsto-september-8",
+  "input": "../Known Videos with coordinates/Unknown location - raw audio - colsto (144p, h264).mp4",
+  "recording_date": "2026-09-08",
+  "date_status": "Working date supplied by user as 'should be 2026'; spoken day is September 8. Verify against flight matches.",
+  "original_time_offset_s": 3600,
+  "events": [
+    { "event_id": "event_1", "start_s": 2090, "end_s": 2278, "heard_cpa_s": 2152 },
+    { "event_id": "event_2", "start_s": 3030, "end_s": 3134, "heard_cpa_s": 3073 }
+  ],
+  "search_input": "../output/reference/search_input.json",
+  "notes": [
+    "Guide times 5752 and 6673 are in the original recording; subtract 3600 for this downloaded clip.",
+    "The source video shows a filename ending 60to120min; the matching curve pair supports this crop interpretation.",
+    "Guide anchors are approximate. Independent ideal-pass fits give CPAs about 2156.54 and 3077.54 seconds.",
+    "An acoustic fit, candidate ranking and independent validation are required before claiming the location is verified.",
+    "The guide describes a video demonstration, not a supplied peer-reviewed paper or a complete dataset."
+  ]
+}

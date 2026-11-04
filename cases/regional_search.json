@@ -1,0 +1,27 @@
+{
+  "normalized_tracks": "../output/regional/normalized.json",
+  "event_files": ["colsto_event1.json", "colsto_event2.json"],
+  "observer_bounds": [40.83, -73.59, 40.92, -73.46],
+  "grid_spacing_m": 500,
+  "observer_ellipsoid_height_m": 0,
+  "pair_config": {
+    "event1_cpa_recording_s": 2152,
+    "shared_shifts_s": [-5,-4,-3,-2,-1,0,1,2,3,4,5],
+    "clock_offset_bounds_s": [0,86400],
+    "model": { "sound_speed_mps": 343, "max_gap_s": 180 }
+  },
+  "coarse_bounds": [
+    { "speed_mps": [130,154], "slant_distance_m": [4300,7800] },
+    { "speed_mps": [88,110], "slant_distance_m": [1390,4690] }
+  ],
+  "measured_separation_s": 921,
+  "separation_tolerance_s": 10,
+  "provenance": [
+    "Diagnostic regional search informed by the source's reported Oyster Bay area. This is not a blind national search.",
+    "Working date September 8, 2026 was supplied by user and is supported by the later DOPPLERGEIST reference dataset.",
+    "Observed ridge points were selected before consulting predicted flight curves.",
+    "Coarse speed and distance ranges from replication guide, page 4; 10-second separation tolerance is an implementation choice.",
+    "500m diagnostic grid is coarser than the guide's 200m/100m production search; all rows retained for later refinement.",
+    "Simplified pressure-altitude tracks and a flat observer height are diagnostic approximations, not verification-grade altitude treatment."
+  ]
+}

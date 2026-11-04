@@ -1,0 +1,10 @@
+{
+  "source_label": "Official ADSB.lol preferred daily archive; source-informed regional adapter validation, 20:00-22:00 UTC",
+  "time_origin_utc_s": 1788825600.0,
+  "time_window_utc_s": [1788897600.0, 1788904800.0],
+  "bounds": [40.65, -73.85, 41.1, -73.2],
+  "max_gap_s": 30.0,
+  "max_speed_mps": 330.0,
+  "accepted_sources": ["adsb_icao", "adsr_icao"],
+  "altitude_policy": {"mode": "geometric_only"}
+}

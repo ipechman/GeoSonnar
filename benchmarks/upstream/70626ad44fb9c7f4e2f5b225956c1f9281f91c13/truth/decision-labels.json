@@ -1,0 +1,90 @@
+{
+  "decision-001": {
+    "control_kind": "supported",
+    "location_accuracy_eligible": true,
+    "expect_inconclusive": false,
+    "location": [
+      40,
+      -100
+    ]
+  },
+  "decision-002": {
+    "control_kind": "noise",
+    "location_accuracy_eligible": false,
+    "expect_inconclusive": true
+  },
+  "decision-003": {
+    "control_kind": "missing",
+    "location_accuracy_eligible": false,
+    "expect_inconclusive": true
+  },
+  "decision-004": {
+    "control_kind": "ambiguous",
+    "location_accuracy_eligible": false,
+    "expect_inconclusive": true
+  },
+  "decision-005": {
+    "control_kind": "harmonics",
+    "location_accuracy_eligible": false,
+    "expect_inconclusive": true
+  },
+  "decision-006": {
+    "control_kind": "residual",
+    "location_accuracy_eligible": false,
+    "expect_inconclusive": true
+  },
+  "decision-007": {
+    "control_kind": "altitude_only",
+    "location_accuracy_eligible": false,
+    "expect_inconclusive": true
+  },
+  "decision-008": {
+    "control_kind": "missing_diagnostics",
+    "location_accuracy_eligible": false,
+    "expect_inconclusive": true
+  },
+  "decision-009": {
+    "control_kind": "supported",
+    "location_accuracy_eligible": true,
+    "expect_inconclusive": false,
+    "location": [
+      40,
+      -100
+    ]
+  },
+  "decision-010": {
+    "control_kind": "noise",
+    "location_accuracy_eligible": false,
+    "expect_inconclusive": true
+  },
+  "decision-011": {
+    "control_kind": "missing",
+    "location_accuracy_eligible": false,
+    "expect_inconclusive": true
+  },
+  "decision-012": {
+    "control_kind": "ambiguous",
+    "location_accuracy_eligible": false,
+    "expect_inconclusive": true
+  },
+  "decision-013": {
+    "control_kind": "harmonics",
+    "location_accuracy_eligible": false,
+    "expect_inconclusive": true
+  },
+  "decision-014": {
+    "control_kind": "residual",
+    "location_accuracy_eligible": false,
+    "expect_inconclusive": true
+  },
+  "decision-015": {
+    "control_kind": "altitude_only",
+    "location_accuracy_eligible": false,
+    "expect_inconclusive": true
+  },
+  "decision-016": {
+    "control_kind": "missing_diagnostics",
+    "location_accuracy_eligible": false,
+    "expect_inconclusive": true
+  }
+}

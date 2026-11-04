@@ -1,0 +1,6 @@
+{
+  "date_utc": "2026-09-08",
+  "bounds": [40.65, -73.85, 41.1, -73.2],
+  "max_flights": 5000,
+  "refresh": false
+}

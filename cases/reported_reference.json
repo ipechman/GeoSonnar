@@ -1,0 +1,7 @@
+{
+  "latitude_deg": 40.8764657,
+  "longitude_deg": -73.5249506,
+  "label": "Video's reported leading acoustic coordinate (not surveyed camera ground truth)",
+  "source": "Supplied explanation video, frame at 21:40; output/audio-validation/explainer_21m40.png",
+  "usage": "Evaluation and plotting only. Never used to rank candidates. Regional search bounds are separately acknowledged as source-informed."
+}

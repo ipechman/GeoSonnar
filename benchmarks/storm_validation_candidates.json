@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "purpose": "Acquisition/readiness registry, not a scored accuracy benchmark",
+  "reviewed_utc_date": "2026-11-04",
+  "candidates": [
+    {
+      "case_id": "figshare-triggered-lightning-2024",
+      "kind": "real_infrasound_waveform_integration",
+      "source_url": "https://figshare.com/articles/dataset/Triggered-Lightning_DAS_Dataset/34020543",
+      "doi": "10.6084/m9.figshare.34020543.v1",
+      "license": "CC BY 4.0",
+      "status": "acquired_geometry_and_lightning_metadata_missing",
+      "recordings": 8,
+      "independent_receiver_truth_verified": false,
+      "independent_lightning_catalog_verified": false,
+      "known_location_accuracy_validated": false,
+      "hybrid_accuracy_validated": false
+    },
+    {
+      "case_id": "thunderprint-norway-vid2-reference",
+      "kind": "external_development_reference_not_held_out",
+      "repository": "https://github.com/Hexay/thunderprint",
+      "inspected_tree_sha": "8f6886b854902348c6f0826e3a854371cff162de",
+      "video_url": "https://www.youtube.com/watch?v=uD6Rtt2l4Ds",
+      "status": "raw_audio_and_lightning_not_bundled",
+      "upstream_claimed_receiver": {
+        "latitude_deg": 65.666899,
+        "longitude_deg": 14.138535,
+        "source": "https://github.com/Hexay/thunderprint/blob/main/eval/truth.toml",
+        "verified_independently_by_geosonnar": false,
+        "accuracy_m": null
+      },
+      "upstream_claimed_date_utc": "2025-07-19",
+      "upstream_flash_inferred_start_utc": "2025-07-19T15:59:46.43Z",
+      "clock_source": "https://github.com/Hexay/thunderprint/blob/main/tools/real.sh",
+      "audio_sample_zero_verified": false,
+      "lightning_provider": "MET Norway Frost",
+      "lightning_download_requires": "User-provided FROST_CLIENT_ID; no credentials are stored in this registry",
+      "upstream_reported_location_error_km": 1.3,
+      "upstream_result_is_blind": false,
+      "geosonnar_location_error_km": null,
+      "known_location_accuracy_validated": false,
+      "hybrid_accuracy_validated": false,
+      "limitations": [
+        "The upstream author states the true location was known during development",
+        "The UTC estimate comes from video flashes; an audio/video offset remains possible",
+        "The Git tree contains no waveform, UALF or other raw lightning fixture",
+        "No verified aircraft observations or tracks are supplied",
+        "Do not assign this truth to the unrelated hour-long local colsto recording"
+      ]
+    }
+  ]
+}

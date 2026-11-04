@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "frozen_before_any_location_fit": true,
+  "native_discovery_policy_sha256": "fda1f50c3bcaea5f23a0fd0e70e320a4d5da5decdba6a8aa73865d5cfe2bcbe6",
+  "frequency_only": true,
+  "automatic_ridges_included": "Every proposed ridge, unchanged; fail closed on no events or excessive work rather than screening for a successful result",
+  "grid_spacing_m": 20000.0,
+  "grid_method": "Inclusive rectangular endpoints; degree steps from111320m per degree and cosine of midpoint latitude, no truth-centered point",
+  "clock_step_s": 5.0,
+  "emitted_frequency_bounds_hz": [20.0, 3200.0],
+  "retained_hypotheses": 1000,
+  "max_evaluations": 2000000,
+  "measurement_sigma": "Native reported ridge frequency/time uncertainty unchanged; common frequency residual scale1Hz",
+  "refinement": "No automatic refinement is declared here. The coarse result and alternatives must first be reported; later refinement is a separately recorded source-informed experiment.",
+  "review_semantics": "Pending operator workspace is preserved. A separate experiment copy includes every unedited proposal only for numerical validation. Its confirmed flag is an API eligibility flag in the experiment, not a claim of human review or aircraft identity."
+}

@@ -1,0 +1,58 @@
+{
+  "audio": "reference-recording.wav",
+  "tracks": [
+    "../adsb/2026-09-08/conus-alltypes-faint-window.parquet"
+  ],
+  "max_track_gap_s": 30,
+  "terrain": {
+    "rasters": [
+      "../terrain/Copernicus_DSM_COG_10_N40_00_W074_00_DEM.tif"
+    ],
+    "geoid_raster": "../terrain/us_nga_egm96_15.tif"
+  },
+  "grid": {
+    "bounds": [
+      -73.59,
+      40.83,
+      -73.47,
+      40.92
+    ],
+    "spacing_m": 200,
+    "scoring_spacing_m": 100,
+    "refine_spacing_m": 25,
+    "refine_pairs": 5
+  },
+  "events": [
+    {
+      "start_s": 1250,
+      "end_s": 1310,
+      "band_hz": [
+        280,
+        530
+      ],
+      "max_slope_hz_s": 15,
+      "max_up_slope_hz_s": 0.5,
+      "speed_range_mps": [
+        50,
+        160
+      ],
+      "slant_range_m": [
+        500,
+        10000
+      ],
+      "f0_range_hz": [
+        300,
+        520
+      ]
+    }
+  ],
+  "filters": {
+    "known_time_tolerance_s": 10
+  },
+  "scoring": {
+    "mode": "ridge",
+    "time_sweep_s": 5,
+    "time_step_s": 0.5
+  },
+  "recording_start_utc": "2026-09-08T20:17:30Z"
+}

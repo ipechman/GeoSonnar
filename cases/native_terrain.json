@@ -1,0 +1,8 @@
+{
+  "dem": "../data/dopplergeist/terrain/Copernicus_DSM_COG_10_N40_00_W074_00_DEM.tif",
+  "geoid": "../data/dopplergeist/terrain/us_nga_egm96_15.tif",
+  "observer_bounds": [40.83, -73.59, 40.92, -73.46],
+  "grid_spacing_m": 200.0,
+  "microphone_height_m": 3.0,
+  "vertical_datum_assumption": "Reproduce the existing development baseline: Copernicus DSM plus EGM96 undulation and 3 m microphone height. Copernicus uses EGM2008; EGM96 is an explicit approximation retained for comparison, not an exact datum conversion or surveyed ground height."
+}

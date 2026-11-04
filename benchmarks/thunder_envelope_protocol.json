@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "protocol_id": "bounded-thunder-envelope-001",
+  "frozen_before_implementation": true,
+  "experiment_status": "not_run",
+  "claim": "Numerical and workflow validation of a standalone bounded regional envelope comparison; no independently validated field accuracy or automatic acceptance threshold.",
+  "observation": "Analyst-selected complete uniform nonnegative RMS envelope, explicitly documented actual frequency band and measurement method; no threshold-selected subset, masks, gap filling or truth-dependent preprocessing.",
+  "forward_model": "Equal unit emitted energy per retained provider row; ECEF slant delay in constant still air; inverse-square energy attenuation with explicit distance floor/cutoff; normalized truncated causal exponential energy kernel integrated over each sample bin centered at the supplied observation time (time minus/plus half cadence); sum energies before square root to obtain relative RMS. Supplied times are sample/STFT centers, not left bin edges. Catalog lookback includes the half-bin support.",
+  "comparison": "Linear zero-padded FFT numerator and full-window cosine normalization at every declared uniform clock offset. Positive offset means recording sample zero is later. Unsupported or numerically unresolved windows are unavailable, never successful zero-residual matches.",
+  "controls_required": [
+    "Independent direct correlation at every lag, including non-power-of-two lengths, nonzero audio segment origin, both offset signs and exact full-overlap boundaries",
+    "Independent analytic geometry and integrated-kernel oracle, fractional arrivals, overlapping and coincident rows, amplitude scaling and ignored source intensity",
+    "Silence, irregular samples, masks, gaps, nonfinite values, overflow and declared/hard work-memory limits",
+    "Exact catalog identity, explicit unknown-height fallback and source-bound FMI interpretation and timestamp allowance",
+    "Cancellation, completed-receiver accounting, deterministic ordering, report/overlay binding and input nonmutation"
+  ],
+  "future_accuracy_experiment": {
+    "status": "requires_separate_frozen_inputs_and_predictions",
+    "primary_utility": "Shortlist containment/area reduction and unresolved outcomes for deliberately weak separate modalities under identical priors; not only leading-point error on strong Doppler cases.",
+    "negative_controls": "Wrong dates, shifted clocks, out-of-region truth, missing/extra strokes, wind/engine/rain-like envelopes, repeated-source geometry and searched misleading alternatives. Evaluate maxima after the entire region-by-offset search.",
+    "separation": "Development choices and any decision threshold require fresh holdouts; commit predictions before opening receiver truth. Existing failed field and hybrid-ablation cases remain regressions, not new holdouts.",
+    "field_gate": "Independent original microphone location/height, sample-zero UTC uncertainty and matched source coverage. Thunderprint is source-informed; current Figshare infrasound has no independent microphone/strike geometry. Neither establishes hybrid accuracy.",
+    "hybrid_gate": "A real comparison needs Doppler and thunder evidence in the same recording. Do not add envelope and picked timing from the same thunder as independent votes. No score merge in this increment."
+  },
+  "global_multiweek_search_implemented": false,
+  "location_accuracy_validated": false,
+  "hybrid_accuracy_validated": false
+}

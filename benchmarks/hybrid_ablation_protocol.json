@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "name": "hybrid-ablation-v1",
+  "evidence_class": "procedurally held-out synthetic scenes; not real-world accuracy validation",
+  "generator_seed": 73190426,
+  "development_per_family": 3,
+  "holdout_per_family": 12,
+  "families": ["nominal", "noisy", "ambiguous", "model_mismatch"],
+  "primary_families": ["nominal", "noisy"],
+  "controls": ["wrong_aircraft", "wrong_strike", "wrong_clock", "wrong_date", "outside_region", "missing_lightning", "missing_track", "unreviewed"],
+  "control_base_count": 4,
+  "control_base_family": "nominal",
+  "grid": {"side": 25, "spacing_m": 250.0, "half_width_m": 3000.0, "truth_half_width_m": 1500.0, "receiver_height_m": 80.0},
+  "assumed_sound_speed_mps": 343.0,
+  "recording_start_utc": "2026-09-08 00:00:00",
+  "duration_s": 360.0,
+  "emission_samples_per_aircraft": 21,
+  "strike_count": 3,
+  "weights": {"frequency_weight": 1.0, "doppler_timing_weight": 1.0, "thunder_weight": 1.0},
+  "scales": {"frequency_scale_hz": 1.0, "doppler_timing_scale_s": 1.0, "thunder_scale_s": 1.0},
+  "observation_uncertainty": {"frequency_sigma_hz": 1.0, "uncertainty_s": 2.0},
+  "noise": {
+    "nominal": {"frequency_sd_hz": 0.6, "doppler_time_sd_s": 1.0, "thunder_time_sd_s": 1.0, "ridge_ar1": 0.0},
+    "noisy": {"frequency_sd_hz": 1.4, "doppler_time_sd_s": 2.2, "thunder_time_sd_s": 2.2, "ridge_ar1": 0.6},
+    "ambiguous": {"frequency_sd_hz": 0.6, "doppler_time_sd_s": 1.0, "thunder_time_sd_s": 1.0, "ridge_ar1": 0.0},
+    "model_mismatch": {"frequency_sd_hz": 0.6, "doppler_time_sd_s": 1.0, "thunder_time_sd_s": 1.0, "ridge_ar1": 0.0}
+  },
+  "mismatch": {"true_sound_speeds_mps": [335.0, 351.0], "thunder_source_displacement_m": 500.0},
+  "control_parameters": {"decoy_east_m": 2200.0, "decoy_north_m": -1400.0, "clock_shift_s": 20.0, "wrong_date_shift_s": 86400.0, "outside_grid_shift_east_m": 8000.0},
+  "success_thresholds_m": [250.0, 500.0, 1000.0],
+  "paired_tie_tolerance_m": 1.0,
+  "diagnostic_low_score_max": 1.0,
+  "diagnostic_wrong_error_m": 1000.0,
+  "bootstrap_repetitions": 5000,
+  "bootstrap_seed": 552019,
+  "decision": {
+    "primary_improvement": "All 24 primary scenes must be rankable in both combined and Doppler-only. Both the paired mean error difference and difference of marginal medians (combined minus doppler_only) must have a 95% paired scene-bootstrap upper bound below zero, and all-case 500 m success cannot decrease. Other comparisons are descriptive, not multiple-testing-controlled claims.",
+    "deployment": "No automatic fusion or real-world accuracy claim from synthetic results; inspect mismatch and wrong-association harm before changing defaults."
+  },
+  "constraints": [
+    "Change only three term-enable booleans between modes; same candidate order, observations, associations, clock, heights, emitted frequencies, scales and weights.",
+    "Default combined weighting is two Doppler terms and one thunder term, not equal modality weights.",
+    "Independent Python analytic ECEF source/receiver oracle; production Rust physics never generates observations or truth.",
+    "All input and truth files and code hashes are frozen before development predictions; no threshold, scenario or seed changes after held-out results.",
+    "Score input contains opaque case IDs, not evaluation family, split, seed or receiver truth. Predictions are committed before the evaluator opens truth.",
+    "Off-grid truth and grid center are randomized independently; the same 625 candidate coordinates are used for every mode.",
+    "Primary analysis uses 24 independent nominal/noisy holdouts. Ambiguity, model mismatch and 32 correlated control variants are separate strata.",
+    "Report unavailable modes and all-case success denominators; paired error analysis alone cannot conceal missing results.",
+    "Production outputs remain unverified and uncalibrated. Low-score wrong winners are diagnostics, not false-confidence estimates.",
+    "This evaluates scoring with supplied reviewed measurements and associations, not audio detection, association discovery, clock estimation or global search."
+  ]
+}

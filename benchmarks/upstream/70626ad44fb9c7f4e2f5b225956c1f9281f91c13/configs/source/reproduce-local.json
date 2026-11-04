@@ -1,0 +1,83 @@
+{
+  "audio": "reference-recording.wav",
+  "tracks": [
+    "../adsb/2026-09-08/reference-region.parquet"
+  ],
+  "type_database": "../adsb/2026-09-08/type-database.csv",
+  "max_track_gap_s": 30,
+  "terrain": {
+    "rasters": [
+      "../terrain/Copernicus_DSM_COG_10_N40_00_W074_00_DEM.tif"
+    ],
+    "geoid_raster": "../terrain/us_nga_egm96_15.tif"
+  },
+  "grid": {
+    "bounds": [
+      -73.59,
+      40.83,
+      -73.47,
+      40.92
+    ],
+    "spacing_m": 200,
+    "scoring_spacing_m": 100,
+    "refine_spacing_m": 25,
+    "refine_pairs": 5
+  },
+  "events": [
+    {
+      "start_s": 2100,
+      "end_s": 2280,
+      "band_hz": [
+        75,
+        190
+      ],
+      "max_slope_hz_s": 4,
+      "max_up_slope_hz_s": 0.5,
+      "speed_range_mps": [
+        130,
+        154
+      ],
+      "slant_range_m": [
+        4300,
+        7800
+      ],
+      "f0_range_hz": [
+        110,
+        116
+      ]
+    },
+    {
+      "start_s": 3040,
+      "end_s": 3125,
+      "band_hz": [
+        95,
+        185
+      ],
+      "max_slope_hz_s": 4,
+      "max_up_slope_hz_s": 0.5,
+      "speed_range_mps": [
+        88,
+        110
+      ],
+      "slant_range_m": [
+        1390,
+        4690
+      ],
+      "f0_range_hz": [
+        126,
+        133
+      ]
+    }
+  ],
+  "filters": {
+    "offset_tolerance_s": 5,
+    "silence": {
+      "edge_margin_s": 100
+    }
+  },
+  "scoring": {
+    "mode": "brightness",
+    "time_sweep_s": 5,
+    "time_step_s": 0.5
+  }
+}

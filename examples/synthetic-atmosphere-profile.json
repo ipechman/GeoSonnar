@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "name": "EXAMPLE ONLY - fabricated atmosphere, not weather observations",
+  "provenance": {
+    "provider": "GeoSonnar synthetic example",
+    "source": "Fabricated values for schema and numerical checks only",
+    "source_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "notes": "Do not use this example to interpret a real recording. Replace with explicitly normalized weather observations/reanalysis and their actual source-input hash."
+  },
+  "valid_from_utc_s": 1790000000.0,
+  "valid_to_utc_s": 1790003600.0,
+  "bounds": [-0.25, -0.25, 0.25, 0.25],
+  "height_datum": "wgs84_ellipsoid",
+  "humidity_reference": "liquid_water",
+  "levels": [
+    {"ellipsoid_height_m": -100.0, "temperature_k": 293.15, "pressure_pa": 102500.0, "relative_humidity_fraction": 0.65, "eastward_wind_mps": 1.0, "northward_wind_mps": 0.0},
+    {"ellipsoid_height_m": 1000.0, "temperature_k": 286.65, "pressure_pa": 89900.0, "relative_humidity_fraction": 0.55, "eastward_wind_mps": 5.0, "northward_wind_mps": 2.0},
+    {"ellipsoid_height_m": 3000.0, "temperature_k": 273.65, "pressure_pa": 70100.0, "relative_humidity_fraction": 0.4, "eastward_wind_mps": 12.0, "northward_wind_mps": 5.0},
+    {"ellipsoid_height_m": 6000.0, "temperature_k": 254.15, "pressure_pa": 47200.0, "relative_humidity_fraction": 0.2, "eastward_wind_mps": 20.0, "northward_wind_mps": 8.0}
+  ],
+  "integration": {"max_step_m": 250.0, "absolute_tolerance_s": 1e-7, "max_segments": 4096}
+}

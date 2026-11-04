@@ -1,0 +1,45 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GeoSonnar · Audio event review</title>
+<style>
+body{font:16px system-ui,sans-serif;background:#101822;color:#e3eaf2;max-width:1150px;margin:auto;padding:24px}h1{font-size:28px;margin-bottom:6px}p{line-height:1.5;color:#bac9d9}button,select{font:inherit;background:#263849;color:#fff;border:1px solid #52708b;border-radius:6px;padding:8px}button{cursor:pointer}table{width:100%;border-collapse:collapse;margin:18px 0}td,th{text-align:left;padding:10px;border-bottom:1px solid #334252}svg{background:#172431;border:1px solid #3b5065;border-radius:6px;width:100%;height:auto}label{display:inline-block;margin:8px 12px 8px 0}.small{font-size:13px}a{color:#8bd8ff}details{margin:12px 0}.badge{color:#fdcd76}input{accent-color:#68d2df}#empty{padding:30px;border:1px solid #52687c;border-radius:8px}summary{cursor:pointer}.warning{color:#fdcd76}#source{overflow-wrap:anywhere}
+</style>
+<h1>Review possible flyovers</h1><p id="source"></p>
+<p>These are moving-tone proposals, not confirmed aircraft. Harmonics are grouped into one possible flyover. Breaks in a line show missing measurements. No location or recording clock has been inferred.</p>
+<div id="overview"></div><p id="stats"></p><div id="empty" hidden>No moving-tone events met the current settings. Faint, masked or nontonal aircraft may still be present.</div>
+<table id="table"><thead><tr><th>Group</th><th>Time in recording</th><th>Measured ridges</th><th>Your review</th></tr></thead><tbody id="rows"></tbody></table>
+<button id="export">Save review decisions</button><span class="small"> Saves a separate JSON file. Original detections stay unchanged.</span>
+<p class="small warning">“Keep” means suitable for further acoustic review; it does not confirm flight identity or location.</p>
+<div id="details"></div><details><summary>Method and provenance</summary><pre id="method" style="white-space:pre-wrap"></pre></details>
+<script type="application/json" id="report">__REPORT_JSON__</script>
+<script>
+'use strict';
+const discoverySha256='__DISCOVERY_SHA256__';
+const report=JSON.parse(document.getElementById('report').textContent), ns='http://www.w3.org/2000/svg';
+const palette=['#78dce8','#ffcc75','#a4e87b','#ee9ae0','#b2b6ff','#ff9388','#a7ded0'];
+document.getElementById('source').textContent=report.source;
+document.getElementById('stats').textContent=`${report.group_count} possible flyovers · ${report.ridge_count} measured ridges · channel ${report.source_metadata.selected_channel_index} · ${report.source_metadata.duration_s.toFixed(2)} seconds`;
+document.getElementById('empty').hidden=report.group_count!==0;
+document.getElementById('method').textContent=JSON.stringify({discovery_sha256:discoverySha256,source_sha256:report.source_sha256,source_metadata:report.source_metadata,settings:report.settings,limitations:report.limitations},null,2);
+const all=report.events, reviews=new Map();
+function download(text,name,type){const url=URL.createObjectURL(new Blob([text],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function element(name,attrs={}){const e=document.createElementNS(ns,name);for(const[k,v]of Object.entries(attrs))e.setAttribute(k,v);return e;}
+function plot(events,lo,hi,low,high){
+ const svg=element('svg',{viewBox:'0 0 1100 330',role:'img','aria-label':'Measured frequency over recording time'}), left=65,top=20,width=1010,height=260;
+ const x=t=>left+(t-lo)/Math.max(.001,hi-lo)*width,y=f=>top+height-(f-low)/Math.max(1,high-low)*height;
+ for(let i=0;i<=5;i++){const f=low+(high-low)*i/5,t=lo+(hi-lo)*i/5;svg.append(element('line',{x1:left,y1:y(f),x2:left+width,y2:y(f),stroke:'#334a60'}));for(const[value,xx,yy]of [[`${f.toFixed(0)} Hz`,5,y(f)+4],[`${t.toFixed(1)} s`,x(t)-15,310]]){const label=element('text',{x:xx,y:yy,fill:'#b9ccdd','font-size':'12'});label.textContent=value;svg.append(label);}}
+ for(const ev of events){let points=[],last=null;const color=palette[report.groups.findIndex(g=>g.harmonic_group_id===ev.harmonic_group_id)%palette.length];function line(){if(points.length){svg.append(element('polyline',{points:points.join(' '),fill:'none',stroke:color,'stroke-width':'1.5'}));points=[];}}
+  for(const p of ev.ridge){if(last!==null&&p.time_s-last>report.settings.max_gap_s)line();points.push(`${x(p.time_s)},${y(p.frequency_hz)}`);last=p.time_s;}line();
+ }return svg;
+}
+document.getElementById('overview').append(plot(all,0,report.source_metadata.duration_s,report.settings.min_frequency_hz,report.settings.max_frequency_hz));
+for(const [index,g]of report.groups.entries()){
+ const events=all.filter(e=>e.harmonic_group_id===g.harmonic_group_id),tr=document.createElement('tr');
+ for(const value of [`Flyover ${index+1}`,`${g.start_s.toFixed(1)}–${g.end_s.toFixed(1)} s`,String(g.ridge_count)]){const td=document.createElement('td');td.textContent=value;tr.append(td);}
+ const cell=document.createElement('td'),select=document.createElement('select');select.setAttribute('aria-label',`Review flyover ${index+1}`);for(const [value,label]of [['unreviewed','Not reviewed'],['keep_for_matching','Keep for matching'],['reject','Reject'],['uncertain','Uncertain']]){const option=document.createElement('option');option.value=value;option.textContent=label;select.append(option);}reviews.set(g.harmonic_group_id,select);cell.append(select);tr.append(cell);document.getElementById('rows').append(tr);
+ const detail=document.createElement('details'),title=document.createElement('summary');title.textContent=`Flyover ${index+1}: inspect measured ridges`;detail.append(title);
+ const low=Math.min(...events.map(e=>e.band_hz[0])),high=Math.max(...events.map(e=>e.band_hz[1]));detail.append(plot(events,g.start_s,g.end_s,Math.max(0,low-5),high+5));
+ const text=document.createElement('p');text.className='small';text.textContent=events.map(e=>`${e.event_id}: ${(e.quality.support_fraction*100).toFixed(0)}% measured support, ${e.quality.fragment_count} fragment(s)`).join(' · ');detail.append(text);
+ for(const e of events){const link=document.createElement('a');link.href=e.event_id+'.csv';link.download=e.event_id+'.csv';link.textContent=`${e.event_id} CSV `;link.onclick=event=>{event.preventDefault();download('time_s,frequency_hz,weight\n'+e.ridge.map(p=>`${p.time_s},${p.frequency_hz},${p.weight}`).join('\n')+'\n',e.event_id+'.csv','text/csv');};detail.append(link);}document.getElementById('details').append(detail);
+}
+document.getElementById('export').onclick=()=>{const output={schema_version:2,discovery_sha256:discoverySha256,review_actor:'human',source_sha256:report.source_sha256,selected_channel_index:report.source_metadata.selected_channel_index,location_verified:false,scope:'Human review of acoustic proposals only; no confirmed aircraft or location',groups:report.groups.map(g=>({harmonic_group_id:g.harmonic_group_id,review:reviews.get(g.harmonic_group_id).value,event_ids:all.filter(e=>e.harmonic_group_id===g.harmonic_group_id).map(e=>e.event_id)}))};download(JSON.stringify(output,null,2)+'\n','review-selection.json','application/json');};
+</script></html>

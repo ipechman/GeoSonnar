@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "case_id": "fresh-deployment-A",
+  "source_selection": "First indexed April2024 Eclipse Soundscapes deployment found by sequentially searching ESID104 then ESID105; different from prior ESID103. No spectral or aircraft-fit evidence used.",
+  "source_record": "https://zenodo.org/records/20835101",
+  "selection_frozen_before_waveform_or_track_download": true,
+  "interval_rule": "First nonempty April8,2024 waveform beginning at or after16:00:00UTC; retain its first600seconds, or concatenate immediately consecutive files only when original format and filename/header UTC prove sample-contiguous coverage. If a gap occurs first, retain the shorter contiguous run and report it; do not screen for an event.",
+  "start_not_before_utc": "2024-04-08T16:00:00Z",
+  "maximum_duration_s": 600,
+  "maximum_total_download_bytes": 150000000,
+  "broad_aircraft_region_south_west_north_east": [28.0, -101.0, 32.0, -97.0],
+  "review_protocol": "Send root only waveform-derived plots/audio, sample-zero UTC, broadregion and uncertainties. Root reviews and freezes selected traces/rejections before aircraft identities or fit results. Exact publisher coordinates and mapping metadata remain in a separate provenance/truth directory until predictions are committed.",
+  "blindness": "Source-informed acquisition, reviewer-blind audio review. Public search results exposed exact publisher coordinates to the acquisition agent; strict experiment-wide blinding is not claimed.",
+  "independent_site": true,
+  "microphone_position_error_bound_m": null,
+  "recorder_utc_error_bound_s": null,
+  "no_event_policy": "Keep no-event/insufficient-evidence outcome; do not replace the interval after listening or detection.",
+  "no_frost_accounts_or_gui": true
+}

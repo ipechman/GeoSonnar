@@ -1,0 +1,960 @@
+{
+  "controls": {
+    "missing_lightning": {
+      "cases": 4,
+      "modes": {
+        "combined": {
+          "maximum_error_m": null,
+          "mean_error_m": null,
+          "median_error_m": null,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 4,
+          "p90_error_m": null,
+          "ranked": 0,
+          "success_counts": {
+            "1000": 0,
+            "250": 0,
+            "500": 0
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        },
+        "doppler_only": {
+          "maximum_error_m": 158.30119137035567,
+          "mean_error_m": 123.20466077859612,
+          "median_error_m": 140.34565428362885,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 154.70273485433447,
+          "ranked": 4,
+          "success_counts": {
+            "1000": 4,
+            "250": 4,
+            "500": 4
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        },
+        "thunder_only": {
+          "maximum_error_m": null,
+          "mean_error_m": null,
+          "median_error_m": null,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 4,
+          "p90_error_m": null,
+          "ranked": 0,
+          "success_counts": {
+            "1000": 0,
+            "250": 0,
+            "500": 0
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        }
+      }
+    },
+    "missing_track": {
+      "cases": 4,
+      "modes": {
+        "combined": {
+          "maximum_error_m": null,
+          "mean_error_m": null,
+          "median_error_m": null,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 4,
+          "p90_error_m": null,
+          "ranked": 0,
+          "success_counts": {
+            "1000": 0,
+            "250": 0,
+            "500": 0
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        },
+        "doppler_only": {
+          "maximum_error_m": null,
+          "mean_error_m": null,
+          "median_error_m": null,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 4,
+          "p90_error_m": null,
+          "ranked": 0,
+          "success_counts": {
+            "1000": 0,
+            "250": 0,
+            "500": 0
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        },
+        "thunder_only": {
+          "maximum_error_m": 611.9988442859282,
+          "mean_error_m": 364.5496495371178,
+          "median_error_m": 349.94670877279566,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 592.2226221371363,
+          "ranked": 4,
+          "success_counts": {
+            "1000": 4,
+            "250": 2,
+            "500": 2
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        }
+      }
+    },
+    "outside_region": {
+      "cases": 4,
+      "modes": {
+        "combined": {
+          "maximum_error_m": 5647.661394446204,
+          "mean_error_m": 4737.953002223376,
+          "median_error_m": 4652.210311018813,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 5422.13828909517,
+          "ranked": 4,
+          "success_counts": {
+            "1000": 0,
+            "250": 0,
+            "500": 0
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        },
+        "doppler_only": {
+          "maximum_error_m": 5647.661394446204,
+          "mean_error_m": 4737.953002223376,
+          "median_error_m": 4652.210311018813,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 5422.13828909517,
+          "ranked": 4,
+          "success_counts": {
+            "1000": 0,
+            "250": 0,
+            "500": 0
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        },
+        "thunder_only": {
+          "maximum_error_m": 6017.41648051805,
+          "mean_error_m": 5018.030314918755,
+          "median_error_m": 4823.100933531051,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 5744.797071767417,
+          "ranked": 4,
+          "success_counts": {
+            "1000": 0,
+            "250": 0,
+            "500": 0
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        }
+      }
+    },
+    "unreviewed": {
+      "cases": 4,
+      "modes": {
+        "combined": {
+          "maximum_error_m": null,
+          "mean_error_m": null,
+          "median_error_m": null,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 4,
+          "p90_error_m": null,
+          "ranked": 0,
+          "success_counts": {
+            "1000": 0,
+            "250": 0,
+            "500": 0
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        },
+        "doppler_only": {
+          "maximum_error_m": null,
+          "mean_error_m": null,
+          "median_error_m": null,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 4,
+          "p90_error_m": null,
+          "ranked": 0,
+          "success_counts": {
+            "1000": 0,
+            "250": 0,
+            "500": 0
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        },
+        "thunder_only": {
+          "maximum_error_m": null,
+          "mean_error_m": null,
+          "median_error_m": null,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 4,
+          "p90_error_m": null,
+          "ranked": 0,
+          "success_counts": {
+            "1000": 0,
+            "250": 0,
+            "500": 0
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        }
+      }
+    },
+    "wrong_aircraft": {
+      "cases": 4,
+      "modes": {
+        "combined": {
+          "maximum_error_m": 2570.3543308251396,
+          "mean_error_m": 2493.3038157278206,
+          "median_error_m": 2496.7855564860656,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 2566.153461188004,
+          "ranked": 4,
+          "success_counts": {
+            "1000": 0,
+            "250": 0,
+            "500": 0
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        },
+        "doppler_only": {
+          "maximum_error_m": 2623.728055001708,
+          "mean_error_m": 2546.913374699745,
+          "median_error_m": 2563.3528814299134,
+          "misleading_low_score_wrong": 4,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 2607.7159377487374,
+          "ranked": 4,
+          "success_counts": {
+            "1000": 0,
+            "250": 0,
+            "500": 0
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        },
+        "thunder_only": {
+          "maximum_error_m": 611.9988442859282,
+          "mean_error_m": 364.5496495371178,
+          "median_error_m": 349.94670877279566,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 592.2226221371363,
+          "ranked": 4,
+          "success_counts": {
+            "1000": 4,
+            "250": 2,
+            "500": 2
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        }
+      }
+    },
+    "wrong_clock": {
+      "cases": 4,
+      "modes": {
+        "combined": {
+          "maximum_error_m": 3209.2366137364365,
+          "mean_error_m": 2488.9739846709617,
+          "median_error_m": 2416.8288531692824,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 2983.1848722239592,
+          "ranked": 4,
+          "success_counts": {
+            "1000": 0,
+            "250": 0,
+            "500": 0
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        },
+        "doppler_only": {
+          "maximum_error_m": 3209.2366137364365,
+          "mean_error_m": 2501.14683823351,
+          "median_error_m": 2416.8288531692824,
+          "misleading_low_score_wrong": 1,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 2983.1848722239592,
+          "ranked": 4,
+          "success_counts": {
+            "1000": 0,
+            "250": 0,
+            "500": 0
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        },
+        "thunder_only": {
+          "maximum_error_m": 4931.357529180536,
+          "mean_error_m": 3879.9999154137727,
+          "median_error_m": 4031.281117543783,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 4765.57257049111,
+          "ranked": 4,
+          "success_counts": {
+            "1000": 0,
+            "250": 0,
+            "500": 0
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        }
+      }
+    },
+    "wrong_date": {
+      "cases": 4,
+      "modes": {
+        "combined": {
+          "maximum_error_m": null,
+          "mean_error_m": null,
+          "median_error_m": null,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 4,
+          "p90_error_m": null,
+          "ranked": 0,
+          "success_counts": {
+            "1000": 0,
+            "250": 0,
+            "500": 0
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        },
+        "doppler_only": {
+          "maximum_error_m": null,
+          "mean_error_m": null,
+          "median_error_m": null,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 4,
+          "p90_error_m": null,
+          "ranked": 0,
+          "success_counts": {
+            "1000": 0,
+            "250": 0,
+            "500": 0
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        },
+        "thunder_only": {
+          "maximum_error_m": 4931.357529180536,
+          "mean_error_m": 4390.703185158612,
+          "median_error_m": 4473.816988291062,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 4822.6181633362785,
+          "ranked": 4,
+          "success_counts": {
+            "1000": 0,
+            "250": 0,
+            "500": 0
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        }
+      }
+    },
+    "wrong_strike": {
+      "cases": 4,
+      "modes": {
+        "combined": {
+          "maximum_error_m": 198.63338323577472,
+          "mean_error_m": 141.77446664485038,
+          "median_error_m": 157.31917008342782,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 189.5429694200135,
+          "ranked": 4,
+          "success_counts": {
+            "1000": 4,
+            "250": 4,
+            "500": 4
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        },
+        "doppler_only": {
+          "maximum_error_m": 158.30119137035567,
+          "mean_error_m": 123.20466077859612,
+          "median_error_m": 140.34565428362885,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 154.70273485433447,
+          "ranked": 4,
+          "success_counts": {
+            "1000": 4,
+            "250": 4,
+            "500": 4
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        },
+        "thunder_only": {
+          "maximum_error_m": 3103.4560943770084,
+          "mean_error_m": 2690.685951932168,
+          "median_error_m": 2611.034016207109,
+          "misleading_low_score_wrong": 4,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 2982.0672189046304,
+          "ranked": 4,
+          "success_counts": {
+            "1000": 0,
+            "250": 0,
+            "500": 0
+          },
+          "success_denominator": 4,
+          "verified_locations": 0
+        }
+      }
+    }
+  },
+  "evidence_class": "procedurally held-out synthetic scenes; not real-world accuracy validation",
+  "frozen_source_unchanged": true,
+  "holdout_by_family": {
+    "ambiguous": {
+      "cases": 12,
+      "combined_vs_doppler": {
+        "combined_losses": 1,
+        "combined_wins": 5,
+        "interpretation": "Negative difference favors combined. Median difference is the difference of marginal medians, with paired scene resampling; descriptive synthetic inference, not field-population inference",
+        "mean_difference_bootstrap_95_m": [
+          -2014.3127585067343,
+          -213.83864850803843
+        ],
+        "mean_error_difference_m": -1021.6782847633901,
+        "median_difference_bootstrap_95_m": [
+          -2138.8070668407786,
+          0.0
+        ],
+        "median_error_difference_m": -116.45773366683062,
+        "paired_count": 12,
+        "sign_test_two_sided_p": 0.21875,
+        "ties_within_1m": 6
+      },
+      "combined_vs_thunder": {
+        "combined_losses": 4,
+        "combined_wins": 7,
+        "interpretation": "Negative difference favors combined. Median difference is the difference of marginal medians, with paired scene resampling; descriptive synthetic inference, not field-population inference",
+        "mean_difference_bootstrap_95_m": [
+          -323.95580147446015,
+          25.199175061348615
+        ],
+        "mean_error_difference_m": -147.7948871314207,
+        "median_difference_bootstrap_95_m": [
+          -449.3461469424908,
+          106.996643765807
+        ],
+        "median_error_difference_m": -128.5416957903608,
+        "paired_count": 12,
+        "sign_test_two_sided_p": 0.548828125,
+        "ties_within_1m": 1
+      },
+      "modes": {
+        "combined": {
+          "maximum_error_m": 450.3529676648849,
+          "mean_error_m": 263.7616076061337,
+          "median_error_m": 297.9937398030538,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 427.54027768987976,
+          "ranked": 12,
+          "success_counts": {
+            "1000": 12,
+            "250": 5,
+            "500": 12
+          },
+          "success_denominator": 12,
+          "verified_locations": 0
+        },
+        "doppler_only": {
+          "maximum_error_m": 4969.1578376899415,
+          "mean_error_m": 1285.4398923695237,
+          "median_error_m": 414.45147346988443,
+          "misleading_low_score_wrong": 4,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 3215.4582929205353,
+          "ranked": 12,
+          "success_counts": {
+            "1000": 8,
+            "250": 2,
+            "500": 7
+          },
+          "success_denominator": 12,
+          "verified_locations": 0
+        },
+        "thunder_only": {
+          "maximum_error_m": 721.1122618576377,
+          "mean_error_m": 411.5564947375544,
+          "median_error_m": 426.5354355934146,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 647.9941170440638,
+          "ranked": 12,
+          "success_counts": {
+            "1000": 12,
+            "250": 3,
+            "500": 8
+          },
+          "success_denominator": 12,
+          "verified_locations": 0
+        }
+      }
+    },
+    "model_mismatch": {
+      "cases": 12,
+      "combined_vs_doppler": {
+        "combined_losses": 0,
+        "combined_wins": 1,
+        "interpretation": "Negative difference favors combined. Median difference is the difference of marginal medians, with paired scene resampling; descriptive synthetic inference, not field-population inference",
+        "mean_difference_bootstrap_95_m": [
+          -22.78177499718143,
+          0.0
+        ],
+        "mean_error_difference_m": -7.5939249990604765,
+        "median_difference_bootstrap_95_m": [
+          -65.43925765503113,
+          0.0
+        ],
+        "median_error_difference_m": -15.316689693210265,
+        "paired_count": 12,
+        "sign_test_two_sided_p": 1.0,
+        "ties_within_1m": 11
+      },
+      "combined_vs_thunder": {
+        "combined_losses": 2,
+        "combined_wins": 10,
+        "interpretation": "Negative difference favors combined. Median difference is the difference of marginal medians, with paired scene resampling; descriptive synthetic inference, not field-population inference",
+        "mean_difference_bootstrap_95_m": [
+          -598.0724051072845,
+          -218.49672820038904
+        ],
+        "mean_error_difference_m": -406.5064564147224,
+        "median_difference_bootstrap_95_m": [
+          -589.8364431309786,
+          -37.321753211820145
+        ],
+        "median_error_difference_m": -407.3541592408791,
+        "paired_count": 12,
+        "sign_test_two_sided_p": 0.03857421875,
+        "ties_within_1m": 0
+      },
+      "modes": {
+        "combined": {
+          "maximum_error_m": 202.44881817272235,
+          "mean_error_m": 125.65554589596874,
+          "median_error_m": 134.04939127855062,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 179.72449842657105,
+          "ranked": 12,
+          "success_counts": {
+            "1000": 12,
+            "250": 12,
+            "500": 12
+          },
+          "success_denominator": 12,
+          "verified_locations": 0
+        },
+        "doppler_only": {
+          "maximum_error_m": 202.44881817272235,
+          "mean_error_m": 133.24947089502922,
+          "median_error_m": 149.36608097176088,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 179.72449842657105,
+          "ranked": 12,
+          "success_counts": {
+            "1000": 12,
+            "250": 12,
+            "500": 12
+          },
+          "success_denominator": 12,
+          "verified_locations": 0
+        },
+        "thunder_only": {
+          "maximum_error_m": 1210.0080918461103,
+          "mean_error_m": 532.1620023106912,
+          "median_error_m": 541.4035505194297,
+          "misleading_low_score_wrong": 1,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 953.1159664547489,
+          "ranked": 12,
+          "success_counts": {
+            "1000": 11,
+            "250": 4,
+            "500": 5
+          },
+          "success_denominator": 12,
+          "verified_locations": 0
+        }
+      }
+    },
+    "noisy": {
+      "cases": 12,
+      "combined_vs_doppler": {
+        "combined_losses": 2,
+        "combined_wins": 0,
+        "interpretation": "Negative difference favors combined. Median difference is the difference of marginal medians, with paired scene resampling; descriptive synthetic inference, not field-population inference",
+        "mean_difference_bootstrap_95_m": [
+          0.0,
+          41.831229641678966
+        ],
+        "mean_error_difference_m": 16.22826188386102,
+        "median_difference_bootstrap_95_m": [
+          0.0,
+          49.37191752275195
+        ],
+        "median_error_difference_m": 7.7519340063160485,
+        "paired_count": 12,
+        "sign_test_two_sided_p": 0.5,
+        "ties_within_1m": 10
+      },
+      "combined_vs_thunder": {
+        "combined_losses": 0,
+        "combined_wins": 12,
+        "interpretation": "Negative difference favors combined. Median difference is the difference of marginal medians, with paired scene resampling; descriptive synthetic inference, not field-population inference",
+        "mean_difference_bootstrap_95_m": [
+          -1085.23525473896,
+          -557.3238753393642
+        ],
+        "mean_error_difference_m": -800.3679159502543,
+        "median_difference_bootstrap_95_m": [
+          -1108.955188542066,
+          -441.15435001727286
+        ],
+        "median_error_difference_m": -767.0871428726059,
+        "paired_count": 12,
+        "sign_test_two_sided_p": 0.00048828125,
+        "ties_within_1m": 0
+      },
+      "modes": {
+        "combined": {
+          "maximum_error_m": 258.37627645927466,
+          "mean_error_m": 115.32818268751912,
+          "median_error_m": 105.29140423697575,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 186.11998676249192,
+          "ranked": 12,
+          "success_counts": {
+            "1000": 12,
+            "250": 11,
+            "500": 12
+          },
+          "success_denominator": 12,
+          "verified_locations": 0
+        },
+        "doppler_only": {
+          "maximum_error_m": 189.13082277797932,
+          "mean_error_m": 99.0999208036581,
+          "median_error_m": 97.5394702306597,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 166.2015268094434,
+          "ranked": 12,
+          "success_counts": {
+            "1000": 12,
+            "250": 12,
+            "500": 12
+          },
+          "success_denominator": 12,
+          "verified_locations": 0
+        },
+        "thunder_only": {
+          "maximum_error_m": 2149.2791021447256,
+          "mean_error_m": 915.6960986377734,
+          "median_error_m": 872.3785471095816,
+          "misleading_low_score_wrong": 4,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 1281.6565787571524,
+          "ranked": 12,
+          "success_counts": {
+            "1000": 8,
+            "250": 0,
+            "500": 2
+          },
+          "success_denominator": 12,
+          "verified_locations": 0
+        }
+      }
+    },
+    "nominal": {
+      "cases": 12,
+      "combined_vs_doppler": {
+        "combined_losses": 0,
+        "combined_wins": 0,
+        "interpretation": "Negative difference favors combined. Median difference is the difference of marginal medians, with paired scene resampling; descriptive synthetic inference, not field-population inference",
+        "mean_difference_bootstrap_95_m": [
+          0.0,
+          0.0
+        ],
+        "mean_error_difference_m": 0.0,
+        "median_difference_bootstrap_95_m": [
+          0.0,
+          0.0
+        ],
+        "median_error_difference_m": 0.0,
+        "paired_count": 12,
+        "sign_test_two_sided_p": 1.0,
+        "ties_within_1m": 12
+      },
+      "combined_vs_thunder": {
+        "combined_losses": 1,
+        "combined_wins": 10,
+        "interpretation": "Negative difference favors combined. Median difference is the difference of marginal medians, with paired scene resampling; descriptive synthetic inference, not field-population inference",
+        "mean_difference_bootstrap_95_m": [
+          -461.4831115999718,
+          -151.44549155418258
+        ],
+        "mean_error_difference_m": -291.5612877763739,
+        "median_difference_bootstrap_95_m": [
+          -430.1935961629024,
+          -55.33689529164411
+        ],
+        "median_error_difference_m": -254.104599387971,
+        "paired_count": 12,
+        "sign_test_two_sided_p": 0.01171875,
+        "ties_within_1m": 1
+      },
+      "modes": {
+        "combined": {
+          "maximum_error_m": 160.31713509626874,
+          "mean_error_m": 116.51916311489965,
+          "median_error_m": 123.44536419698022,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 157.6551781876898,
+          "ranked": 12,
+          "success_counts": {
+            "1000": 12,
+            "250": 12,
+            "500": 12
+          },
+          "success_denominator": 12,
+          "verified_locations": 0
+        },
+        "doppler_only": {
+          "maximum_error_m": 160.31713509626874,
+          "mean_error_m": 116.51916311489965,
+          "median_error_m": 123.44536419698022,
+          "misleading_low_score_wrong": 0,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 157.6551781876898,
+          "ranked": 12,
+          "success_counts": {
+            "1000": 12,
+            "250": 12,
+            "500": 12
+          },
+          "success_denominator": 12,
+          "verified_locations": 0
+        },
+        "thunder_only": {
+          "maximum_error_m": 1071.3802274970562,
+          "mean_error_m": 408.08045089127353,
+          "median_error_m": 377.54996358495123,
+          "misleading_low_score_wrong": 1,
+          "no_rankable_or_error": 0,
+          "p90_error_m": 605.4067702363309,
+          "ranked": 12,
+          "success_counts": {
+            "1000": 11,
+            "250": 4,
+            "500": 9
+          },
+          "success_denominator": 12,
+          "verified_locations": 0
+        }
+      }
+    }
+  },
+  "predeclared_primary_synthetic_improvement": false,
+  "primary": {
+    "cases": 24,
+    "combined_vs_doppler": {
+      "combined_losses": 2,
+      "combined_wins": 0,
+      "interpretation": "Negative difference favors combined. Median difference is the difference of marginal medians, with paired scene resampling; descriptive synthetic inference, not field-population inference",
+      "mean_difference_bootstrap_95_m": [
+        0.0,
+        21.457165589070893
+      ],
+      "mean_error_difference_m": 8.11413094193051,
+      "median_difference_bootstrap_95_m": [
+        0.0,
+        25.50941687252684
+      ],
+      "median_error_difference_m": 0.8571927795621548,
+      "paired_count": 24,
+      "sign_test_two_sided_p": 0.5,
+      "ties_within_1m": 22
+    },
+    "combined_vs_thunder": {
+      "combined_losses": 1,
+      "combined_wins": 22,
+      "interpretation": "Negative difference favors combined. Median difference is the difference of marginal medians, with paired scene resampling; descriptive synthetic inference, not field-population inference",
+      "mean_difference_bootstrap_95_m": [
+        -744.7820965361738,
+        -369.24973430620946
+      ],
+      "mean_error_difference_m": -545.9646018633141,
+      "median_difference_bootstrap_95_m": [
+        -673.2873455608275,
+        -275.050743869693
+      ],
+      "median_error_difference_m": -419.32255856830494,
+      "paired_count": 24,
+      "sign_test_two_sided_p": 5.7220458984375e-06,
+      "ties_within_1m": 1
+    },
+    "modes": {
+      "combined": {
+        "maximum_error_m": 258.37627645927466,
+        "mean_error_m": 115.92367290120939,
+        "median_error_m": 112.4296489293426,
+        "misleading_low_score_wrong": 0,
+        "no_rankable_or_error": 0,
+        "p90_error_m": 167.75150025539335,
+        "ranked": 24,
+        "success_counts": {
+          "1000": 24,
+          "250": 23,
+          "500": 24
+        },
+        "success_denominator": 24,
+        "verified_locations": 0
+      },
+      "doppler_only": {
+        "maximum_error_m": 189.13082277797932,
+        "mean_error_m": 107.80954195927887,
+        "median_error_m": 111.57245614978045,
+        "misleading_low_score_wrong": 0,
+        "no_rankable_or_error": 0,
+        "p90_error_m": 159.7123519784948,
+        "ranked": 24,
+        "success_counts": {
+          "1000": 24,
+          "250": 24,
+          "500": 24
+        },
+        "success_denominator": 24,
+        "verified_locations": 0
+      },
+      "thunder_only": {
+        "maximum_error_m": 2149.2791021447256,
+        "mean_error_m": 661.8882747645234,
+        "median_error_m": 531.7522074976475,
+        "misleading_low_score_wrong": 5,
+        "no_rankable_or_error": 0,
+        "p90_error_m": 1228.335788547711,
+        "ranked": 24,
+        "success_counts": {
+          "1000": 19,
+          "250": 4,
+          "500": 11
+        },
+        "success_denominator": 24,
+        "verified_locations": 0
+      }
+    }
+  },
+  "production_confidence_calibrated": false,
+  "protocol_sha256": "c6a68f0b40732387ecc29dfa0c274a8b68f42111680c88a6329386405b7a972a",
+  "real_world_accuracy_improvement_established": false,
+  "schema_version": 1,
+  "scorer": {
+    "bytes": 1196032,
+    "sha256": "6ef05efc1f4d762440103700007f67ee23d6ab5ef55e5c7321d75d33ff904bba"
+  },
+  "status": "completed",
+  "run_id": "hybrid-ablation-001",
+  "artifact_sha256": {
+    "build.command.json": "1e7aa45ccf38875c1788a2d0bea4130bff33add75277ad90df7ebd237f55603a",
+    "control-input.json": "cf8bfbaf11239d4476ec0f1e906998b19bdc85c4f10ad1ad920cfdf94098a82b",
+    "control-predictions.json": "472eba17d177988311b2f0059f511c2afad6e9d2324b1f08c6796763c37e9070",
+    "control.command.json": "91a527270ae882c71804302610d8080a59e7179cce9dfacc3ec73d5514c27080",
+    "development-input.json": "0ecc2eeb58cf6c360c0b82a6514f7536f9f319f1fb52ea50ae60ec66c38889e9",
+    "development-predictions.json": "d8b4ed8c0038249eb77bf71f9804030162c3ea65b72b585db731981402665f88",
+    "development.command.json": "4c5f95ce7a77ef0e5530020e93dcc29ea388c472c8e925d58e0a92f3a330fc4f",
+    "evaluation-truth.json": "d0ae244e329b6e5df06f58927c474d1077ef3fbe5e5925b2a137299948397bba",
+    "frozen-before-predictions.json": "2008a811f0a230645ebec0cffed2302c4b6a51c71afbb56dad7371c08ce28236",
+    "holdout-input.json": "12c9cd53a5fd09b9360f8a910379a5b07a1a8a32e9d61f75901e21ff09875a31",
+    "holdout-predictions.json": "fdf4fde393a9b72287aaa5115ee74fa3507557c85d6c8987eebc7b6dd3b21deb",
+    "holdout.command.json": "28bc1a7a56f4680a534e4955131a2e8edb916a6120a43eb09b792e3a316a9713",
+    "prediction-contract-checked.json": "3d8a49bb36dc8cefd373fc11aeccbdde8c9bc2ebaca799fd6564753735f6d7b8",
+    "predictions-committed-before-evaluation.json": "7c7ad20230acf7279715bcc4c5ee935893469c90a4919f128592db2f50c9c325",
+    "protocol.json": "c6a68f0b40732387ecc29dfa0c274a8b68f42111680c88a6329386405b7a972a",
+    "source-snapshot.json": "dcdd5b983f2c20e6cbc2e7e7def0022c032057d8ceb7e2c15fe74a85f91947fd",
+    "summary.json": "3f9cf9fb12d201d58a25323f409e3286b721c63494d891427258510002c2936c",
+    "validation-checks.json": "f23871d69e0fa6d78150831b789d94cd8bbcad965bdc827ad88f5907714762b0"
+  },
+  "source_sha256": {
+    "Cargo.lock": "dfb8f0b7b0c07d9db513981b59e744653798573a0f2ee13fb57b4d204dd086e7",
+    "Cargo.toml": "599b079c170afb094585866029a4db70f61604a546dafacc75f96e90cde48c2e",
+    "analysis/benchmark_hybrid_ablation.py": "0142f41d9155d6a76873a28b72e8f66760ab148bbe0463893c939149514a9893",
+    "benchmarks/hybrid_ablation_protocol.json": "58ab26fc8cb8c812ad7debeb34b18d16cab4d1bd2eebebba32221f58e293516d",
+    "benchmarks/test_hybrid_ablation.py": "115c64c5c58811009ce5fe6bd3432a1e3a1faee9bd76fa62adf7d9643073070c",
+    "examples/hybrid_ablation.rs": "f52b74f496784410e44d0a57914d9768a9f23693f2ec82ac5eb6133c92ad955e",
+    "src/acoustic_fit.rs": "c4cb3e33f4edaf6ca49934e12ad8bf79a51e17d0395af528a52c0ca2900d65e5",
+    "src/acquisition.rs": "84292fd73e664c077e5afdea5a22a91202bfe550377bd48fd3425aeeba6c753d",
+    "src/adsblol.rs": "81b3eaa363b9a97446915bc6e9ced5122def34a3a62dce2a838f83c91fe6a727",
+    "src/adsblol_acquisition.rs": "9df180a57767a807f14ecd2392a84667d5bc9d38e05aa826d3765fb17b49c348",
+    "src/audio.rs": "92504e22b30477bed4cdb8b186228967bee66d3f450da9a95c4d5f1c508a0285",
+    "src/audio_priors.rs": "352be7ffc824366a919fe170b14c9b0524b3475a5c324d0e67b44c45c6c0a183",
+    "src/bin/geosonnar-gui.rs": "4e548e2d868f120d591a6c9bb2bc2affc884bb8df8682f8032f37c122a34b087",
+    "src/casework.rs": "28be1515d3927ac7542796568838b0926bad683677c3dff73e48dc2b6dbc93d4",
+    "src/data_catalog.rs": "64078a019838f8f5916c1c5b67e7f4b71c8e0fe4751f8b26e26aa0d0b00a6021",
+    "src/dataset_requests.rs": "a6e8b305f85e044489fd1cb1a99ad01f2aa1c955a846f42d5fccd5c66c92c3b2",
+    "src/decision.rs": "b3ff491b70929d464a403d14adb7d2f9fed4f189d50523b34dedfb0b309fc58b",
+    "src/detailed_data.rs": "1be71dd7e8625c05113180bc4235502ac27c07a176eab537fa29ea21751feda0",
+    "src/discovery.rs": "1cba4b7c9ba040c9060fbfbdaa33b4485e4cabd18eee3cc62156245cf5abe826",
+    "src/discovery_groups.rs": "bc0fc8e4fb0d55810b1426debe7ad3f95ffd2274228580d99babbaf942463c46",
+    "src/event_review.rs": "a659afac3ec9077337144c12ea85dcb60dbf6c42ab83d9197ecce899fb41d033",
+    "src/evidence_score.rs": "c92873e2453b2f8bf5c5f7e4066e3472f0554ddb172376082e26538e2cb261a1",
+    "src/gui/mod.rs": "ad73e734355e769a32de7d451b33079529a9f2f8bacae2062b97ae7822d9560b",
+    "src/gui/spectrogram.rs": "380d4d7b4bf939f7ee2340bec12934b3f14cb86ae5ffe42006ceecd741c4dd6b",
+    "src/gui/studio.rs": "51e6cccd80a88d1a5ccb830086f7829bfcbc503436abe92b740fe7f221788e0a",
+    "src/gui/studio/library.rs": "d6a601aff67d5d2243fc70ed48b292f73ec420013137adcc763bf07c2e548870",
+    "src/gui/studio/map.rs": "2d9f28e15535ac37dc59db66d7872d85e7934640b1414a0e94039e9754a2691d",
+    "src/gui/studio/presets.rs": "ae144fddca0c815d2b01c0e1907ee29aab9b1278138e35c25917d002f00565bf",
+    "src/gui/studio/tests.rs": "980f5ab02ee490828fa38ccfc47b390ced9675c6295f572e1fcd7a349882ca6e",
+    "src/gui/studio/tiles.rs": "55da4f613e6d9138f93ffcd3746a88251c4b55125136b4f9a53a3cf04d377731",
+    "src/gui/tests.rs": "2b7eaa91c5f972ef8d7c5c272b935f3dd578147f04125f5444113a29e80288c8",
+    "src/gui/widgets.rs": "6bff7e2eda5a4183337c4161843bb6cc18a2e48e877a047dd8206726b5d71408",
+    "src/gui_bridge.rs": "a38d21e6f29959a54a7029457184e59b6edb5889f580b35237e3a68c08b95009",
+    "src/jobs.rs": "d847510117cac2457d122f7078e7467e76624675c9ad1144a4f7f2519558f456",
+    "src/lib.rs": "06fed320f06b902d226694de6a3780f1963491055b5ea563b99d9959e715a5b0",
+    "src/main.rs": "12a89a37a36713a30048de9df89a839500e284250143861d7eb477f297e2ef83",
+    "src/map_data.rs": "b54b308cfaf93198d5ef7cce5e599bc4072b457a41e56a6912732998fb240ad4",
+    "src/media.rs": "e4c53f4501139af82ec1296ab645f93ea742744f1615a07ad7797a9b686c388d",
+    "src/normalization.rs": "dc263384f4e6a1aad5a6a53824f82041dda50677c02f54b6a011bbd9081f4e6e",
+    "src/overlay.rs": "eef14bd1c943e202617c64f4c366a77acb50a5d92d0a5cf4c32fd3da19833bc0",
+    "src/physics.rs": "e62f578471cd59ab1ad4d21988d78ab13864485e4b1236ee95fc272da3696f16",
+    "src/review_media.rs": "0fc3ba867788cf41f6547dade782108ac250a01ce6d9b3341724d200d8ddfe9e",
+    "src/reviewed_search.rs": "d06408fa6139c9b425e0437483b33311675df93f61731a8e314e0f1265d5815b",
+    "src/search_setup.rs": "6deebb004bb1db945b33ee4c68b9f34dfd68e3f281dc2b6c1747793f0d56f059",
+    "src/single.rs": "270492c846bd5d41e5596a353eeb930722e6fb012be1f24db35636fcb9fcfe59",
+    "src/terrain.rs": "179ee0a4da0af0c215706642ff158ff9504a31867ea79fc9dc984c49916c3fca",
+    "src/thunder.rs": "69e638fcc847e986156f72c8ed11b6737da67a43132609fa903997de8326ba7b",
+    "src/verification.rs": "61e47edd33586884c92f6269d54c6ff2402eea55ca85095601547177840d3a36",
+    "src/workspace.rs": "46a63bc0aa86dfcd614dd2c7ae49b16ad1f5d9e7e6dbae7bb5c5f185e93b9034",
+    "src/workspace_scoring.rs": "8568c1d25852850f96dd5a8f225e967e0bc6486fad98e33fe0b5c87e885f74f5"
+  }
+}

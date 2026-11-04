@@ -1,0 +1,14 @@
+FMI/NORDLIS historical lightning observations, CC BY 4.0.
+Source: https://opendata.fmi.fi/wfs
+Query: service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::observations::lightning::multipointcoverage&starttime=2025-07-19T16:00:00Z&endtime=2025-07-19T16:01:00Z&bbox=13,65,15,66
+Retrieved 2026-11-04; original XML SHA256:
+8a1e23ba96a79a2cd513145a8a7a8ba33f6a07dc723b98b52f426ae0d54b77c4
+License: https://en.ilmatieteenlaitos.fi/open-data-licence
+CC BY 4.0 terms: https://creativecommons.org/licenses/by/4.0/
+
+The expected JSON is GeoSonnar's independent raw-field transcription, checked
+against the provider's separate simple-feature response. It is not a location
+validation case. All36 positions/times and144 source parameter values matched.
+Timestamp representation is whole seconds, coordinate datum is ETRS89, and
+ellipse_major units/confidence semantics remain unresolved. No altitude is
+inferred. Rows may share a timestamp or coordinates and must remain distinct.

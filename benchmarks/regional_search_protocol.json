@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "name": "regional-search-v1",
+  "evidence_class": "independent analytic synthetic search checks; not field accuracy",
+  "generator_seed": 94612073,
+  "families": ["nominal", "noisy", "ambiguous"],
+  "holdouts_per_family": 4,
+  "analytic_cases": 3,
+  "controls": ["missing_track", "wrong_clock_range", "unreviewed", "budget_too_small"],
+  "control_bases": 2,
+  "grid": {"side": 7, "spacing_m": 500.0, "half_width_m": 1500.0, "truth_half_width_m": 900.0, "receiver_height_m": 80.0},
+  "clock": {"min_offset_s": -15.0, "max_offset_s": 15.0, "step_s": 5.0},
+  "true_clock_offsets_s": [-10.0, 0.0, 10.0],
+  "emitted_frequency_bounds_hz": [70.0, 180.0],
+  "retained_hypotheses": 50,
+  "max_evaluations": 200000,
+  "success_thresholds_m": [250.0, 500.0, 1000.0],
+  "acceptance": [
+    "All three noiseless on-grid analytic combined searches recover the independent receiver and shared clock within numerical tolerance, including misleading source alternatives and unknown emitted tones.",
+    "Missing approved sources, unreviewed selected events and insufficient work budgets return explicit errors before searching; no default association or dropped term is substituted.",
+    "Completed reports account for every declared receiver/clock cell and event/source evaluation, preserve plan/input identities, and keep location_verified false.",
+    "No per-scene thresholds, weights, source lists or bounds may be tuned after predictions. Noisy/weak cases and excluded-clock controls are descriptive, including failures.",
+    "Compare Doppler-only, thunder-only and combined on identical data, candidate receivers, shared clock ranges and per-modality source/tone options. Disabled modalities' events are removed from the search plan only.",
+    "Evaluation labels are separate; predictions are written before evaluation reads them. This is local procedural separation, not an independently administered blind trial."
+  ]
+}

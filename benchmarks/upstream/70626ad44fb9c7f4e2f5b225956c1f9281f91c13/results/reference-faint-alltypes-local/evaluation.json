@@ -1,0 +1,11 @@
+{
+  "reference_source": "https://app.osprey-watch.org/nest/3916",
+  "reference_coordinate": [
+    40.8766,
+    -73.5247
+  ],
+  "error_m": 357.4686768823865,
+  "threshold_m": 100,
+  "meets_threshold": false,
+  "scope": "regional search; source-informed window; clock derived from two-event result; rounded public platform coordinate"
+}

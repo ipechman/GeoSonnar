@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "predeclared_before_local_discovery": true,
+  "primary_source_record": "https://zenodo.org/records/22049202",
+  "reference": {"member": "20240408_042453.WAV", "start_frame": 0, "duration_s": 600, "selection": "Source-informed site and interval; no external fitted parameters used"},
+  "time_holdout": {"member": "20240408_165034.WAV", "start_frame": 0, "duration_s": 600, "selection": "Different interval at same site, chosen before local detector or fitting results; not independent-site validation"},
+  "search_bounds_south_west_north_east": [42.5, -73.5, 45.5, -70.0],
+  "clock_offset_bounds_s": [-15, 15],
+  "clock_error_bound_known": false,
+  "receiver_height_ellipsoid_m": 200.0,
+  "receiver_height_basis": "Fixed broad-region engineering assumption, not a value derived from deployment coordinates",
+  "sound_speed_mps": 343.0,
+  "geometric_aircraft_altitude_only": true,
+  "reference_trace_window_utc": ["2024-04-08T04:20:00Z", "2024-04-08T04:40:00Z"],
+  "time_holdout_trace_window_utc": ["2024-04-08T16:45:00Z", "2024-04-08T17:05:00Z"],
+  "discovery_settings": {
+    "chunk_s": 120.0, "overlap_s": 60.0,
+    "min_frequency_hz": 40.0, "max_frequency_hz": 1600.0,
+    "window_s": 2.048, "hop_s": 0.5,
+    "min_contrast": 2.5, "min_duration_s": 12.0, "min_support": 0.65,
+    "min_drop_hz": 4.0, "min_fractional_drop": 0.03,
+    "max_gap_s": 2.0, "max_fragment_gap_s": 20.0, "max_peaks_per_frame": 60
+  },
+  "candidate_coverage_complete": false,
+  "unheard_aircraft_penalties_allowed": false,
+  "publisher_coordinate_precision_validated": false,
+  "interpretation": "No event and rejected fit are preserved; source-informed replay and within-site time holdout remain separate. Exact publisher receiver coordinates never enter discovery or fitting inputs. Public metadata supports independent location comparison, not certified sub-100-m accuracy."
+}

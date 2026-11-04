@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "upstream_commit": "70626ad44fb9c7f4e2f5b225956c1f9281f91c13",
+  "interpretation": [
+    "This catalog describes a port of validation semantics, not execution of the upstream Python suite.",
+    "A test passes when its predeclared expected outcome is reproduced. Inconclusive, needs_input, no_supported_fit and execution failure remain distinct outcomes.",
+    "GeoSonnar's ridge RMSE and linear trajectory model do not share upstream robust-score units or interpolation. Direct equality is appropriate for pinned fixtures and contracts, not unrelated score values.",
+    "A reference result below a geographic threshold remains a source-informed development regression when the search region, event windows or clock came from that reference.",
+    "Do not interpret an unimplemented lane as skipped-and-passed. Generated reports should list capability gaps separately from passed and failed checks.",
+    "Runtime is measured on this machine. Upstream wall times are context, not portable pass thresholds.",
+    "Current upstream CI disables its historical synthetic lane under that repository owner's instruction. That does not impose an instruction on GeoSonnar; here analytic controls verify software physics and never substitute for real recording evidence."
+  ],
+  "required_receipt_fields": [
+    "Upstream pinned commit and source URLs",
+    "Local source and executable hashes",
+    "Hashes of every effective input including events, terrain, normalized tracks and configuration",
+    "Exact commands and arguments, environment/tool versions, per-case timing and exit status",
+    "Expected status, observed status, numerical tolerance and any failure text",
+    "Search scope, candidate completeness, normalization omissions and known altitude/clock assumptions",
+    "Evaluation coordinate provenance and separation from search; no hidden adjustment of thresholds"
+  ],
+  "current_real_data": [
+    "Reference regional parquet and all-types faint-window parquet have been restored and verified against the published checkpoint hashes.",
+    "The current raw video is user-provided. Its automatic scan finds portions of both main reference events but misses the faint event; the previous geolocation regressions still use manually reviewed ridges.",
+    "All 40 real Livermore corpus recordings have been restored and source hashes checked. Native discovery completes on all 40, with proposals on 34 clips. These are technical completion checks and descriptive counts, not event precision/recall or geolocation validation; the published annotation clock is not established as audio sample zero.",
+    "The NASA and WSU suites still require additional real assets and adapters. They remain unrun capabilities, not failed geolocation attempts in this project.",
+    "The final discovery contract and reports are documented in benchmarks/DISCOVERY.md. The informational notes used during validation-003 are archived as output/benchmarks/validation-003/upstream_notes-at-run.json; this documentation update does not change validation thresholds or native code."
+  ],
+  "next_step": "Audio-only timing/frequency/geometry fitting and refinement from new ranked candidates are now implemented; consult benchmarks/AUDIO_PRIORS.md and its executed receipts for actual scientific outcomes. Fits can remain inconclusive, and finite-grid edges remain incomplete coverage. Native terrain orchestration, a Windows GUI, and independent timed/surveyed recordings remain separate work before claiming global accuracy."
+}

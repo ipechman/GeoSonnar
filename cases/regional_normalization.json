@@ -1,0 +1,12 @@
+{
+  "source_label": "adsb.aero 2026-09-08 regional acquisition; provider paths are simplified",
+  "time_origin_utc_s": 1788825600,
+  "max_gap_s": 180,
+  "max_speed_mps": 330,
+  "altitude_treatment": {
+    "mode": "pressure_approximation",
+    "ellipsoid_offset_m": 0,
+    "uncertainty_m": 150,
+    "rationale": "Exploratory regional screening only: aircraft pressure height is treated as an approximate common height above the sea-level receiver. This is not a datum correction; detailed tracks, terrain, and altitude sensitivity are required before verification."
+  }
+}

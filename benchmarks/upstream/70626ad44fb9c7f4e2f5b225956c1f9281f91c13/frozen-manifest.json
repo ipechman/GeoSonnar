@@ -1,0 +1,245 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "case_id": "feature-N86LP_R01",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N9393T_R02",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N788BM_R03",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N784MB_R04",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N413AK_R05",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N373DF_R06",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N814SR_R07",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N2933A_R08",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N60RS_R11",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N4040_R12",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N795MM_R13",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N248LF_R14",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N913TC_R15",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N413AK_R16",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N500MG_R17",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N621KS_R18",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N4004R_R19",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N394FX_R20",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N563FX_R21",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N916KT_R22",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N310MG_R23",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N9658K_R24",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N8085W_R27",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N7RR_R30",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N172EL_R35",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N748SP_R36",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N61NG_R37",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N456CS_R38",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N3012N_R40",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N757AH_R41",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N1387U_R44",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N451EE_R45",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N759NC_R46",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N662EZ_R48",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N413AK_R49",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N958JX_R50",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N451EE_R51",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N231DT_R57",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N67WL_R59",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "feature-N7PG_R60",
+      "split": "development",
+      "scope": "annotation_band_assisted_features"
+    },
+    {
+      "case_id": "reference",
+      "split": "development",
+      "scope": "regional_source_informed_reference"
+    },
+    {
+      "case_id": "reference-faint-alltypes-local",
+      "split": "development",
+      "scope": "regional_source_informed_reference"
+    },
+    {
+      "case_id": "reference-faint-local",
+      "split": "development",
+      "scope": "regional_source_informed_reference"
+    },
+    {
+      "case_id": "reference-faint-recovered-clock",
+      "split": "development",
+      "scope": "regional_source_informed_reference"
+    },
+    {
+      "case_id": "reference-local",
+      "split": "development",
+      "scope": "regional_source_informed_reference"
+    },
+    {
+      "case_id": "reference-local-fast",
+      "split": "development",
+      "scope": "regional_source_informed_reference"
+    },
+    {
+      "case_id": "synthetic-known-minute",
+      "split": "development",
+      "scope": "manual_synthetic_localization"
+    },
+    {
+      "case_id": "synthetic-two-events",
+      "split": "development",
+      "scope": "manual_synthetic_localization"
+    }
+  ]
+}

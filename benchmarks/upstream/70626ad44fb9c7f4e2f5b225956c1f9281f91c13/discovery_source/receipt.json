@@ -1,0 +1,47 @@
+[
+  {
+    "path": "tests/test_discovery.py",
+    "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_discovery.py",
+    "git_blob_sha1": "f075a2bf884d19ef65a15f53e6588d7bd3f570c7",
+    "local": "benchmarks/upstream/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/discovery_source/test_discovery.py",
+    "bytes": 5920,
+    "sha256": "c04c1875ce1ab33d67fad203743a23daf6bd833eaba3afc2a912453769463167",
+    "git_blob_verified": true
+  },
+  {
+    "path": "scripts/make_benchmark_controls.py",
+    "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/make_benchmark_controls.py",
+    "git_blob_sha1": "272d098b231f2f966d024e1aa5c1f3895bf9c5c9",
+    "local": "benchmarks/upstream/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/discovery_source/make_benchmark_controls.py",
+    "bytes": 5161,
+    "sha256": "d00220016a75ed8dfe6b8096e80dd5fa2c3434ebaa217c4f042811d568dab2da",
+    "git_blob_verified": true
+  },
+  {
+    "path": "scripts/evaluate_benchmark.py",
+    "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/evaluate_benchmark.py",
+    "git_blob_sha1": "807de6e49c5fe326a45e7e51990b07cf29483c2c",
+    "local": "benchmarks/upstream/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/discovery_source/evaluate_benchmark.py",
+    "bytes": 1138,
+    "sha256": "1372a2e5fc4fbb42883e000f9a0eda0095b448bd4815b2a7c828d7a26ebee089",
+    "git_blob_verified": true
+  },
+  {
+    "path": "scripts/benchmark_real_discovery.py",
+    "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_real_discovery.py",
+    "git_blob_sha1": "4f756e0e87219400a8ba6f8e338506dee5bee220",
+    "local": "benchmarks/upstream/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/discovery_source/benchmark_real_discovery.py",
+    "bytes": 4418,
+    "sha256": "f1553c3c67ee94e11a374ef1091d7ee6087a241882aa9cbc25e69aa0b1d3ef64",
+    "git_blob_verified": true
+  },
+  {
+    "path": "scripts/benchmark_real_features.py",
+    "url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_real_features.py",
+    "git_blob_sha1": "bc28ab4fcdd1ae6c53db858f837efc031db9439a",
+    "local": "benchmarks/upstream/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/discovery_source/benchmark_real_features.py",
+    "bytes": 3333,
+    "sha256": "9449641722d70d18c12dffc8044104656f21ad651b7dca8327a9767af4ee71e8",
+    "git_blob_verified": true
+  }
+]

@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "frozen_at_utc": "2026-11-03T16:37:40.897090+00:00",
+  "scope": "Source-informed regional experiment with audio-derived Doppler timing/frequency priors and refinement seeded only from new regional candidates. Event selection, regional coverage, date and terrain remain prior information.",
+  "files": {
+    "discovery": {
+      "path": "output/benchmarks/discovery/original-hour-001/discovery.json",
+      "sha256": "5f7d76e1d136fddd97b5bb489245756f2b5ab534849df419f9f7a510d07bdd55"
+    },
+    "normalized_tracks": {
+      "path": "output/reference-data/normalized.json",
+      "sha256": "11134f6a28823d8e35fbc136a1baff0ee5a2f6b40927a8239084ef391b3398eb"
+    },
+    "observers": {
+      "path": "output/reference-data/observers.json",
+      "sha256": "17b12b81cb24f5a28fd1dfbb028b1b2293b55556763824a2699bcc1e55477c1b"
+    },
+    "regional_manual_baseline": {
+      "path": "output/reference/results.json",
+      "sha256": "0b42cd59dad3f5370d410af1fef7dd575d591d30d79634567ec9702160d8d5f3"
+    },
+    "fine_manual_baseline": {
+      "path": "output/reference-refinement/baseline/fine/results.json",
+      "sha256": "5e3efc0968f06457b4003e6c414b5c3dff3ec89eec6634e85b67559e1c62fc98"
+    },
+    "previous_reviewed_comparison": {
+      "path": "output/benchmarks/reviewed-search/comparison-001/report.json",
+      "sha256": "80605c398c5c45c42209cba88e9d05bac10b5d46560bd279ef2a14e35899b333"
+    },
+    "evaluation_locations": {
+      "path": "benchmarks/truth/reference-locations.json",
+      "sha256": "e315c76109491d66eb736ea5f36a4de9ab5b25e9007d7616ba8e5f7fb8683516"
+    },
+    "dem": {
+      "path": "data/dopplergeist/terrain/Copernicus_DSM_COG_10_N40_00_W074_00_DEM.tif",
+      "sha256": "6a0f4273de0bbc0709cc9db4793a89ac40c811388f59f23f644c0304b66ab94d"
+    },
+    "geoid": {
+      "path": "data/dopplergeist/terrain/us_nga_egm96_15.tif",
+      "sha256": "db493027562c9b004d7220fa881f5603adada4e1c5029b933fa7de4547b0e78d"
+    }
+  },
+  "review": {
+    "actor": "agent",
+    "basis": "Same two previously acoustically associated main-event groups; their complete automatic ridges are retained. No new flight-search result chooses, clips, rescales or edits a measurement.",
+    "selected": [
+      {
+        "harmonic_group_id": "harmonics-0011",
+        "event_id": "event-0011"
+      },
+      {
+        "harmonic_group_id": "harmonics-0013",
+        "event_id": "event-0013"
+      }
+    ],
+    "unselected_group_state": "unreviewed"
+  },
+  "regional_geometry": {
+    "observer_bounds": [
+      40.83,
+      -73.59,
+      40.92,
+      -73.46
+    ],
+    "grid_spacing_m": 200.0,
+    "observer_ellipsoid_height_m": 0.0,
+    "clock_offset_bounds_s": [
+      0.0,
+      86400.0
+    ],
+    "sound_speed_mps": 343.0,
+    "max_track_gap_s": 30.0,
+    "microphone_height_m": 3.0,
+    "source_informed": true
+  },
+  "excluded_manual_priors": [
+    "event samples",
+    "emitted-frequency grids",
+    "event1_cpa_recording_s",
+    "shared_shifts_s",
+    "coarse speed bounds",
+    "coarse slant-distance bounds",
+    "measured_separation_s",
+    "separation_tolerance_s",
+    "fine pair identities",
+    "fine observer grid"
+  ],
+  "refinement": {
+    "top_pairs": 3,
+    "radius_m": 600.0,
+    "spacing_m": 100.0,
+    "fine_radius_m": 150.0,
+    "fine_spacing_m": 25.0,
+    "every_retained_pair_gets_fine_search": true,
+    "edge_policy": "Report boundary/incomplete coverage; do not recenter using any evaluation coordinate or silently claim a unique global optimum.",
+    "sound_speed_mps": 343.0,
+    "aircraft_height_shift_m": 0.0
+  },
+  "audio_fit_policy": "Use the native broad-domain defaults and independent analytic controls. Native source/default hashes are frozen before the first production fit. No parameter is tuned to a flight identity, old acoustic fit or evaluation coordinate. If fit diagnostics cannot support safe derived priors, retain an inconclusive outcome without substituting manual priors.",
+  "software_integrity_gates": [
+    "All selected measured times/frequencies and original gaps remain unchanged through fit and search.",
+    "No old manual event/frequency/timing/coarse/fine values enter native fitting or generated search priors.",
+    "Geometry, normalized track data and date/time-origin assumptions are preserved and hashed.",
+    "Native fit status and identifiability/boundary diagnostics are explicit; empirical stability envelopes are not calibrated confidence intervals.",
+    "All generated timing/frequency/coarse priors agree with the published native fit derivation.",
+    "New regional results alone seed top distinct ordered flight-pair refinement; each retained pair receives its own local and fine terrain grid.",
+    "All outputs remain location_verified false and failures/no-candidate/inconclusive stages remain distinguishable.",
+    "Source, scripts, native executable, contract and data hashes remain unchanged during the production run.",
+    "Both new regional prediction and every conditional refinement finish before parsing old winner/results and coordinate references."
+  ],
+  "scientific_outcomes": {
+    "geographic_acceptance_gate": null,
+    "same_aircraft_requirement": null,
+    "inconclusive_is_not_location_success": true,
+    "scope_note": "Absolute UTC, atmospheric state, complete aircraft coverage and true surveyed microphone position are not established by audio fitting."
+  },
+  "timeout_s_per_command": 1200,
+  "evaluation_isolation": "Source files and old results may be hashed as opaque bytes before production. Evaluation content is parsed after predictions; procedural separation on one filesystem, not a sealed holdout.",
+  "search_padding_policy": {
+    "emitted_frequency_margin_hz": 2.0,
+    "heard_cpa_margin_s": 2.5,
+    "speed_fraction": 0.2,
+    "slant_fraction": 0.35,
+    "slant_minimum_margin_m": 500.0,
+    "frequency_step_hz": 0.5,
+    "shared_shift_step_s": 0.5,
+    "interpretation": "Fixed engineering allowance around empirical fit envelopes, not calibrated confidence limits. Cover both padded timing intervals when deriving pair separation tolerance."
+  }
+}

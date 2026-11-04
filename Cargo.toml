@@ -1,0 +1,36 @@
+[package]
+name = "geosonnar"
+version = "0.11.2"
+edition = "2024"
+rust-version = "1.94"
+description = "Reproducible aircraft-audio geolocation verification core"
+license = "GPL-3.0-or-later"
+default-run = "geosonnar"
+
+[features]
+default = []
+gui = ["dep:eframe", "dep:rfd", "dep:image", "dep:wgpu"]
+
+[[bin]]
+name = "geosonnar-gui"
+path = "src/bin/geosonnar-gui.rs"
+required-features = ["gui"]
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0", features = ["float_roundtrip"] }
+flate2 = "1.1.10"
+tar = "0.4.46"
+sha2 = "0.10.9"
+quick-xml = "=0.41.0"
+tiff = { version = "0.11.3", default-features = false, features = ["deflate", "lzw"] }
+eframe = { version = "=0.35.0", optional = true, default-features = false, features = ["glow", "wgpu_no_default_features", "default_fonts", "accesskit"] }
+wgpu = { version = "=29.0.0", optional = true, default-features = false, features = ["std", "parking_lot", "dx12", "wgsl"] }
+rfd = { version = "=0.17.2", optional = true, default-features = false }
+image = { version = "=0.25.10", default-features = false, features = ["png"], optional = true }
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+

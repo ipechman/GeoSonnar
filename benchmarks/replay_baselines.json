@@ -1,0 +1,55 @@
+{
+  "schema_version": 2,
+  "purpose": "Frozen native replay inputs and prior GeoSonnar outputs; not independently surveyed location truth.",
+  "tolerances": {
+    "winner_coordinate_drift_m": 2.0,
+    "rmse_absolute_difference_hz": 0.0001,
+    "clock_absolute_difference_s": 0.05
+  },
+  "cases": [
+    {
+      "id": "regional-detailed",
+      "input": "output/reference/search_input.json",
+      "input_sha256": "0968fd6f1265707cfb6fc172ff8b835bb26cc0bc6620aeca235667946c255500",
+      "baseline": "output/reference/results.json",
+      "baseline_sha256": "0b42cd59dad3f5370d410af1fef7dd575d591d30d79634567ec9702160d8d5f3"
+    },
+    {
+      "id": "regional-fine",
+      "input": "output/reference-refinement/baseline/fine/input.json",
+      "input_sha256": "46ac2f3ab2c6f858065add05380fcd03905242e1dbb4cf6f378b1e55cb2b4295",
+      "baseline": "output/reference-refinement/baseline/fine/results.json",
+      "baseline_sha256": "5e3efc0968f06457b4003e6c414b5c3dff3ec89eec6634e85b67559e1c62fc98"
+    }
+  ],
+  "negative_simplified": {
+    "id": "simplified-archive-remains-unverified",
+    "input": "output/regional/search_input.json",
+    "input_sha256": "cf371ed8ca8a0990ca1c1851a35dc2e6ef482c38d643703e9ca48158c7f67937",
+    "expected_status": "hypotheses_ranked",
+    "expected_exit_code": 0,
+    "unavailable_reference_pair_icao24": [
+      "a1dfeb",
+      "ace391"
+    ],
+    "baseline": "output/regional/results.json",
+    "baseline_sha256": "4fe8e2d324e5a7a8b64b29486a93d8683716b61e4fff6a5ae3e107356d7fbb38",
+    "scope": "Full simplified archive can return unverified numerical hypotheses; its incomplete published-reference pair must be absent. No new accuracy claim."
+  },
+  "negative_partial_pair": {
+    "id": "simplified-reference-pair-incomplete",
+    "input": "benchmarks/fixtures/simplified-reference-pair-incomplete.json",
+    "input_sha256": "5ea64d13ac425a8fb40af92f7c6275ff62479fe7e35d22f2c5422ef4f8fd94d2",
+    "expected_status": "no_candidate",
+    "expected_exit_code": 3,
+    "derivation_receipt": "benchmarks/fixtures/simplified-reference-pair-incomplete.receipt.json",
+    "source_input": "output/regional/search_input.json",
+    "source_input_sha256": "cf371ed8ca8a0990ca1c1851a35dc2e6ef482c38d643703e9ca48158c7f67937",
+    "selected_icao24": [
+      "a1dfeb",
+      "ace391"
+    ],
+    "track_count": 10,
+    "scope": "Independently declared source-informed support negative: preserve all reference-aircraft parts and all measured ridges, observers, and settings; no bridging of the missing first-event support. No accuracy claim."
+  }
+}

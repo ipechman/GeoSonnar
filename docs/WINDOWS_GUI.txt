@@ -1,0 +1,867 @@
+GeoSonnar 0.11.2 - Windows review workspace
+
+VERSION 0.11.2 - WIDE-AREA TWO-PASS DOPPLER
+For complete-day ADS-B data and a USA-size grid, use the indexed wide-area path:
+1. Data > Stored datasets > select the complete downloaded day archive. Set the
+   Extraction region and aircraft-area padding before Build indexed flight data;
+   widening Search later does not expand the imported source coverage.
+   Choose Use complete archive UTC day, or enter the separate full-date UTC source
+   interval; blank source fields mean the complete day. The earlier From UTC / To
+   UTC fields belong to Import bounded tracks into library, the smaller map path.
+   Review altitude/gap settings, disk budget and Advanced memory limit (512 MiB by
+   default), then Build indexed flight data. Select the new indexed copy and choose
+   Use indexed flight data. Its exact points remain on disk, not in the map buffer.
+2. In Audio review, confirm and source-assess exactly two selected Doppler events
+   with nonoverlapping intervals and at least three measured points each.
+   Search > Wide-area two-pass Doppler > Copy the two selected reviewed Doppler
+   events. Review the heard-CPA picks, emitted-tone grids, speed/slant ranges,
+   shared shift and possible recording-start interval. Set the complete area and
+   grid spacing; Estimate counts the global grid without the legacy 10,000 cap.
+3. Review memory/work/time/output budgets, then Run reviewed wide-area plan. The source
+   index prunes impossible tracks; exact native trajectories supply local CPAs
+   and the common-clock pair score. Cancel preserves completed receiver pages.
+4. Results > Wide-area results shows a sortable retained shortlist of source pairs,
+   coordinates, UTC recording starts and RMSE. The run folder also retains processed-
+   receiver records. A partial run cannot establish the winner of its whole area.
+   Open saved wide-area run... selects that run folder; keep its matching
+   <run-name>.review.json file beside it to retain review context. Reopening does
+   not resume computation; this first implementation cannot resume saved runs.
+   Prepare local area makes a smaller wide-area grid for explicit re-estimation.
+   It does not transfer aircraft associations to another method or enable terrain,
+   atmosphere or thunder refinement automatically.
+
+The first wide-area method uses an explicit fixed ellipsoid receiver height and
+constant sound speed. Terrain, atmosphere and thunder belong to later local
+refinement. Grid spacing, scores and rankings are not calibrated confidence.
+Legacy map-preview and regional-search limits remain for their bounded methods;
+they do not restrict the separate indexed wide-area path.
+
+Flight points and original provenance share bounded packed files; metadata is
+paged. Buffered provenance compression preserves exact source records.
+For the tested complete-USA day source, set Advanced memory limit to 1024 MiB
+before loading and estimating. The recorded national preflight required about
+531 MiB, above the 512 MiB default. It verified source loading and planning,
+not completed nationwide scoring.
+The memory allowance covers the source/index reservation shown by Estimate.
+The exact-track cache has a separate 256 MiB allowance; decoder buffers and the GUI
+also use memory. This control is not a hard limit on the whole program's memory.
+Changing it never removes source tracks, changes spacing or edits reviewed events.
+
+The full-day import comparison used the same archive and selection in sequential
+runs on one machine, both under a 20% aggregate CPU cap. Elapsed time fell from
+17 min 25 s to 3 min 58 s (about 4.40 times faster). All 54,788,942 retained samples
+and 461,344 passes matched the baseline, including identical index, metadata,
+point and provenance hashes; a fresh native open verified the stored data.
+The USA 10 km grid's 196,647-receiver Estimate passed with a 1024 MiB source/index
+allowance. This measures import and planning, not completed nationwide scoring
+or location accuracy.
+
+A work-budget stop is incomplete, not "no match". In a separate 50-cell diagnostic,
+the historical native configuration completed 50/50 cells in 24.39 s. Broad GUI
+copied suggestions reached the 250000000 work-unit limit at 0/50 completed cells;
+102 provisional pair scores were excluded because the first receiver was unfinished.
+The historical configuration used distinct physical bounds per event; the GUI
+currently shares one set across both, so these are different workloads.
+Review evidence-supported tone and physical ranges, choose an explicit work budget,
+then re-estimate. Enter work units as a raw integer; runtime and memory are separate
+limits. Raising only the time limit does not remove the work limit. A sufficient
+larger budget for those broad GUI suggestions has not been tested, and no nationwide
+scoring runtime is established.
+
+VERSION 0.11.2 - INSPECT / SEEK FREQUENCY PANNING
+Zoom into the frequency band, select Inspect / seek, then hold the left mouse
+button and drag vertically to pan frequencies. The first drag direction selects
+the gesture: vertical pans the band; horizontal scrubs time. The frequency band
+keeps its width and stays within the loaded spectrum. Reverse direction at an
+edge to move back immediately. Click a trace to select it, or empty space to seek.
+These gestures change the view/cursor; they do not edit evidence or undo history.
+Draw trace, Move point and the other editing tools keep their own gestures.
+
+The 0.11.2 source passed 888 native tests, including 218 headless GUI/launcher
+checks, the separate 2.1-million-point storage control, nine media/data integrations,
+formatting and Clippy. Python controls passed 132 tests with one unsupported
+fixture skipped; all seven release-collector controls passed. New controls check
+exact provenance and point values across compression-buffer boundaries, refusal
+to publish a completed index after a final buffered-write failure, and source
+counts for accepted and rejected rows. Receipts: output/benchmarks/frequency-pan-001/.
+These checks establish software behavior, not nationwide throughput or field accuracy.
+
+VERSION 0.11.1 - DATA LIBRARY
+Stored FMI requests show their last published state: planned, partial, failed,
+cancelled, complete or complete_empty. Imported datasets have their own status.
+Invalid or changed status metadata shows unavailable. A complete-empty request
+contains no records; it is not evidence that no lightning occurred. Status alone
+does not verify raw files or provider coverage.
+
+Delete managed copy waits for the outcome before unloading affected inputs.
+Unrelated copies, review choices, numerical results and saved history remain.
+An ordinary refusal preserves loaded state; if deletion removed some files before
+stopping, only those affected inputs are invalidated and incomplete deletion is
+reported. Resume deletion from Stored datasets. Results that reference removed
+sources remain historical; restore matching inputs and check them before further
+source-dependent inspection. The renderer and scientific scoring are unchanged.
+
+The 0.11.1 source passed 821 native tests, including 196 headless GUI/launcher
+checks, nine media/data integrations, formatting and Clippy. Python controls
+passed 132 tests with one unsupported fixture skipped; all seven release-collector
+controls passed. Receipts: output/benchmarks/data-library-001/. No interactive
+GUI or graphics device was opened. This is application verification; earlier
+scientific results remain historical, with no new field-accuracy claim.
+
+VERSION 0.11.0 - MEDIA SETUP
+The Case screen checks local media-tool locations in the background. FFprobe is
+required before Create case becomes available. FFmpeg is required when decoding
+audio or video in Audio review; its absence does not block case registration or
+data work. FFplay is optional for audio playback and appears in Settings.
+
+These tools are not bundled. Place the actual executables in the portable
+folder's tools directory, or use Browse tools / Settings to choose installed
+files and Save settings. Package-manager launch shortcuts are not supported.
+For a new installation, https://ffmpeg.org/download.html#build-windows links to
+Windows executable builds. Extract a Windows x64 static build, retain its license
+and README, and copy ffmpeg.exe, ffprobe.exe and optionally ffplay.exe from bin
+into GeoSonnar's tools folder. Choose Auto-detect afterward. Nothing downloads
+or installs automatically.
+Blank paths search tools/, beside the program, the known actual Chocolatey
+ffmpeg-full installation, then local absolute PATH entries. Direct Windows network
+locations and detected symbolic/reparse links are skipped automatically. Found means
+the file was located; compatibility is checked when the tool is used.
+
+Auto-detect deliberately clears manual selections and saves automatic discovery.
+Use it after moving a portable copy if old settings point to a missing location.
+Missing explicit paths are kept until you change them. Checking paths starts no
+media process or download, and closing the app does not wait for this check.
+If an old file lookup stays blocked, Browse or Auto-detect saves the replacement
+and queues only the latest check. Reopen the app if the old lookup does not finish.
+The 0.11.0 source passed 808 native tests, including 185 headless GUI/launcher
+checks, nine media/data integrations, formatting and Clippy. Python controls
+passed 132 tests; one unsupported fixture was skipped. No interactive GUI or
+graphics device was opened. Release receipts: output/benchmarks/media-readiness-001/.
+The 0.10.0 scientific results below are historical and were not repeated here.
+
+The separate prospective storm-data exercise completed all 1,248 planned FMI
+queries with one explicit retry. Six required comparison windows contained no
+records, so all 126 location searches were withheld under the frozen plan.
+That attempt remains unavailable; it supplies no new location-accuracy result.
+
+EARLIER VERSION 0.10.0
+The optional Doppler + envelope method compares both forms of measured audio
+evidence at every shared location and clock. The default Reviewed events method
+is unchanged.
+
+Validation: 793 native tests, including 177 headless GUI/launcher checks, nine
+explicit media/data integrations, and 132 Python controls passed. One unsupported
+Python fixture was skipped; native Windows link checks passed. Formatting,
+Clippy and the portable build passed. The CLI passed 188 workflow checks and
+324 checks across six historical hypotheses. The original storm measurement
+and nine results were byte-identical. All 48 frozen joint cases and 72,912 cells
+matched scores, tones, assignments, ranks and boundaries exactly; five joint
+CLI failure/cancellation controls passed. No GUI or graphics device was opened.
+Receipts: output/benchmarks/joint-workspace-001/ in the development workspace.
+
+Audio review > Thunder envelope: explicitly choose an interval, add a review
+note and measure it. Zooming the spectrogram does not change this interval.
+All controls exposes the FFT, cadence and frequency band. Changing the interval,
+channel or measurement settings requires measuring again.
+
+Search > Doppler + envelope (experimental): review aircraft alternatives, enable
+frequency only in Evidence, and declare the common area/time grid and actual
+lightning query coverage. Clock spacing must match the measured envelope cadence.
+Estimate work before running. This method currently requires constant sound speed
+and does not add picked Doppler/thunder arrivals as another vote.
+
+Results offers separate Doppler, thunder-envelope and combined ordinal views,
+sortable coordinates, clocks, scores and availability. Review individual leaders'
+location/time disagreement. A row pins the map without applying its assumptions.
+Missing or unfinished cells withhold combined ranking. Cancelled runs and the
+original full request remain in Run history. Save a report copy for full JSON/CSV
+cells and an HTML preview. Joint-cell predicted curves are not yet displayed on
+the audio canvas; the separate envelope command line still exports curves.
+
+The combination is experimental ordering, not confidence or a location verdict.
+Wrong lightning data can harm a useful Doppler estimate. Independent field
+accuracy, hybrid field improvement and false-match thresholds remain unproved.
+
+RUN HISTORY
+Results > Run history keeps the original reviewed settings, source bindings,
+numerical results and completed/cancelled/failed status for explicit regional
+and comparison runs. Refresh reads local receipts. Open shows a historical run
+without rerunning or loading data. Save copy exports that run's original settings,
+even after later edits. Delete removes only that owned history entry; no automatic
+eviction occurs. Limits are 256 runs and 1 GiB per case.
+
+The label "Saved result; replay requires original data" is deliberate: compact
+history does not copy every track, lightning dataset or recording. For inspection,
+load the exact original datasets in Data and choose Check loaded original data
+for inspection. Full investigation export remains a separate action.
+
+If storage fails, Results retains the original outcome and offers Retry saving
+original result or explicit Discard. Save review / Ctrl+S does not save that
+numerical outcome. Another run and case replacement are blocked until it is
+preserved or explicitly discarded. Closing warns about unsaved results as well
+as edits. An interrupted receipt remains visible; damaged entries do not silently
+become successful runs. Deleting a displayed run labels it as memory only.
+
+See docs/THUNDER_ENVELOPE.md for the optional GUI method and separate command-line
+workflows, explicit intake, work preview, cancellation and model assumptions.
+
+GUIDED VIEW AND ALL CONTROLS
+The top bar switches between Guided view and All controls. This changes only
+the layout and is remembered for this portable copy. It does not apply presets,
+change search methods, confirm events, select evidence or start work.
+Guided view keeps the current step and candidate-finding presets visible.
+Review files contains saved-review, saved-investigation and discard actions.
+Data separates Get data from Stored datasets; the latter contains load, resume
+and delete actions. Map layers and display groups secondary map controls.
+Detailed settings remain accessible, and All controls restores the dense view.
+Continue buttons only navigate; they never approve evidence or run a search.
+
+SPECTROGRAM ZOOM
+Wheel over the spectrogram zooms time and frequency around the pointer.
+Ctrl-wheel changes time only; Alt-wheel frequency only; Shift-wheel pans time.
+The frequency row shows visible limits, zoom buttons and Fit loaded frequencies.
+Zoom stays within the measured FFT band. The next decode uses the separate
+Hz load limit in Advanced spectrogram settings; zooming does not narrow it.
+Zoom changes the view, not FFT resolution, measurements or review choices.
+
+CANCEL ALL AND EXIT
+Close the window during work, then choose Cancel all and exit. This also discards
+unsaved edits, as stated in the prompt. Cancellation is requested first; after a
+two-second grace the application closes even if a worker cannot cooperate.
+Windows owns the GUI's helper processes as one group and stops remaining media,
+download and CLI children when it exits. Other applications are not included.
+Saved files and original inputs remain; interrupted outputs may be incomplete.
+Resumable downloads keep their recorded parts, subject to integrity checks.
+If Windows cannot establish this process ownership, the GUI reports a startup
+error before opening the workspace rather than promising incomplete cleanup.
+
+VERSION 0.8.0 - EXPLICIT HISTORICAL LIGHTNING REQUESTS
+Data > Request lightning > FMI / NORDLIS public history provides local planning,
+explicit download/resume, separate import, and separate loading. No provider
+work starts on launch. Review the stored request and its errors before import.
+Only complete nonempty requests become a lightning layer. Source interpretation
+in Data or Search requires an explicit coordinate approximation, written reason
+and at least one second of timestamp-representation allowance. The thunder
+residual scale and unknown-height fallback still require separate review.
+FMI covers Northern Europe, not worldwide or Quebec history. Download completion
+does not establish full strike coverage or verify a recording location.
+See docs/FMI_LIGHTNING.md in the source package for limits and the CLI workflow.
+
+VERSION 0.7.0 - DESCRIPTIVE FIT COMPARISON
+After Inspect fit in audio, expand Fit comparison for the selected Doppler event.
+It compares the unchanged inspected curve with fitted flat and linearly drifting
+tones at exactly the same measured points. The table shows ordinary error in Hz
+and error divided by the original scoring scales. Display interpolation points
+never enter the comparison. All inspected events shows each event separately.
+Missing, duplicate or invalid predictions, fewer than three measured times, or
+unsupported numerical scales prevent a comparison instead of dropping points.
+
+These are descriptive errors on the same data used to fit the alternatives.
+The line has two fitted parameters; the flat tone has one. The Doppler candidate
+may already reflect a search over many aircraft, locations, clocks and pitches.
+Lower error does not identify the sound, verify a location or supply confidence.
+No score, source assessment, association or measurement is changed by inspection.
+
+VERSION 0.6.0 - STARTUP OPTIONS AND SAVED INVESTIGATIONS
+This version adds reopening saved Results without rerunning a search.
+Explicit restoration loads a receipt-checked snapshot of the original normalized
+inputs; inspection checks the matching recording separately. It also adds
+Direct3D rendering, a software-rendering launcher and startup logs. The 0.6.0
+application checks and static-C-runtime build passed; see VALIDATION below for
+the exact scope. The user subsequently confirmed responsive startup on the
+initial Case screen with the 0.6.0 software launcher. The user later reported
+using the 0.7.0 default GUI without issues; exact workflows were not specified. Historical counts refer to the
+builds they name; the reported original OpenGL stall has no established cause.
+
+Measurement confirmation and source assessment are separate. New/imported events
+start unassessed; old reviews retain their choices but need source assessment
+before a new workspace search. Uncertain sources remain usable with an explicit
+reason, visible in Results and prediction inspection. Editing measurements resets
+both assessments; Undo restores them. Guided search, managed aircraft history,
+terrain heights and measured/predicted overlays remain available. Earlier
+packages remain separate. Use the matching package and validation receipt.
+
+START
+Unzip the complete matching portable folder into a writable location. No installer
+is required. Keep geosonnar.exe beside the interface launchers for processing jobs.
+
+geosonnar-gui.exe uses Direct3D 12 for the interface. geosonnar-safe.exe uses
+software Direct3D 12 rendering on the CPU. The two launchers contain the same
+program; the exact safe filename selects software mode before graphics starts.
+Keep that filename unchanged. Software mode performs the same analysis and still
+needs the usual cases, recordings and media tools. It may draw more slowly.
+
+If software rendering cannot use an available Direct3D 12 software adapter, it
+reports an error instead of silently switching to a hardware adapter. Neither
+launcher changes Windows driver or graphics settings. Windows still discovers
+graphics devices during startup, so software mode is an alternative to test, not
+a guarantee that every graphics-related stall is avoided.
+
+The older OpenGL path is available only by explicitly starting geosonnar-gui.exe
+with --opengl; that option needs an OpenGL 3.3-capable driver. The safe launcher
+refuses --opengl. Starting geosonnar-gui.exe with --software-renderer selects the
+same rendering mode as geosonnar-safe.exe. Renderer choice is not saved to settings.
+
+STARTUP LOGS AND CURRENT LIMIT
+Each launch attempts to create a new geosonnar-startup-*.log beside the program,
+falling back to the Windows temporary folder if that location is unwritable. Each
+log is limited to 64 KiB. It records the version, chosen renderer and one-time
+startup milestones: before graphics initialization, entry into the graphics
+creation callback, completed workspace initialization, and the first built UI
+frame. The frame marker occurs before presentation to the screen; it does not
+prove that Windows displayed the frame successfully. Error, panic and exit
+markers are included when reached. A log can be incomplete if startup stalls.
+Case paths, arguments, settings values and panic details are not recorded.
+
+A user reported that opening 0.5.0 stalled the computer and closing it immediately
+restored responsiveness. The cause is not yet established. The new rendering
+options and logs help investigate that report. The user confirmed that 0.6.0's
+software launcher stays responsive on the initial Case screen, then reported
+using the default 0.7.0 GUI without issues. Headless checks do not reproduce that
+graphics path or certify this new build's native interaction. No desktop launch
+is part of automated tests.
+
+Follow 1 Case -> 2 Audio review -> 3 Data -> 4 Search -> 5 Results.
+Jobs and Settings remain separate utilities. The sun button at the bottom
+switches light/dark controls and remembers the choice. The measured spectrum
+and video preview retain dark backgrounds for readability.
+
+1. CASE
+Choose a recording, a title and a folder for cases. Intake creates a fresh
+case and checks the recording. Original media stays in place and is not
+uploaded. Reopen with case.json. Add clues with their uncertainty; narrative
+clues do not silently constrain a search. Enter the optional recording start
+in UTC when known; this is saved with your review. Channels are numbered from 1 in
+the interface and from 0 in saved files.
+
+2. AUDIO REVIEW
+Choose the channel, then use the full-recording timeline above the spectrum.
+Gray shows loaded audio; the cyan viewport shows the visible interval. Drag its
+center to pan or its edges to resize. From/To fields and Load visible audio sit
+beside the navigator. Up to five minutes can be decoded at a time; an unloaded
+interval is marked explicitly until you load it.
+
+Use the mouse wheel over the spectrogram to zoom around the pointer. Shift +
+wheel pans in time. The +/− buttons and Fit loaded audio provide alternatives.
+Guided view shows detection presets directly; All controls groups them under
+Detection presets and spectrum settings. Advanced disclosures hold FFT and
+contrast settings; the visible frequency range is beside the timeline.
+The pixels are measured from
+the selected audio channel.
+
+Seek with the timeline or Inspect / seek. Video is a periodic decoded-frame
+preview with its actual frame timestamp. The optional measured-spectrum
+and trace overlay uses the recording timeline. Audio-only recordings work.
+Play interval uses external FFplay; Pause stops it and playback can restart
+from the displayed position. The moving preview cursor estimates playback
+position; measure acoustic arrival times from the recorded evidence.
+
+Add a Doppler event, select Draw trace and hold the left mouse button while
+following its ridge. A stroke replaces points within its drawn time span and is
+one undoable edit. Add point, Move point and Erase point remain available for
+precise corrections. Thunder edges edits thunder intervals. Exact values remain
+editable in the selected-event inspector.
+
+Delete removes the selected event. Ctrl+Z undoes; Ctrl+Y or Ctrl+Shift+Z redoes;
+Ctrl+S saves the review. Text fields retain their own editing shortcuts. Changes
+to measurements require review again and clear their scoring selection.
+
+The window can shrink to 760 by 560 logical pixels. Panels adapt when resized;
+at narrower widths the Events / Selected event tabs appear below the canvas.
+Scrollable areas keep controls reachable. Displayed Windows drive and network
+paths omit the verbatim prefix while their stored bindings remain intact.
+
+Detection presets provide starting sensitivities; inspect their thresholds.
+Prepare Doppler detection creates a job to start in Jobs. Import the resulting
+checked discovery.json, or open an existing result for this recording/channel.
+Find thunder candidates in view uses the loaded low-frequency energy envelope.
+These are experimental energetic soundprints, not a trained thunder recognizer.
+Traffic, wind or other sounds can produce proposals. Lower thresholds reveal
+more candidates; sensitivity is not calibrated confidence.
+
+Nothing is selected for scoring automatically. The event inspector separates
+three decisions: 1 Measurement review, 2 Source assessment, 3 Scoring choice.
+Confirm measurements checks the trace, interval and timing you observed. It does
+not identify the sound source. Separately assess whether the sound could be an
+aircraft or thunder: Not assessed, Plausible source, Uncertain hypothesis, or
+Does not fit this source. An uncertain hypothesis is allowed with a brief reason
+that states what makes it plausible and what else could explain it. No aircraft
+identity or lightning-strike match has to be proven to explore a hypothesis.
+
+Use this event in scoring is still an explicit choice. Selected events without
+a source assessment, incompatible events, or uncertain events without a reason
+block the active search; they are not silently removed. Search names the blocked
+events and offers Review source in Audio. Only enabled terms/requested modes
+are checked. Uncertain hypotheses carry visible warnings into their results.
+Specific aircraft/strike alternatives are approved separately in Search.
+
+Editing the event type, trace, interval, arrival, measurement uncertainty or
+audio channel resets measurement confirmation and source assessment. Undo/Redo
+restores the complete previous review. Changing only a source assessment,
+association or emitted-tone assumption preserves measurement confirmation and
+invalidates old comparisons. Older saved reviews reopen as Not assessed while
+retaining their previous measurements and selections; assess them before scoring.
+Group review remains available for the earlier harmonic-group workflow and its
+separate Keep/Reject snapshots; the editable workspace has its own selections.
+
+3. DATA
+Data imports owned copies into the case with source details and hashes.
+Original files remain intact. Verify & load map / scoring layer checks a copy
+before use. Remove layer removes it from the review. Delete managed copy
+requires confirmation and removes registered files; saved reviews that depend
+on those files need them restored before they can verify successfully.
+
+Request ADS-B offers two explicit acquisition routes. Small time/area request
+uses public map-history replay to find candidate aircraft, then downloads their
+full traces. Follow 1 Time & aircraft area -> 2 Review & fetch -> 3 Coverage &
+import. Enter exact ISO UTC times (YYYY-MM-DDTHH:MM:SSZ), at most one hour inside
+one UTC day, and an aircraft coverage rectangle no wider than 20 degrees on
+either axis. The aircraft region is separate from the receiver grid: pad it for
+acoustic travel and aircraft motion. Copy a padded window from Search includes
+your shared clock uncertainty and an explicit travel-time look-back. Oversized
+requests must be split manually; they are not silently shortened.
+
+Prepare bounded history request is local and does not check live availability.
+Review the request and caps, then explicitly Fetch reviewed history request.
+The default is 64 full traces and 100 MB cumulative HTTP payload; the supported
+maximum is 256 traces and 250 MB. Replay files cover broader areas. If the trace
+cap is reached, candidates are chosen by aircraft-ID order, not relevance.
+Inspect source types, omitted identities, cap omissions, replay gaps and failed
+requests. Complete means the selected files finished, never complete sky
+coverage. Missing aircraft are not evidence of absence. Cancellation stops the
+owned transfer and preserves an incomplete report and reusable responses.
+Budgets include failed response bytes and earlier attempts in that request cache.
+
+Native import is a separate action. Incomplete requests require explicit review
+before importing available traces. Geometric altitude and ADS-B / ADS-R positions
+are the default; barometric approximation needs an offset, uncertainty and
+rationale. Import creates a separate managed normalized-track dataset. Select
+and load it afterward, then approve aircraft alternatives in Search yourself.
+Downloaded candidates never confirm an event or become acoustic associations.
+Stored history can be reopened from the library for review, resume and import;
+its registered raw responses, reports and hashes remain available for auditing.
+
+Global day archive remains available for broader requests. Enter a UTC date and
+download limit, check availability and size, then explicitly Download planned
+archive. These global archives can be several gigabytes; filtering by region and
+time happens during native import. Interrupted downloads retain resumable data.
+One import covers one UTC day. Missing positions/heights and broken support
+remain gaps. Neither acquisition route establishes complete aircraft coverage.
+
+Request terrain plans Copernicus GLO-90 or GLO-30 tiles for the entered region.
+Review the tile list and total download cap, then start the explicit download.
+Stored verified tiles can be reused. Coverage is limited to 64 one-degree tiles
+per request; missing/ocean tiles remain visible failures. Copernicus supplies a
+surface model referenced to EGM2008. Downloading it does not convert heights to
+WGS84 ellipsoid heights or automatically change the scoring receiver height.
+
+Request lightning accepts a UTC interval and region, provides request details
+you can copy for your provider, and downloads an authorized CSV/JSON export URL.
+The app filters actual imported strikes to that interval/area and records the
+original source hash and filtering bounds. A successful export download does
+not establish complete strike coverage. There is no anonymous worldwide
+historical lightning API in this program; Blitzortung raw history requires
+provider access. Other exports can still be downloaded with an authorized HTTPS
+link and size cap, or imported from a local file.
+
+Preserve provider terms and declare the altitude datum. Lightning CSV needs
+id,time_utc_s,latitude_deg,longitude_deg; altitude_m and intensity are optional.
+JSON uses schema_version:1 and a strikes array with those fields. Times are Unix
+UTC seconds. Raw provider formats may need a separate adapter.
+
+4. SEARCH
+Natural Earth country outlines work offline as coarse geographic context.
+Pan/zoom, inspect aircraft paths or lightning strikes, and place a receiver pin.
+Online street map is optional and off by default. It requests only viewed
+OpenStreetMap tiles and caches them in the case. The provider receives the
+requested map area. Attribution remains visible; there is no bulk map download.
+
+Search opens the Guided regional search. Follow its three steps from left to
+right. The Fixed assumptions comparison remains available beside it.
+
+1 Area & time: enter a bounded rectangle and grid spacing, then an approximate
+recording-start UTC and a shared offset interval/step. Offsets are absolute
+relative to that recording start; they replace the fixed clock adjustment.
+Every event in one hypothesis shares this clock. Presets are starting choices,
+not statements about the recording's true uncertainty. The grid allows up to
+10,000 receivers within 85 degrees north/south, without a date-line-crossing
+rectangle. Other work limits can require a smaller declared search.
+
+2 Evidence: confirm measurements and assess acoustic sources in Audio review,
+then explicitly select the events and scoring terms you want to use. Refresh the regional event list after changing
+selections. It never confirms events or approves sources for you. For each
+selected event, check the aircraft or strike alternatives you want considered.
+Inspect highlights a source on the map; checking it separately approves it for
+search. Source text/time filters only change the displayed list. Hidden approved
+alternatives stay approved. Review the travel-time look-back when filtering.
+Doppler frequency requires an explicit emitted-tone range; the search fits one
+bounded constant tone per event. Inspect the range instead of accepting a
+suggestion without review. Weights and uncertainty floors remain explicit.
+
+3 Run: estimate the work before pressing Run reviewed regional plan. The estimate
+covers receivers, shared clock offsets, approved sources and residual work.
+An optional independent-mode comparison runs selected Doppler-only, thunder-only
+and combined searches over the same declared area/time/source pools. Review its
+aggregate cap and requested modes before starting. It retains the scoring terms
+you selected; it does not enable missing evidence automatically. Progress and
+Cancel remain visible. A cancelled search is partial, not a completed negative
+result. Evidence or data changes require a fresh estimate/run.
+
+Receiver heights from terrain is an optional advanced panel. Edit terrain height settings
+keeps a local draft until you explicitly Apply reviewed height model. Choose registered surface tiles,
+declare their vertical datum, select a compatible geoid for EGM96/EGM2008 data,
+and enter microphone height above the surface. Preview checks every receiver.
+Missing tiles/geoid coverage or incompatible datums block application; there is
+no silent zero-height fallback. Copernicus terrain uses EGM2008. Use fixed
+receiver height explicitly removes this model. Loading a raster alone changes
+neither the selected height model nor the fixed height. Both guided search and
+fixed receiver/grid comparisons honor an applied, verified height model.
+
+Fixed assumptions comparison holds chosen aircraft/strike associations, emitted
+tones and shared clock fixed. Its Doppler/thunder breakdown is conditional on
+those choices; it is not an independent search over alternative associations.
+It remains useful for inspecting full residuals and checking a chosen hypothesis.
+An optional imported atmospheric profile supplies temperature, humidity,
+pressure and wind along bounded straight paths. Weather-map download is not
+implemented. Fine grid spacing and source resolution do not establish accuracy.
+
+Large aircraft layers use a bounded, visibly labelled display simplification.
+Represented path segments retain their endpoints and do not bridge declared
+gaps. The playhead uses original adjacent samples, and scoring always uses the
+original full tracks. At very large segment counts some display segments are
+omitted; the map shows the represented count. Map geometry is a review aid,
+not a replacement for source-coverage checks.
+
+5. RESULTS
+Regional results default to Locations - best at each receiver. Every declared
+receiver is retained, including unavailable receivers and locations absent from
+the global combination shortlist. Sort score, coordinates, clock or sources;
+select a row to inspect its best approved source/time combination. The Retained
+source/time combinations view shows the bounded global shortlist. Many source
+combinations at one location do not establish geographic uniqueness.
+
+Review boundary flags, incomplete coverage and unavailable reasons. Inspect fit
+in audio reconstructs the selected hypothesis, opens Audio review and centers on
+an inspected event without changing evidence, associations or scoring selections.
+Lime curves and diamonds show predicted Doppler frequencies; thin connectors at
+measured timestamps show frequency residuals. Violet dashed markers show expected
+thunder / CPA arrivals. They are hypothetical predictions, not confidence bands.
+The caption identifies the candidate source, shared clock and propagation model.
+Curves stop at unsupported source intervals and velocity boundaries; gray marks
+and the missing-predictions panel preserve unavailable portions. Display samples
+may be coarsened within a bounded work budget; exact measured-time predictions
+are retained. These same predictions appear on the measured-spectrum video
+overlay when enabled. This does not turn the video preview into synchronized
+playback.
+
+Show inspected hypothesis hides/shows the temporary overlay. Choose an inspected
+event or All inspected events; Clear inspection removes it. Editing evidence or
+assumptions, changing loaded data, or switching candidate/mode invalidates it.
+Full numeric residuals remain in Results. Fixed comparison also offers Inspect
+selected receiver in audio using its fixed associations, tone and clock.
+Apply selected associations & clock is a separate, undoable action. When viewing
+an independent mode, applying also changes the scoring-term switches to that
+mode; the button says so. Merely switching the displayed mode changes nothing.
+Prepare refinement plan creates a smaller area/time draft around a selected
+hypothesis while retaining every approved source and tone range. Review and
+estimate it before explicitly running again; it does not run automatically.
+
+Independent-mode results show each mode's completion status, peak coordinates
+and clock. They report Doppler/thunder peak distance and clock disagreement.
+The best-score-plus spatial tolerance is descriptive, not confidence. Spatial
+overlap is calculated after each mode fits its own clock; it does not establish
+common-time support. The retained best clocks also cannot rule out other clock
+solutions. Review the shared-clock combined search and its residuals. Cancelled
+and Not started modes remain visible; missing results are not negative evidence.
+
+Lower scores describe agreement in the chosen uncertainty units. They are not
+probabilities, confidence bounds or verified locations. Thunder arrivals and
+strike heights still need review, and strike coverage can be incomplete. The
+point-strike model does not represent extended lightning channels or changing
+weather. Combined scoring has not established an accuracy improvement on
+independent recordings; a convincing-looking rank can still be geographically
+wrong. Inspect competing locations instead of treating the first row as proof.
+
+SAVE AND REOPEN
+Save review + traces creates a fresh CASE/workspace-reviews revision with
+workspace.json and trace exports. It preserves decisions, event/term selections,
+source hashes, clock, heights and scoring assumptions. Save comparison + evidence
+snapshot also retains the fixed comparison report. For regional searches, Save
+investigation report + evidence writes a new revision with a self-contained
+HTML dossier, ranked combinations, all-location CSV, workspace/report JSON and
+an artifact-hash receipt. Independent comparisons include every requested mode
+and its completion status, including Not started. A partial dossier remains
+labelled partial. The export does not open a browser automatically. Earlier
+revisions remain intact.
+Open saved review accepts workspace.json; Restore saved data layers verifies
+its original data again. Save or discard unsaved edits before replacing a review.
+
+With the matching case open, Open saved investigation sits beside Open saved
+review. Choose the investigation folder containing receipt.json and workspace.json;
+for independent comparisons,
+choose the top-level folder containing comparison.json. Opening verifies the
+export's files and report consistency, restores the exact saved review and all
+Results, and opens the Results tab. It never starts a search, downloads data,
+selects a winning hypothesis or applies an association. Cancelled and Not started
+modes keep their recorded status. Unsaved edits must be saved or explicitly
+discarded first. Loading another case or editing during a load cannot replace
+the newer review with a late result.
+
+Saved Results remain readable when original recordings or datasets are missing.
+Opening the matching case checks its recording and shows any problem, while
+keeping the case available for reading saved Results. The dossier's index.html
+can also be read separately.
+New GUI exports include replay-inputs.json: a receipt-covered snapshot of the
+original normalized layers and lightning catalog, preserving source details,
+ordering, UTC and height interpretation. Raw provider files and recordings are
+still separate. This snapshot increases export size; supported export limits
+remain explicit, and an oversized snapshot must not be silently shortened.
+
+Restore report data explicitly loads those archived buffers. Check loaded data
+against report alternatively verifies datasets loaded independently in Data;
+older exports without an input snapshot use that route. The original input
+fingerprint must match before Inspect or Apply is available. A mismatch leaves
+the saved report unchanged and viewable. No network request is made by reopening
+or restoring a report snapshot.
+
+Archived inspection is labelled "Archived inputs; original source files not
+rechecked". It checks the dossier receipt, the unchanged review, the complete
+input fingerprint and the active case's recording before/after building the
+prediction. Missing or changed recording bytes prevent actual audio inspection;
+opening a report does not claim the media were checked. Applying associations,
+new scoring and normal review saving still require original external source
+files to be available and unchanged. Archived inputs do not bypass those checks.
+Restoring an archive reproduces the inputs used for that saved result; it does
+not fetch newer provider data or establish complete coverage. Receipt hashes
+detect changes relative to the receipt, not authenticity or a verified location.
+
+Editing the restored review makes its old Results historical; Undo may restore
+the original review but never invents missing data verification. Changing loaded
+data requires another input check. Older unassessed acoustic sources remain
+unassessed: viewing historical Results does not approve them. Reassess and run
+a new reviewed search when the source gate blocks new model inspection.
+
+JOBS, TOOLS AND PORTABILITY
+Jobs still run the prepared discovery, terrain, pair/single-event ranking and
+overlay pipeline. Import prepared job plan creates a new case-bound job.
+Progress counts completed stages. Cancel stops an active stage and its owned
+subprocesses. Resume verifies unchanged completed stages; attempts/logs remain.
+Recover interrupted job refuses a process that is alive or uncertain.
+
+Supply actual FFmpeg and FFprobe executables in Settings, plus FFplay for audio.
+These tools are external and not bundled. Package-manager launch shims are
+unsuitable for saved media jobs. Discovery jobs copy media tools, using extra
+disk space. Numerical processing needs no Python or media helper unless a
+selected stage decodes media. Preview speed depends on the recording/decoder;
+this interface is not a full-frame-rate synchronized video player.
+
+geosonnar-settings.json beside the interface stores local settings, theme and
+recent paths; fresh packages exclude it. Keep relative case/media/data layouts
+together when moving cases. External bindings still require their recorded
+paths. Older jobs may need a new plan after external inputs move.
+
+The portable app, a saved investigation and a complete portable case are different
+things. The app folder contains the executables. The investigation folder contains
+Results, decisions and optional normalized input snapshots. It does not contain
+the recording, original provider datasets or media tools. A one-step complete
+case bundle and source-path relinking are not implemented. Keep the original case
+and its inputs available if you intend to apply results or continue searching.
+
+SHORT STARTUP CHECK - USER OPERATED
+1. From the new matching package, open geosonnar-safe.exe and leave it on the empty
+   Case page before loading any recording. Check that the desktop stays responsive,
+   then resize the window and close it. If the slowdown returns, close the app.
+2. Keep that run's startup log. If software mode reports that no suitable adapter
+   is available, retain the error and log; it has not fallen back to hardware.
+3. If software mode is responsive, you can separately try geosonnar-gui.exe on the
+   same empty Case page. Compare the result before opening a case. A successful
+   software launch alone does not verify the normal renderer.
+4. Continue the manual workflow check only with a launcher that stays responsive.
+
+SHORT REOPENING CHECK - USER OPERATED
+1. Open the matching case. Save any current edits, then choose Open saved
+   investigation and select a complete dossier folder (the top-level folder for
+   an independent-mode comparison).
+2. Confirm Results opens with no hypothesis selected or applied. Compare saved
+   coordinates, clocks and statuses with index.html. A cancelled comparison must
+   retain its partial and Not started labels. Opening must not start a search.
+3. Choose Restore report data explicitly. For an older dossier without a snapshot,
+   load its original datasets in Data, then Check loaded data against report.
+   Until that check succeeds, the saved rows remain readable but inspection is
+   unavailable. A mismatch must preserve the saved report.
+4. Select a completed hypothesis and Inspect fit in audio. Check the "Archived
+   inputs; original source files not rechecked" label and confirm observations
+   and source approvals stay unchanged. This requires the matching recording;
+   restoring archived data alone is not a media check.
+5. Apply only if you want to change the review's assumptions, then Undo. Application
+   still requires the original sources. Close and reopen the dossier to check
+   that its saved Results remain unchanged. Test missing inputs using a disposable
+   case copy; do not remove the only copy of original evidence.
+
+SHORT MANUAL CHECK - USER OPERATED
+1. Complete the startup check with the matching new package yourself.
+   Set actual media-tool paths. Open a case and load a short audio interval.
+2. Resize smaller/larger; seek, Play/Pause, wheel-zoom, draw a ridge and try
+   Delete / Undo. Check Delete in a text field leaves events alone. Confirm a
+   measurement without assessing its source: Search must ask for source review.
+   Try an uncertain hypothesis with/without a reason; only the reasoned case can
+   proceed. Check source changes preserve event selection, while trace changes
+   reset review and Undo restores it. Save/reopen an old and a new review.
+3. In Data, prepare a small historical aircraft request; confirm planning does
+   not download. Fetch explicitly, review gaps/caps/source types, then import
+   and load the normalized layer. Alternatively import existing local datasets.
+   In guided Search, set a small
+   area and uncertain clock interval. Confirm/select events, refresh the event
+   list and explicitly approve a few alternatives. Check filtering does not
+   silently change your approved pool.
+4. Estimate and run a small search. If both modalities are available, request
+   the independent comparison and inspect its aggregate estimate. Cancel one
+   run and confirm partial/not-started work stays visible. Run again to finish.
+5. In Results, sort all receiver locations and inspect an alternative outside
+   the global shortlist. Inspect fit in audio: compare lime predictions with
+   measured ridges, violet expected arrivals with thunder events, and gray gaps.
+   Check the source/clock/model label, show/hide and video-overlay controls.
+   Edit a trace or switch candidate/mode and confirm the old overlay disappears.
+   Inspecting must leave evidence and source approvals unchanged. Apply one
+   completed hypothesis, then Undo.
+   Review both geographic and clock disagreements, not only spatial overlap.
+6. Prepare a refinement draft and confirm it does not start a job. If suitable
+   terrain/geoid data is available, preview height coverage before applying;
+   missing coverage must remain unavailable instead of becoming zero height.
+7. Save the investigation dossier and follow the short reopening check above.
+   Reopen the saved workspace separately and verify its original sources.
+   Check the sun toggle survives a restart.
+Large downloads and the optional online map are separate explicit actions.
+These manual checks remain user-operated; automated tests never control the
+desktop. Headless controls do not replace a real analyst usability review.
+
+RELEASED IN 0.3.0 (BEFORE THE DEVELOPMENT ADDITIONS ABOVE)
+Results shows separate Doppler, thunder and combined coordinates and distances.
+An adjustable best-score-plus tolerance displays broad overlapping possibilities;
+it never changes scores or acts as a confidence level. Different best locations
+with overlapping areas remain usable. Search shows separate colored estimate
+markers and green rings for shared cells; boundary flags prompt coverage review.
+
+Data > Atmospheric profile imports an optional normalized JSON altitude profile.
+Temperature, pressure, humidity and directional wind affect aircraft and thunder
+travel times; aircraft Doppler uses the derivative of the same propagation model.
+The exact profile and source record are embedded in saved reviews. Removing it
+restores fixed sound speed and supports Undo. Profiles are experimental straight
+paths, not refracted rays or weather maps. No weather download or automatic
+height-datum conversion was included in that release. The development terrain
+height panel above adds explicit verified datum conversion. Missing coverage
+remains unavailable.
+Atmospheric refinement is bounded to 400 receivers and 20,000 residuals.
+See the source documentation docs/ATMOSPHERE.md for the schema and assumptions.
+
+VALIDATION
+Version 0.8.0 passed 689 native tests, including 143 headless GUI/launcher checks,
+plus seven explicit media and cached-data integrations. Python controls passed
+132 tests with one actual symbolic-link fixture unavailable; Windows junction
+controls passed. Formatting, Clippy and the static-C-runtime release build passed.
+Shutdown tests cover stuck workers, stalled playback diagnostics, and termination
+of owned helpers while an unrelated process stays alive. A live FMI minute
+matched 36 observations and 144 source attributes; cache reuse and import passed.
+Six frozen real-audio hypotheses passed 324 checks with previous predictions and
+scores unchanged. No native window was opened. Independent hybrid location
+accuracy and calibrated confidence remain unestablished; these checks do not
+certify hands-on interaction in 0.8.0. The historical 17-stage scientific profile
+was not repeated. Receipt: output/benchmarks/fmi-pipeline-001/summary.json.
+
+Version 0.7.0 passed 618 native tests, including 124 headless GUI/launcher checks,
+and all seven stages of the scoped diagnostics profile. Formatting, Clippy,
+the static-C-runtime build and source-integrity checks passed. Six preserved
+real-audio hypotheses passed 324 independent arithmetic/integrity checks; every
+existing prediction and score stayed identical. Three built-launcher headless
+configuration probes and safe-launcher rejection of OpenGL also passed.
+Seven installed-media/cached integrations and the historical scientific/Python
+profiles were not repeated for this diagnostics-only change. Their previous
+results remain tied to the older builds below. No native graphics device or
+application window was opened. The receipt is
+output/benchmarks/fit-diagnostics-001/summary.json.
+
+The WSU reference trace fits a simple drift better than any of its five fixed
+Doppler scenarios. The previously unsuccessful fresh-B estimate nevertheless
+beats both simple baselines. Neither outcome identifies the sound or validates
+a location. Fit comparison is an inspection aid, not a confidence calculation.
+
+Version 0.6.0 passed 609 distinct native tests, including 122 headless GUI and
+launcher checks, four explicit media integrations and three cached-data
+integrations. Python controls passed 132 tests; one actual symbolic-link fixture
+was unavailable on this Windows account. The native Windows junction checks
+passed. All 11 stages of the application validation profile passed, including
+formatting, Clippy, the static-C-runtime build and input-integrity checks.
+The historical 17-stage scientific replay was not repeated for this release.
+
+A replay of the preserved unsuccessful field hypothesis retained identical
+physical predictions and measured residuals through native input loading, export,
+reopening and archived inspection. A separate control removed only owned copies
+of its source files: archived inspection remained available, while verification
+for live application correctly failed. The original recording and source files
+were unchanged. This tests persistence, not location accuracy.
+
+The built executables passed three headless renderer-selection checks, and the
+safe launcher rejected an OpenGL override. These checks initialized no graphics
+and opened no GUI window. Direct3D and software rendering remain compatibility
+workarounds to test, not confirmed fixes for the reported 0.5.0 startup freeze.
+The aggregate receipt is output/benchmarks/investigation-reopen-001/summary.json.
+
+Version 0.5.0 passed all 17 implemented validation stages and 584 native tests,
+including 105 headless GUI checks, four explicit media integrations and three
+cached-data integrations. Python controls passed 130 tests; one symbolic-link
+fixture was unavailable on this Windows account, while the native junction
+check passed. The additional regional synthetic replay passed 231 checks.
+Five variants of a frozen failed field inspection verified the source gate and
+unchanged predictions. This does not make that failed location a success.
+The aggregate receipt is output/benchmarks/source-assessment-001/summary.json.
+
+The unchanged detector's second untouched annotated hour produced 14 groups
+wholly within aircraft-audible intervals, zero wholly within negative intervals
+and seven mixed/uncertain groups; six of nine audible runs were covered.
+Together with the contrasting first hour below, this shows recording dependence.
+Audibility overlap is not independent identification of each tonal source, and
+these audits do not measure an accuracy benefit from the source-review controls.
+
+Version 0.4.0 passed 560 native tests, including 97 headless GUI tests, four
+explicit media integrations and three cached terrain/legacy-review integrations.
+All 17 stages of validation-014 passed, including historical scientific replays,
+formatting, Clippy, source integrity and the static-C-runtime release build.
+Python controls passed 126 tests; one actual symbolic-link fixture was unavailable
+on this Windows account. The native Windows junction-safety check passed.
+The aggregate receipt is output/benchmarks/regional-workflow-001/summary.json.
+
+Independent field accuracy remains unestablished. The new fresh-deployment
+trial's leading hypothesis was 81 km from the publisher marker. An annotated
+one-hour detector audit found 51 groups wholly inside intervals labelled no
+salient aircraft, four inside aircraft-audible intervals and nine mixed/uncertain.
+These labels describe audibility, not the source of each ridge. Review proposals
+and competing hypotheses; sensitivity sliders are not aircraft probabilities.
+The measured-versus-predicted overlay reproduced the committed field score
+exactly, but displaying a plausible fit did not validate that location.
+  python benchmarks/run_validation.py --gui --output output/benchmarks/NEW_RUN
+Optional --ffmpeg and --ffprobe arguments select integration-test helpers.
+Version 0.3.0 passed 446 distinct native checks, including 69 headless GUI
+controls and four explicit media integrations, plus 31 Python controls. See the
+local output/benchmarks/hybrid-atmosphere-001/summary.json receipt. It combines
+the full native run with targeted final-change checks; three optional legacy/
+terrain integrations and the historical 17-stage replay were not rerun.
+Eight real infrasound recordings passed native audio processing, but missing
+independent geometry, strike and clock metadata prevents location validation.
+Version 0.2.0 passed validation-013: 395 native tests (63 GUI controls), four
+explicit media integrations, 15 harness controls and all 17 validation stages.
+Two cached-terrain comparisons also passed. Provider requests have offline
+controls; a live multi-tile download was not part of this validation. The package
+receipt identifies the exact build and local validation report.
+Headless interaction checks exercise resizing, wheel navigation, tracing and
+keyboard focus without controlling your desktop. Hands-on visual usability is
+left to you. Tests do not establish independent hybrid localization accuracy.
+
+LICENSE AND SOURCE
+GeoSonnar is GNU GPL version 3 or (at your option) any later version, with
+no warranty. See LICENSE and THIRD_PARTY_NOTICES.md; dependency and upstream
+licenses retain their own terms. The matching project source is distributed
+alongside each released Windows package as GeoSonnar-source-VERSION.zip, with the
+same version number as the package. It contains project
+source, build/package scripts, tests and Cargo.lock; it does not vendor dependency
+sources. Cargo resolves those locked dependencies during a source build. Media
+and downloaded datasets are separate inputs and are not part of the package.

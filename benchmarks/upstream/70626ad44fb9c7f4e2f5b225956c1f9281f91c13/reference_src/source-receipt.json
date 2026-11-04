@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "repository": "1337isnot1337/DOPPLERGEIST",
+  "commit": "70626ad44fb9c7f4e2f5b225956c1f9281f91c13",
+  "license_file": "../LICENSE",
+  "retrieval": "GitHub connector pinned file fetch; reference inspection only, no upstream code executed",
+  "files": [
+    {
+      "source_path": "src/dopplergeist/discovery.py",
+      "local_path": "discovery.py",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/src/dopplergeist/discovery.py",
+      "git_blob_sha1": "70aca197a995698041378bd65c34843326179dc5",
+      "expected_bytes": 18671,
+      "bytes": 18671,
+      "sha256": "b824d7463571a2d4fd8467077b37c2e0953828b7e3eeb396f2bd74296a31e6bc",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "src/dopplergeist/audio.py",
+      "local_path": "audio.py",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/src/dopplergeist/audio.py",
+      "git_blob_sha1": "da3878ffe4cba4094debb8a71bd2421e590fc0bc",
+      "expected_bytes": 8315,
+      "bytes": 8315,
+      "sha256": "f9248876059f7f05f3f3db8575e43b9c12f96c536c70b8afc298cfdebcb977a0",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "src/dopplergeist/intake.py",
+      "local_path": "intake.py",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/src/dopplergeist/intake.py",
+      "git_blob_sha1": "83937f6df4836b25aba01df75443530a79ea05d9",
+      "expected_bytes": 9437,
+      "bytes": 9437,
+      "sha256": "c88f51f8c7edd6abb74fca830a839d0bbce758beb9a582a7791a8a174b603781",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "tests/test_discovery.py",
+      "local_path": "tests__test_discovery.py",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_discovery.py",
+      "git_blob_sha1": "f075a2bf884d19ef65a15f53e6588d7bd3f570c7",
+      "expected_bytes": 5920,
+      "bytes": 5920,
+      "sha256": "c04c1875ce1ab33d67fad203743a23daf6bd833eaba3afc2a912453769463167",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "tests/test_audio.py",
+      "local_path": "tests__test_audio.py",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/tests/test_audio.py",
+      "git_blob_sha1": "87ee15029797cb1df427a0e20ad63599f4db25a3",
+      "expected_bytes": 910,
+      "bytes": 910,
+      "sha256": "bf34e7a79245ddb76e83cff5c2b8941511b68d6db0be23db5fc698a497aab652",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "scripts/benchmark_real_discovery.py",
+      "local_path": "scripts__benchmark_real_discovery.py",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_real_discovery.py",
+      "git_blob_sha1": "4f756e0e87219400a8ba6f8e338506dee5bee220",
+      "expected_bytes": 4418,
+      "bytes": 4418,
+      "sha256": "f1553c3c67ee94e11a374ef1091d7ee6087a241882aa9cbc25e69aa0b1d3ef64",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "scripts/benchmark_real_features.py",
+      "local_path": "scripts__benchmark_real_features.py",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/scripts/benchmark_real_features.py",
+      "git_blob_sha1": "bc28ab4fcdd1ae6c53db858f837efc031db9439a",
+      "expected_bytes": 3333,
+      "bytes": 3333,
+      "sha256": "9449641722d70d18c12dffc8044104656f21ad651b7dca8327a9767af4ee71e8",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "benchmarks/real-discovery-20261103.csv",
+      "local_path": "benchmarks__real-discovery-20261103.csv",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/benchmarks/real-discovery-20261103.csv",
+      "git_blob_sha1": "bc79b80076f0ec6a4f0e9f33d4aaa13a7029aec4",
+      "expected_bytes": 4042,
+      "bytes": 4042,
+      "sha256": "51cd469981dc3d9c53fecb0757bac9158255276677f81d1bd7be216dab634192",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "docs/AUDIO_DISCOVERY.md",
+      "local_path": "docs__AUDIO_DISCOVERY.md",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/docs/AUDIO_DISCOVERY.md",
+      "git_blob_sha1": "98397891e11cc168953e62278befd49d41b04bd9",
+      "expected_bytes": 7710,
+      "bytes": 7710,
+      "sha256": "f68443664f82f136912779a475c7a0d526d27734dd4462e602425aa3c77948ed",
+      "git_blob_verified": true
+    },
+    {
+      "source_path": "src/dopplergeist/contracts.py",
+      "local_path": "contracts.py",
+      "source_url": "https://github.com/1337isnot1337/DOPPLERGEIST/blob/70626ad44fb9c7f4e2f5b225956c1f9281f91c13/src/dopplergeist/contracts.py",
+      "git_blob_sha1": "c2c3295b2ed0ebfc0ebe639943e0ab9f7b56788f",
+      "expected_bytes": 15115,
+      "bytes": 15115,
+      "sha256": "66e311197e69fc6636dea33e25ae2acccfeba2845b0561963f33112c932a969f",
+      "git_blob_verified": true
+    }
+  ],
+  "all_git_blobs_verified": true
+}

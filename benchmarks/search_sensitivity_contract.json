@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "experiment": "Bounded frequency and spatial sensitivity of the existing audio-derived regional experiment",
+  "files": {
+    "baseline_search": {
+      "path": "output/benchmarks/audio-priors/pipeline-001/regional/search_input.json",
+      "sha256": "eac203224c5100a6e3205213c86c607f3ff65e8f468f5bcba559c9901cd5b915"
+    },
+    "baseline_regional_results": {
+      "path": "output/benchmarks/audio-priors/pipeline-001/regional/results.json",
+      "sha256": "a0bd846d7208f7478247f5b488ee95a32262245999ba919f05a87965335a7a9f"
+    },
+    "baseline_refinement": {
+      "path": "output/benchmarks/audio-priors/pipeline-001/refinement/report.json",
+      "sha256": "740e21c2189a15546762f37a16ab480363b41ed16a95902b51a25437eba71c32"
+    },
+    "dem": {
+      "path": "data/dopplergeist/terrain/Copernicus_DSM_COG_10_N40_00_W074_00_DEM.tif",
+      "sha256": "6a0f4273de0bbc0709cc9db4793a89ac40c811388f59f23f644c0304b66ab94d"
+    },
+    "geoid": {
+      "path": "data/dopplergeist/terrain/us_nga_egm96_15.tif",
+      "sha256": "db493027562c9b004d7220fa881f5603adada4e1c5029b933fa7de4547b0e78d"
+    },
+    "executable": {
+      "path": "dist/geosonnar.exe",
+      "sha256": "976dfab47845575069186e1740072520f86c3bf00617df9b196df7c40d37ede0"
+    }
+  },
+  "stages": [
+    {"name": "widen-1", "frequency_extra_hz": 2.0, "regional_rings": 3, "local_radius_m": 1200.0, "fine_radius_m": 300.0},
+    {"name": "widen-2", "frequency_extra_hz": 4.0, "regional_rings": 6, "local_radius_m": 1800.0, "fine_radius_m": 450.0},
+    {"name": "widen-3", "frequency_extra_hz": 8.0, "regional_rings": 12, "local_radius_m": 2400.0, "fine_radius_m": 600.0}
+  ],
+  "grid": {
+    "frequency_step_hz": 0.5,
+    "local_spacing_m": 100.0,
+    "fine_spacing_m": 25.0,
+    "microphone_height_m": 3.0
+  },
+  "top_pairs": 3,
+  "timeout_s": 1200,
+  "stability": {
+    "location_m": 50.0,
+    "frequency_hz": 0.5,
+    "clock_s": 1.0,
+    "shared_shift_s": 0.5,
+    "rmse_hz": 0.05,
+    "required_transitions": 2
+  },
+  "policy": {
+    "execute_every_stage": true,
+    "symmetric_frequency_expansion_from_baseline": true,
+    "retain_all_previous_frequency_values": true,
+    "regional_grid": "Add rectangular outer rings to the original observer lattice; preserve every original observer exactly and terrain-sample added observers.",
+    "pair_selection": "Rank all supplied tracks over the expanded region at every stage; retain that stage's top three distinct ordered pairs and every previously retained pair.",
+    "refinement": "Union previous per-pair observer points with each new terrain-sampled local and fine grid; retain original baseline local/fine points. Do not discard a previously sampled better location when recentering.",
+    "held_fixed": ["all 320 measured event points and gaps", "all original tracks", "clock-offset bounds", "shared-shift grid", "coarse speed and slant bounds", "event separation and tolerance", "sound speed", "terrain/height policy", "native executable"],
+    "stability_gate": "The final two successive transitions must retain the same ordered pair, meet every declared change tolerance, and have no winning observer, frequency, clock or coarse-filter boundary. Preserve alternative-pair boundary flags separately.",
+    "no_reference_coordinate_input": true,
+    "no_outcome_dependent_expansion": true,
+    "location_verified": false,
+    "interpretation": "Finite numerical stability conditional on the supplied date, tracks, retained pairs and fixed model assumptions. Frequency and spatial ranges widen together; this does not isolate their individual causal contributions. Track coverage is not enlarged by fetching new data. Stability is not calibrated uncertainty, detection accuracy, surveyed location accuracy or global uniqueness."
+  }
+}

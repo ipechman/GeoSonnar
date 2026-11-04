@@ -1,0 +1,71 @@
+{
+  "schema": "nasa_measured_case_selection_v1",
+  "source_archive_url": "https://data.nasa.gov/docs/datasets/rfk401li/small_uav_acoustics.zip",
+  "source_description_url": "https://data.nasa.gov/docs/datasets/rfk401li/Data_Description_20160203.pdf",
+  "publisher_protocol_source": "Flight Number Description.xlsx in the original archive",
+  "selection_rule": "First lexical Cub and Edge flyover members, then all publisher-labelled high-speed Edge members. The high-speed category was declared after the first two default-discovery failures and before inspecting either new recording.",
+  "selection_uses_audio_or_location_error": false,
+  "evaluation_split": "Public development cases; not a held-out corpus",
+  "clock_scope": "Publisher synchronized UTC seconds of day; calendar dates unresolved. Subtract each recording sample zero from both acoustic and GPS times. No Unix epoch is assigned.",
+  "mono_channel_one_based": 2,
+  "supplied_trajectory_count_per_case": 1,
+  "encounter_count_assumed": false,
+  "cases": [
+    {
+      "case_id": "cub_flyover_107",
+      "archive_member": "data/cub_flyover_107.mat",
+      "size_bytes": 41935404,
+      "sha256": "908ba29a68891fb6cb13087cbea9caf74f8385082d78842e1b91165e174365df",
+      "selection_stage": "initial_first_lexical_by_fixed_wing_family",
+      "publisher_protocol": {
+        "vehicle": "Cub",
+        "condition": "cruise",
+        "nominal_agl_m": 10,
+        "nominal_speed_mps": 25,
+        "notes": "pilot descending towards mics under low power - not ideal flight trajectory"
+      }
+    },
+    {
+      "case_id": "edge_flyover_038",
+      "archive_member": "data/edge_flyover_038.mat",
+      "size_bytes": 35247930,
+      "sha256": "81e02d387845614c4f9eea8761ec35211edcb5456a28d1b1c21dffb41fbd8cc8",
+      "selection_stage": "initial_first_lexical_by_fixed_wing_family",
+      "publisher_protocol": {
+        "vehicle": "Edge",
+        "condition": "cruise",
+        "nominal_agl_m": 20,
+        "nominal_speed_mps": 25,
+        "notes": ""
+      }
+    },
+    {
+      "case_id": "edge_flyover_065",
+      "publisher_protocol": {
+        "vehicle": "Edge",
+        "condition": "high speed",
+        "nominal_agl_m": 100,
+        "nominal_speed_mps": 40,
+        "notes": "high speed pass, propeller plane in bg at start"
+      },
+      "size_bytes": 25249619,
+      "sha256": "d06b708a460da233c550099698e5b69dadfbbe4f5404f77c30f32e1808717ccc",
+      "archive_member": "data/edge_flyover_065.mat",
+      "selection_stage": "all_publisher_high_speed_edge_members"
+    },
+    {
+      "case_id": "edge_flyover_066",
+      "publisher_protocol": {
+        "vehicle": "Edge",
+        "condition": "high speed",
+        "nominal_agl_m": 75,
+        "nominal_speed_mps": 40,
+        "notes": "high speed pass"
+      },
+      "size_bytes": 33606044,
+      "sha256": "0d4a1f7415e42f38ca64087400182e104ed7efface36de3cd7ed669aec9ad9bf",
+      "archive_member": "data/edge_flyover_066.mat",
+      "selection_stage": "all_publisher_high_speed_edge_members"
+    }
+  ]
+}

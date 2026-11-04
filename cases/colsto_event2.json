@@ -1,0 +1,487 @@
+{
+  "points": [
+    {
+      "t_rec_s": 3030.0,
+      "frequency_hz": 176.757812
+    },
+    {
+      "t_rec_s": 3031.0,
+      "frequency_hz": 176.269531
+    },
+    {
+      "t_rec_s": 3032.0,
+      "frequency_hz": 176.269531
+    },
+    {
+      "t_rec_s": 3033.0,
+      "frequency_hz": 174.316406
+    },
+    {
+      "t_rec_s": 3034.0,
+      "frequency_hz": 178.710938
+    },
+    {
+      "t_rec_s": 3035.0,
+      "frequency_hz": 177.734375
+    },
+    {
+      "t_rec_s": 3036.0,
+      "frequency_hz": 174.804688
+    },
+    {
+      "t_rec_s": 3037.0,
+      "frequency_hz": 173.828125
+    },
+    {
+      "t_rec_s": 3038.0,
+      "frequency_hz": 174.316406
+    },
+    {
+      "t_rec_s": 3039.0,
+      "frequency_hz": 173.339844
+    },
+    {
+      "t_rec_s": 3040.0,
+      "frequency_hz": 173.828125
+    },
+    {
+      "t_rec_s": 3041.0,
+      "frequency_hz": 173.339844
+    },
+    {
+      "t_rec_s": 3042.0,
+      "frequency_hz": 172.851562
+    },
+    {
+      "t_rec_s": 3043.0,
+      "frequency_hz": 172.363281
+    },
+    {
+      "t_rec_s": 3044.0,
+      "frequency_hz": 170.898438
+    },
+    {
+      "t_rec_s": 3045.0,
+      "frequency_hz": 171.386719
+    },
+    {
+      "t_rec_s": 3046.0,
+      "frequency_hz": 170.898438
+    },
+    {
+      "t_rec_s": 3047.0,
+      "frequency_hz": 169.921875
+    },
+    {
+      "t_rec_s": 3048.0,
+      "frequency_hz": 169.433594
+    },
+    {
+      "t_rec_s": 3049.0,
+      "frequency_hz": 167.96875
+    },
+    {
+      "t_rec_s": 3050.0,
+      "frequency_hz": 167.480469
+    },
+    {
+      "t_rec_s": 3051.0,
+      "frequency_hz": 166.992188
+    },
+    {
+      "t_rec_s": 3052.0,
+      "frequency_hz": 165.039062
+    },
+    {
+      "t_rec_s": 3053.0,
+      "frequency_hz": 164.550781
+    },
+    {
+      "t_rec_s": 3054.0,
+      "frequency_hz": 163.574219
+    },
+    {
+      "t_rec_s": 3055.0,
+      "frequency_hz": 162.597656
+    },
+    {
+      "t_rec_s": 3056.0,
+      "frequency_hz": 160.644531
+    },
+    {
+      "t_rec_s": 3057.0,
+      "frequency_hz": 159.179688
+    },
+    {
+      "t_rec_s": 3058.0,
+      "frequency_hz": 157.714844
+    },
+    {
+      "t_rec_s": 3059.0,
+      "frequency_hz": 156.25
+    },
+    {
+      "t_rec_s": 3060.0,
+      "frequency_hz": 154.296875
+    },
+    {
+      "t_rec_s": 3061.0,
+      "frequency_hz": 153.320312
+    },
+    {
+      "t_rec_s": 3062.0,
+      "frequency_hz": 151.367188
+    },
+    {
+      "t_rec_s": 3063.0,
+      "frequency_hz": 148.925781
+    },
+    {
+      "t_rec_s": 3064.0,
+      "frequency_hz": 148.925781
+    },
+    {
+      "t_rec_s": 3065.0,
+      "frequency_hz": 145.996094
+    },
+    {
+      "t_rec_s": 3066.0,
+      "frequency_hz": 144.53125
+    },
+    {
+      "t_rec_s": 3067.0,
+      "frequency_hz": 143.066406
+    },
+    {
+      "t_rec_s": 3068.0,
+      "frequency_hz": 140.625
+    },
+    {
+      "t_rec_s": 3069.0,
+      "frequency_hz": 139.648438
+    },
+    {
+      "t_rec_s": 3070.0,
+      "frequency_hz": 138.183594
+    },
+    {
+      "t_rec_s": 3071.0,
+      "frequency_hz": 136.230469
+    },
+    {
+      "t_rec_s": 3072.0,
+      "frequency_hz": 134.765625
+    },
+    {
+      "t_rec_s": 3073.0,
+      "frequency_hz": 133.789062
+    },
+    {
+      "t_rec_s": 3074.0,
+      "frequency_hz": 136.230469
+    },
+    {
+      "t_rec_s": 3075.0,
+      "frequency_hz": 130.859375
+    },
+    {
+      "t_rec_s": 3076.0,
+      "frequency_hz": 129.394531
+    },
+    {
+      "t_rec_s": 3077.0,
+      "frequency_hz": 128.417969
+    },
+    {
+      "t_rec_s": 3078.0,
+      "frequency_hz": 127.441406
+    },
+    {
+      "t_rec_s": 3079.0,
+      "frequency_hz": 125.976562
+    },
+    {
+      "t_rec_s": 3080.0,
+      "frequency_hz": 124.511719
+    },
+    {
+      "t_rec_s": 3081.0,
+      "frequency_hz": 124.023438
+    },
+    {
+      "t_rec_s": 3082.0,
+      "frequency_hz": 123.046875
+    },
+    {
+      "t_rec_s": 3083.0,
+      "frequency_hz": 121.582031
+    },
+    {
+      "t_rec_s": 3084.0,
+      "frequency_hz": 121.09375
+    },
+    {
+      "t_rec_s": 3085.0,
+      "frequency_hz": 120.117188
+    },
+    {
+      "t_rec_s": 3086.0,
+      "frequency_hz": 119.140625
+    },
+    {
+      "t_rec_s": 3087.0,
+      "frequency_hz": 118.652344
+    },
+    {
+      "t_rec_s": 3088.0,
+      "frequency_hz": 118.164062
+    },
+    {
+      "t_rec_s": 3089.0,
+      "frequency_hz": 117.1875
+    },
+    {
+      "t_rec_s": 3090.0,
+      "frequency_hz": 116.699219
+    },
+    {
+      "t_rec_s": 3091.0,
+      "frequency_hz": 116.210938
+    },
+    {
+      "t_rec_s": 3092.0,
+      "frequency_hz": 115.234375
+    },
+    {
+      "t_rec_s": 3093.0,
+      "frequency_hz": 114.746094
+    },
+    {
+      "t_rec_s": 3094.0,
+      "frequency_hz": 109.375
+    },
+    {
+      "t_rec_s": 3095.0,
+      "frequency_hz": 108.886719
+    },
+    {
+      "t_rec_s": 3096.0,
+      "frequency_hz": 109.863281
+    },
+    {
+      "t_rec_s": 3097.0,
+      "frequency_hz": 111.328125
+    },
+    {
+      "t_rec_s": 3098.0,
+      "frequency_hz": 111.816406
+    },
+    {
+      "t_rec_s": 3099.0,
+      "frequency_hz": 110.839844
+    },
+    {
+      "t_rec_s": 3100.0,
+      "frequency_hz": 110.351562
+    },
+    {
+      "t_rec_s": 3101.0,
+      "frequency_hz": 104.980469
+    },
+    {
+      "t_rec_s": 3102.0,
+      "frequency_hz": 108.886719
+    },
+    {
+      "t_rec_s": 3103.0,
+      "frequency_hz": 107.910156
+    },
+    {
+      "t_rec_s": 3104.0,
+      "frequency_hz": 107.910156
+    },
+    {
+      "t_rec_s": 3105.0,
+      "frequency_hz": 107.421875
+    },
+    {
+      "t_rec_s": 3106.0,
+      "frequency_hz": 106.933594
+    },
+    {
+      "t_rec_s": 3107.0,
+      "frequency_hz": 106.933594
+    },
+    {
+      "t_rec_s": 3108.0,
+      "frequency_hz": 106.445312
+    },
+    {
+      "t_rec_s": 3109.0,
+      "frequency_hz": 106.445312
+    },
+    {
+      "t_rec_s": 3110.0,
+      "frequency_hz": 104.492188
+    },
+    {
+      "t_rec_s": 3111.0,
+      "frequency_hz": 105.46875
+    },
+    {
+      "t_rec_s": 3112.0,
+      "frequency_hz": 104.980469
+    },
+    {
+      "t_rec_s": 3113.0,
+      "frequency_hz": 104.980469
+    },
+    {
+      "t_rec_s": 3114.0,
+      "frequency_hz": 104.492188
+    },
+    {
+      "t_rec_s": 3115.0,
+      "frequency_hz": 101.074219
+    },
+    {
+      "t_rec_s": 3116.0,
+      "frequency_hz": 104.003906
+    },
+    {
+      "t_rec_s": 3117.0,
+      "frequency_hz": 103.515625
+    },
+    {
+      "t_rec_s": 3118.0,
+      "frequency_hz": 103.515625
+    },
+    {
+      "t_rec_s": 3119.0,
+      "frequency_hz": 103.027344
+    },
+    {
+      "t_rec_s": 3120.0,
+      "frequency_hz": 103.027344
+    },
+    {
+      "t_rec_s": 3121.0,
+      "frequency_hz": 101.074219
+    },
+    {
+      "t_rec_s": 3122.0,
+      "frequency_hz": 101.074219
+    },
+    {
+      "t_rec_s": 3123.0,
+      "frequency_hz": 101.074219
+    },
+    {
+      "t_rec_s": 3124.0,
+      "frequency_hz": 104.003906
+    },
+    {
+      "t_rec_s": 3125.0,
+      "frequency_hz": 101.074219
+    },
+    {
+      "t_rec_s": 3126.0,
+      "frequency_hz": 101.074219
+    },
+    {
+      "t_rec_s": 3127.0,
+      "frequency_hz": 98.632812
+    },
+    {
+      "t_rec_s": 3128.0,
+      "frequency_hz": 101.5625
+    },
+    {
+      "t_rec_s": 3129.0,
+      "frequency_hz": 101.074219
+    },
+    {
+      "t_rec_s": 3130.0,
+      "frequency_hz": 101.5625
+    },
+    {
+      "t_rec_s": 3131.0,
+      "frequency_hz": 101.5625
+    },
+    {
+      "t_rec_s": 3132.0,
+      "frequency_hz": 101.5625
+    },
+    {
+      "t_rec_s": 3133.0,
+      "frequency_hz": 101.5625
+    },
+    {
+      "t_rec_s": 3134.0,
+      "frequency_hz": 101.074219
+    }
+  ],
+  "f0_hz": [
+    115.0,
+    115.5,
+    116.0,
+    116.5,
+    117.0,
+    117.5,
+    118.0,
+    118.5,
+    119.0,
+    119.5,
+    120.0,
+    120.5,
+    121.0,
+    121.5,
+    122.0,
+    122.5,
+    123.0,
+    123.5,
+    124.0,
+    124.5,
+    125.0,
+    125.5,
+    126.0,
+    126.5,
+    127.0,
+    127.5,
+    128.0,
+    128.5,
+    129.0,
+    129.5,
+    130.0,
+    130.5,
+    131.0,
+    131.5,
+    132.0,
+    132.5,
+    133.0,
+    133.5,
+    134.0,
+    134.5,
+    135.0,
+    135.5,
+    136.0,
+    136.5,
+    137.0,
+    137.5,
+    138.0,
+    138.5,
+    139.0,
+    139.5,
+    140.0,
+    140.5,
+    141.0,
+    141.5,
+    142.0,
+    142.5,
+    143.0,
+    143.5,
+    144.0,
+    144.5,
+    145.0
+  ]
+}

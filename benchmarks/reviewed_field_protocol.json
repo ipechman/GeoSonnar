@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "case_id": "fresh-deployment-B",
+  "status": "frozen_before_reviewer_access_to_aircraft_or_exact_location",
+  "waveform_sha256": "2433d3067183154b5cb8b9fa410ac4f1a105092e9b255c570477084368f6ced7",
+  "review_sha256": "aaf1fb919fff482a5e8c4956a754eb995033f948406ce38fdefcda91bde96e37",
+  "review_config_sha256": "b5999ce013f1531b6cc1ff185646c5c1fe8856f48c7f5a5e08193d99e1367884",
+  "sample_zero_utc_claim": "2024-04-08T12:11:56Z",
+  "reviewer": "assistant visual spectral interpretation, not a human usability trial",
+  "review_basis": "Full 600-second overview and all five 120-second pages, then audio-only magnification; no detector overlay, aircraft identity, fitted trajectory or exact receiver coordinate consulted",
+  "event": {
+    "id": "B-tonal-01",
+    "measurement_count": 40,
+    "approximate_interval_s": [290, 368],
+    "interpretation": "Sustained roughly 150 Hz tonal ridge; possible moving source, aircraft identity unconfirmed",
+    "related_harmonics": "Roughly 75 and 225 Hz bands are related-source possibilities, not additional independent evidence",
+    "frequency_sigma_hz": 1.0,
+    "time_uncertainty_s": 1.024,
+    "doppler_timing_enabled": false,
+    "thunder_timing_enabled": false,
+    "selection": "Explicit experiment-only eligibility; pending operator annotation remains unconfirmed"
+  },
+  "rejections": [
+    {"interval_s": [0, 240], "reason": "Several short or overlapping contours; no separately selected sustained identifiable source"},
+    {"interval_s": [240, 290], "reason": "Rapid rising/falling tonal fragments and source overlap; not selected as a constant-tone aircraft event"},
+    {"interval_s": [368, 410], "reason": "Strong overlapping steep contours make continuation of the chosen ridge ambiguous"},
+    {"interval_s": [410, 480], "reason": "Repeated large pitch rises/drops inconsistent with assuming a single constant emitted tone without additional evidence"},
+    {"interval_s": [480, 600], "reason": "Brief dense harmonic sweeps and other short fragments; no second independent source selected"}
+  ],
+  "search": {
+    "bounds_south_west_north_east": [42.0, -80.0, 44.0, -78.0],
+    "grid_spacing_m": 20000.0,
+    "grid_method": "Inclusive rectangular endpoints; 111320 metres per degree and cosine of midpoint latitude; no truth-centered receiver",
+    "clock_min_offset_s": -120.0,
+    "clock_max_offset_s": 120.0,
+    "clock_step_s": 10.0,
+    "emitted_frequency_bounds_hz": [20.0, 3200.0],
+    "sound_speed_mps": 343.0,
+    "receiver_ellipsoid_height_m": 200.0,
+    "height_and_clock_bounds_are_engineering_assumptions": true,
+    "frequency_residual_scale_hz": 1.0,
+    "source_approval": "Every geometrically imported native pass whose original timestamp support overlaps the event plus declared clock range and a 600-second acoustic look-back; no fit, distance-to-truth or aircraft-type selection",
+    "source_pass_grouping": "None in primary experiment; if native limits are exceeded, preserve the blocked request and document any subsequent experiment separately",
+    "max_evaluations": 2000000,
+    "retain_hypotheses": 1000,
+    "refinement": "No refinement before this frozen broad result is recorded"
+  },
+  "evaluation": {
+    "commit_predictions_before_reading_exact_location": true,
+    "primary_top_location_tolerance_m": 25000.0,
+    "report_top_10_and_20_distinct_receiver_recall": true,
+    "report_nearest_grid_distance_and_rank": true,
+    "report_boundary_unavailability_runtime_and_work": true,
+    "location_acceptance": "None based on this single unidentified tone. Error and shortlist recall are descriptive field evidence; no calibrated confidence or acoustic-source identification claimed",
+    "known_limits": "One deployment and one selected tone; unknown absolute recorder-clock and publisher-marker errors; sampled aircraft index may omit the real source; no lightning data or hybrid accuracy claim"
+  }
+}

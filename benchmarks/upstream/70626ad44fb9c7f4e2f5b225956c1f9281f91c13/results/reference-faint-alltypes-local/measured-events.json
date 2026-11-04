@@ -1,0 +1,25 @@
+[
+  {
+    "start_s": 1250,
+    "end_s": 1310,
+    "band_hz": [
+      280,
+      530
+    ],
+    "max_slope_hz_s": 15,
+    "max_up_slope_hz_s": 0.5,
+    "speed_range_mps": [
+      50,
+      160
+    ],
+    "slant_range_m": [
+      500,
+      10000
+    ],
+    "f0_range_hz": [
+      300,
+      520
+    ],
+    "cpa_receive_s": 1281.0697518824172
+  }
+]

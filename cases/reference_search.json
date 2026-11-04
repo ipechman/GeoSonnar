@@ -1,0 +1,30 @@
+{
+  "normalized_tracks": "../output/reference-data/normalized.json",
+  "event_files": ["colsto_event1.json", "colsto_event2.json"],
+  "observer_bounds": [40.83, -73.59, 40.92, -73.46],
+  "grid_spacing_m": 200,
+  "observer_ellipsoid_height_m": 0,
+  "observers_file": "../output/reference-data/observers.json",
+  "pair_config": {
+    "event1_cpa_recording_s": 2152,
+    "shared_shifts_s": [-5,-4.5,-4,-3.5,-3,-2.5,-2,-1.5,-1,-0.5,0,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5],
+    "clock_offset_bounds_s": [0,86400],
+    "model": { "sound_speed_mps": 343, "max_gap_s": 30 }
+  },
+  "coarse_bounds": [
+    { "speed_mps": [130,154], "slant_distance_m": [4300,7800] },
+    { "speed_mps": [88,110], "slant_distance_m": [1390,4690] }
+  ],
+  "measured_separation_s": 921,
+  "separation_tolerance_s": 10,
+  "provenance": [
+    "Source-informed regional replication, not a blind nationwide search or an independently surveyed microphone location.",
+    "Pinned, checksum-verified DOPPLERGEIST reference-region.parquet derived from ADSB.lol for September 8, 2026; all source aircraft retained.",
+    "Observed ridge points were selected from the downloaded raw recording before fitting historical flight predictions.",
+    "Compatible ECEF positions, DEM plus EGM96 geoid and an assumed 3m microphone height; per-point source datum flags retained by importer.",
+    "Piecewise linear position/velocity model. Imported source velocity columns are retained in provenance but are not used by this baseline.",
+    "Shared clock and separate emitted-tone sweeps. No independent event-2 shift and no extrapolation across track gaps.",
+    "Coarse speed and slant bounds from the guide; 10s separation tolerance and trace-RMSE scoring are explicit reconstruction choices.",
+    "Silence rejection is disabled until archive completeness and acoustic detectability are validated."
+  ]
+}
