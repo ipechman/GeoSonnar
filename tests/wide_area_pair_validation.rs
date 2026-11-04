@@ -620,6 +620,123 @@ fn estimate_cancellation_and_affordable_pair_ceiling_preserve_declared_science()
 }
 
 #[test]
+fn cost_preview_breaks_down_asymmetric_traces_without_changing_the_request() {
+    let mut fixture = Fixture::new(7, false);
+    fixture.request.events[0].points.truncate(5);
+    fixture.request.events[1].points.truncate(7);
+    fixture.request.events[0].f0_hz = vec![50.0, 52.0];
+    fixture.request.events[1].f0_hz = vec![70.0, 71.0, 72.0, 73.0, 74.0];
+    fixture.request.pair_config.shared_shifts_s = vec![-2.0, -1.0, 0.0, 1.0];
+    fixture.request.retain = 11;
+    let before = wide_area_pair::request_sha256(&fixture.request).unwrap();
+    let estimate = wide_area_pair::estimate(&fixture.request).unwrap();
+    let preview = estimate.cost_preview.as_ref().unwrap();
+    assert_eq!(preview.event_trace_samples, [5, 7]);
+    assert_eq!(preview.event_tone_counts, [2, 5]);
+    assert_eq!(preview.shared_shift_count, 4);
+    // Independent expansion of the declared charge for unequal events.
+    assert_eq!(preview.trace_fit_work_units_per_pair, 6324);
+    assert_eq!(preview.minimum_track_work_units_per_pair, 1568);
+    assert_eq!(preview.retention_work_units_per_pair, 44);
+    assert_eq!(estimate.minimum_work_units_per_timing_pair, 7936);
+    assert_eq!(preview.index_build_work_units, 12);
+    assert_eq!(preview.minimum_grid_work_units, 20);
+    assert_eq!(
+        preview.maximum_timing_pairs_after_minimum_grid_work,
+        (fixture.request.budgets.max_work_units - 20) / 7936
+    );
+    assert!(preview.can_afford_minimum_first_receiver);
+    assert!(preview.can_afford_minimum_first_pair);
+    assert_eq!(
+        wide_area_pair::request_sha256(&fixture.request).unwrap(),
+        before
+    );
+}
+
+#[test]
+fn cost_preview_affordability_flags_are_necessary_conditions_at_exact_boundaries() {
+    let mut fixture = Fixture::new(7, false);
+    let estimate = wide_area_pair::estimate(&fixture.request).unwrap();
+    let pair = estimate.minimum_work_units_per_timing_pair;
+    let first_receiver = estimate.cost_preview.unwrap().index_build_work_units + 2;
+    for (budget, receiver_possible, pair_possible) in [
+        (first_receiver - 1, false, false),
+        (first_receiver, true, false),
+        (first_receiver + pair - 1, true, false),
+        (first_receiver + pair, true, true),
+    ] {
+        fixture.request.budgets.max_work_units = budget;
+        let preview = wide_area_pair::estimate(&fixture.request)
+            .unwrap()
+            .cost_preview
+            .unwrap();
+        assert_eq!(preview.can_afford_minimum_first_receiver, receiver_possible);
+        assert_eq!(preview.can_afford_minimum_first_pair, pair_possible);
+        if budget < preview.minimum_grid_work_units {
+            assert_eq!(preview.maximum_timing_pairs_after_minimum_grid_work, 0);
+        }
+    }
+}
+
+#[test]
+fn cost_preview_does_not_reject_complete_zero_pair_receivers() {
+    let mut fixture = Fixture::new(7, false);
+    // This remote grid lies outside even the root source box at zero radius.
+    // Each receiver therefore needs exactly its start and root-query charges.
+    fixture.request.grid = GridLayout::new(&MapSelection {
+        bounds: [40.0, 40.0, 40.001, 40.001],
+        grid_spacing_m: 2000.0,
+        receiver_height_m: 0.0,
+        clock_adjustment_s: 0.0,
+    })
+    .unwrap();
+    for bounds in &mut fixture.request.coarse_bounds {
+        bounds.slant_distance_m = [0.0, 0.0];
+    }
+    fixture.request.budgets.max_work_units = 20;
+    let estimate = wide_area_pair::estimate(&fixture.request).unwrap();
+    let preview = estimate.cost_preview.unwrap();
+    assert_eq!(fixture.request.grid.count, 4);
+    assert_eq!(preview.minimum_grid_work_units, 20);
+    assert_eq!(preview.maximum_timing_pairs_after_minimum_grid_work, 0);
+    assert!(preview.can_afford_minimum_first_receiver);
+    assert!(!preview.can_afford_minimum_first_pair);
+    let report = wide_area_pair::run(
+        &fixture.request,
+        &fixture.output("zero-pair-preview"),
+        &AtomicBool::new(false),
+        |_| {},
+    )
+    .unwrap();
+    assert_eq!(report.status, WideStatus::Completed);
+    assert_eq!(report.progress.completed_receivers, 4);
+    assert_eq!(report.progress.work_units, 20);
+    assert_eq!(report.progress.scanned_passes, 0);
+    assert_eq!(report.progress.timing_candidates, 0);
+    assert!(report.best_hypotheses.is_empty());
+    assert!(report.source_verified_at_end);
+}
+
+#[test]
+fn saved_estimates_without_cost_preview_remain_readable_without_invented_values() {
+    let fixture = Fixture::new(7, false);
+    let estimate = wide_area_pair::estimate(&fixture.request).unwrap();
+    let mut old = serde_json::to_value(&estimate).unwrap();
+    assert!(
+        old.as_object_mut()
+            .unwrap()
+            .remove("cost_preview")
+            .is_some()
+    );
+    let restored: wide_area_pair::WideEstimate = serde_json::from_value(old.clone()).unwrap();
+    assert!(restored.cost_preview.is_none());
+    assert_eq!(serde_json::to_value(restored).unwrap(), old);
+    let restored: wide_area_pair::WideEstimate =
+        serde_json::from_value(serde_json::to_value(&estimate).unwrap()).unwrap();
+    assert_eq!(restored.cost_preview, estimate.cost_preview);
+}
+
+#[test]
 fn cancellation_inside_pair_scoring_is_not_recorded_as_a_rejected_match() {
     let fixture = Fixture::new(7, false);
     let cancel = AtomicBool::new(false);

@@ -1,4 +1,40 @@
-GeoSonnar 0.11.2 - Windows review workspace
+GeoSonnar 0.11.3 - Windows review workspace
+
+VERSION 0.11.3 - INDIVIDUAL EVENT BOUNDS AND SEARCH COSTS
+In Search > Wide-area two-pass Doppler, each event has its own speed and slant-
+distance bounds. Copying reviewed events preserves these bounds. Review assumptions
+for both sounds and re-estimate after changing settings; no event is narrowed
+automatically. Existing saved requests and review sidecars keep their format.
+
+Estimate shows the trace samples, emitted tones and shared shifts that determine
+pair work, plus minimum index/grid charges. A minimum that exceeds the budget is
+definitely insufficient. Passing a minimum check does not guarantee one location,
+let alone the complete grid, will finish: actual pass census and candidate counts
+remain unknown. No runtime forecast is implied.
+
+Results explain work, elapsed-time, memory and output stops separately. Zero
+completed locations after a stop means incomplete, not no match. Scores attempted
+inside an unfinished location do not enter the retained ranking. Review the stated
+limit and evidence-supported ranges, change settings explicitly, then re-estimate.
+Increasing only the time limit does not solve a work-budget stop. Default budgets,
+scoring and source coverage are unchanged.
+
+The 0.11.3 source passed 898 native tests (224 GUI/launcher checks included), the
+separate 2.1-million-point storage control, nine media/cached-data integrations,
+formatting and Clippy. Python controls passed 132 tests with one unsupported
+fixture skipped. Ten new controls cover event bounds, copying, stale estimates,
+saved-format compatibility, cost arithmetic and incomplete-search guidance.
+These headless checks do not establish interactive GUI behavior or field accuracy.
+Receipts: output/benchmarks/wide-usability-001/. The historical 0.11.2 full-day
+import speed comparison below was not rerun for this version.
+
+The built CLI replayed both unchanged 50-cell requests against the complete retained
+54,788,942-sample source. Scores, ordering, counters, saved pages and terminal states
+matched 0.11.2 exactly: historical constraints finished 50/50 locations; the broad
+configuration stopped at its work budget with 0/50 complete. Three fresh estimates,
+including the 196,647-location USA grid, preserved the old fields and verified the
+new cost arithmetic. This establishes software equivalence, not field accuracy or
+a search speedup.
 
 VERSION 0.11.2 - WIDE-AREA TWO-PASS DOPPLER
 For complete-day ADS-B data and a USA-size grid, use the indexed wide-area path:
@@ -60,8 +96,9 @@ A work-budget stop is incomplete, not "no match". In a separate 50-cell diagnost
 the historical native configuration completed 50/50 cells in 24.39 s. Broad GUI
 copied suggestions reached the 250000000 work-unit limit at 0/50 completed cells;
 102 provisional pair scores were excluded because the first receiver was unfinished.
-The historical configuration used distinct physical bounds per event; the GUI
-currently shares one set across both, so these are different workloads.
+The historical configuration used distinct physical bounds per event; the 0.11.2
+GUI shared one set across both, so these were different workloads. Version 0.11.3
+exposes the separate bounds without automatically narrowing them.
 Review evidence-supported tone and physical ranges, choose an explicit work budget,
 then re-estimate. Enter work units as a raw integer; runtime and memory are separate
 limits. Raising only the time limit does not remove the work limit. A sufficient

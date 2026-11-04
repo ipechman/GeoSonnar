@@ -16,12 +16,12 @@
     {
       "path": "Cargo.lock",
       "bytes": 103346,
-      "sha256": "2e437f39bbd054de8043d075360a28de58954bce6aa8e74180512e04fb0e6943"
+      "sha256": "0c28956baccf501ae1bdaa4e0768457602dc192a52e3ed11603fb5aa5138c086"
     },
     {
       "path": "Cargo.toml",
       "bytes": 1229,
-      "sha256": "816c972cf5294b4ad390b35841e87587c0dc53138cdfee45b81ee268dc5a6492"
+      "sha256": "8341cd2aef20f3b1b2662359bd120263cf68172eb9b35eea1e58e55997906836"
     },
     {
       "path": "LICENSE",
@@ -30,8 +30,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 70735,
-      "sha256": "5dfc0773680b7911cbc55cfe6460aba6a7b347a1d088c9582195ace2536d7e35"
+      "bytes": 72785,
+      "sha256": "02a3809ebce89b3280e50808adb5efb9a95695e21b65ac54e6408138bfc269a6"
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -910,8 +910,8 @@
     },
     {
       "path": "docs/WINDOWS_GUI.txt",
-      "bytes": 58467,
-      "sha256": "07c496b72b24274752c350fcce670f85f4eb95b6b3de59ecc3983e995f455f33"
+      "bytes": 60933,
+      "sha256": "f162789a1a3dc94a9c04615b6e8cf776c04891c7f5f83b344fd204c21145a412"
     },
     {
       "path": "examples/fetch_public.rs",
@@ -1220,8 +1220,8 @@
     },
     {
       "path": "src/gui/studio/wide_ui.rs",
-      "bytes": 71650,
-      "sha256": "890bca09b1bdf025cd93a53eeb5aa0757253e8d50dffbd6eece1c97c4dbc5b51"
+      "bytes": 93467,
+      "sha256": "263f7738c07282ef03cc7fba2714d4f5ef41dc16e96ffcd801d536abfd9565ba"
     },
     {
       "path": "src/gui/tests.rs",
@@ -1415,8 +1415,8 @@
     },
     {
       "path": "src/wide_area_pair.rs",
-      "bytes": 50068,
-      "sha256": "fb02a32e43fa39c5bbe96076360764201cb982878ac4f874ea1e4e1119591819"
+      "bytes": 54554,
+      "sha256": "8e72372ed4ad21f4725d405ebad7af62582499e089c5bd0ba69b83a31fc30d9c"
     },
     {
       "path": "src/workspace.rs",
@@ -1660,8 +1660,8 @@
     },
     {
       "path": "tests/wide_area_pair_validation.rs",
-      "bytes": 25881,
-      "sha256": "7a1eb053e95bbcd71b3d96b7a63a3a136eec2d47952bb98a1a071e99807feb46"
+      "bytes": 30997,
+      "sha256": "fcbe750551960d6082629ea126bb710455b9f587c0b549eb20f7f6da1cbc65cf"
     },
     {
       "path": "tests/workspace_review_validation.rs",

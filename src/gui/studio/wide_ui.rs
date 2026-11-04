@@ -9,13 +9,13 @@ use geosonnar::{
     },
 };
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 struct Settings {
     event_ids: [String; 2],
     cpa_s: [f64; 2],
     tones: [[f64; 3]; 2],
-    speed: [f64; 2],
-    distance: [f64; 2],
+    speed: [[f64; 2]; 2],
+    distance: [[f64; 2]; 2],
     separation_tolerance_s: f64,
     shift: [f64; 3],
     utc_start: String,
@@ -114,6 +114,25 @@ mod tests {
             ..Settings::default()
         }
     }
+    fn estimate_fixture(request: &WidePairRequest, source: &IndexedSource) -> WideEstimate {
+        WideEstimate {
+            receiver_count: request.grid.count,
+            source_passes: source.passes as u64,
+            source_points: source.points,
+            unpruned_pass_checks: 1,
+            worst_scan_point_visits: 1,
+            minimum_output_bytes: 1,
+            source_time_origin_utc_s: source.origin,
+            minimum_work_units_per_timing_pair: 1,
+            maximum_timing_pairs_before_scan: 1,
+            source_metadata_bytes: 1,
+            spatial_index_memory_bytes: 1,
+            local_cpa_memory_reserve_bytes: 1,
+            required_index_memory_bytes: 3,
+            cost_preview: None,
+            limitations: vec![],
+        }
+    }
     #[test]
     fn wide_defaults_are_idle_and_do_not_measure_or_select_sources() {
         let mut studio = studio();
@@ -147,6 +166,360 @@ mod tests {
         assert_eq!(plan.pair_config.clock_offset_bounds_s, Some([0., 86400.]));
         assert_eq!(studio.document.as_ref(), Some(&before));
         assert!(studio.undo.is_empty());
+    }
+    #[test]
+    fn independent_event_bounds_bind_request_and_validate_each_event() {
+        let mut studio = studio();
+        let mut settings = reviewed(&mut studio);
+        let document = studio.document.clone().unwrap();
+        settings.speed = [[60., 110.], [140., 250.]];
+        settings.distance = [[1000., 6000.], [8000., 30000.]];
+        let expected = request(&document, &source(), &settings).unwrap();
+        for i in 0..2 {
+            assert_eq!(expected.coarse_bounds[i].speed_mps, settings.speed[i]);
+            assert_eq!(
+                expected.coarse_bounds[i].slant_distance_m,
+                settings.distance[i]
+            );
+            for speed in [true, false] {
+                let mut changed = settings.clone();
+                let bounds = if speed {
+                    &mut changed.speed[i]
+                } else {
+                    &mut changed.distance[i]
+                };
+                bounds[0] += 1.;
+                let actual = request(&document, &source(), &changed).unwrap();
+                assert_ne!(
+                    wide_area_pair::request_sha256(&actual).unwrap(),
+                    wide_area_pair::request_sha256(&expected).unwrap()
+                );
+                assert_eq!(
+                    actual.coarse_bounds[1 - i].speed_mps,
+                    expected.coarse_bounds[1 - i].speed_mps
+                );
+                assert_eq!(
+                    actual.coarse_bounds[1 - i].slant_distance_m,
+                    expected.coarse_bounds[1 - i].slant_distance_m
+                );
+                for invalid in [[-1., 10.], [20., 10.], [f64::NAN, 10.], [1., f64::INFINITY]] {
+                    let mut invalid_settings = settings.clone();
+                    if speed {
+                        invalid_settings.speed[i] = invalid;
+                    } else {
+                        invalid_settings.distance[i] = invalid;
+                    }
+                    assert!(
+                        request(&document, &source(), &invalid_settings)
+                            .unwrap_err()
+                            .contains(&format!("Event {}", i + 1))
+                    );
+                }
+            }
+        }
+        assert_eq!(studio.document.as_ref(), Some(&document));
+        assert!(studio.undo.is_empty());
+    }
+    #[test]
+    fn copying_reviewed_pair_preserves_independent_physical_bounds() {
+        let mut studio = studio();
+        let mut settings = reviewed(&mut studio);
+        settings.speed = [[55., 100.], [160., 290.]];
+        settings.distance = [[2000., 7000.], [15000., 40000.]];
+        let before = studio.document.clone().unwrap();
+        let original = settings.clone();
+        copy_reviewed_pair(&before, &mut settings).unwrap();
+        assert_eq!(settings.speed, original.speed);
+        assert_eq!(settings.distance, original.distance);
+        assert_eq!(
+            settings.cpa_s,
+            [before.events[0].arrival_s, before.events[1].arrival_s]
+        );
+        assert_eq!(settings.tones[0], [118. * 0.9, 120. * 1.1, 1.]);
+        let mut replacement = before.clone();
+        replacement.events[0].id = "replacement-reviewed-event".into();
+        copy_reviewed_pair(&replacement, &mut settings).unwrap();
+        assert_eq!(settings.event_ids[0], "replacement-reviewed-event");
+        assert_eq!(settings.speed, original.speed);
+        assert_eq!(settings.distance, original.distance);
+        replacement.events[1].review = ReviewState::Pending;
+        let unchanged = settings.clone();
+        assert!(copy_reviewed_pair(&replacement, &mut settings).is_err());
+        assert_eq!(settings, unchanged);
+        assert_eq!(studio.document.as_ref(), Some(&before));
+        assert!(studio.undo.is_empty());
+    }
+    #[test]
+    fn either_event_physical_bound_change_refuses_an_older_estimate() {
+        for i in 0..2 {
+            for speed in [true, false] {
+                let mut studio = studio();
+                let settings = reviewed(&mut studio);
+                let document = studio.document.clone().unwrap();
+                let source = source();
+                let request = request(&document, &source, &settings).unwrap();
+                let estimate = estimate_fixture(&request, &source);
+                studio.wide.source = Some(source);
+                studio.wide.settings = settings.clone();
+                if speed {
+                    studio.wide.settings.speed[i][0] += 1.;
+                } else {
+                    studio.wide.settings.distance[i][1] += 100.;
+                }
+                studio.accept_wide_reply(WideReply::Estimated(Box::new(Prepared {
+                    request,
+                    estimate,
+                    document: document.clone(),
+                    settings,
+                })));
+                assert!(studio.wide.prepared.is_none());
+                assert!(
+                    studio
+                        .notice
+                        .as_ref()
+                        .unwrap()
+                        .1
+                        .contains("options changed")
+                );
+                assert_eq!(studio.document.as_ref(), Some(&document));
+                assert!(studio.undo.is_empty());
+            }
+        }
+    }
+    struct SavedRunFixture(PathBuf);
+    impl SavedRunFixture {
+        fn new() -> Self {
+            static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+            let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("output/wide-ui-saved-run-controls")
+                .join(format!(
+                    "{}-{}-{}",
+                    std::process::id(),
+                    std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap()
+                        .as_nanos(),
+                    NEXT.fetch_add(1, Ordering::Relaxed)
+                ));
+            std::fs::create_dir_all(&root).unwrap();
+            Self(root)
+        }
+    }
+    impl Drop for SavedRunFixture {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
+    }
+    #[test]
+    fn legacy_shared_and_new_independent_bounds_reopen_without_rewriting_request() {
+        let fixture = SavedRunFixture::new();
+        for legacy in [true, false] {
+            let mut studio = studio();
+            let mut settings = reviewed(&mut studio);
+            if !legacy {
+                settings.speed = [[60., 110.], [140., 250.]];
+                settings.distance = [[1000., 6000.], [8000., 30000.]];
+            }
+            let document = studio.document.clone().unwrap();
+            let plan = request(&document, &source(), &settings).unwrap();
+            let output = fixture.0.join(if legacy {
+                "legacy-shared"
+            } else {
+                "independent"
+            });
+            save_review_snapshot(&output, &plan, &document).unwrap();
+            let sidecar: serde_json::Value = serde_json::from_slice(
+                &std::fs::read(output.with_extension("review.json")).unwrap(),
+            )
+            .unwrap();
+            assert_eq!(sidecar["schema_version"], 1);
+            assert_eq!(
+                sidecar.as_object().unwrap().len(),
+                3,
+                "Saved review format must remain unchanged"
+            );
+            let report =
+                wide_area_pair::run(&plan, &output, &AtomicBool::new(true), |_| {}).unwrap();
+            assert_eq!(report.status, wide_area_pair::WideStatus::Cancelled);
+            assert_eq!(report.progress.completed_receivers, 0);
+            let saved = std::fs::read(output.join("request.json")).unwrap();
+            studio.wide.settings.speed = [[1., 2.], [3., 4.]];
+            studio.wide.settings.distance = [[5., 6.], [7., 8.]];
+            let draft = studio.wide.settings.clone();
+            studio.accept_wide_reply(load_saved_wide(&output).unwrap());
+            assert_eq!(
+                studio.wide.report.as_ref().unwrap().request_sha256,
+                wide_area_pair::request_sha256(&plan).unwrap()
+            );
+            assert_eq!(studio.wide.report_document.as_ref(), Some(&document));
+            assert_eq!(studio.document.as_ref(), Some(&document));
+            assert_eq!(
+                studio.wide.settings, draft,
+                "Opening a result must not replace active choices"
+            );
+            assert!(studio.wide.source.is_none() && studio.wide.prepared.is_none());
+            assert_eq!(std::fs::read(output.join("request.json")).unwrap(), saved);
+            let reopened: WidePairRequest = serde_json::from_slice(&saved).unwrap();
+            for i in 0..2 {
+                assert_eq!(reopened.coarse_bounds[i].speed_mps, settings.speed[i]);
+                assert_eq!(
+                    reopened.coarse_bounds[i].slant_distance_m,
+                    settings.distance[i]
+                );
+            }
+        }
+    }
+    fn painted_text(mut paint: impl FnMut(&mut egui::Ui)) -> String {
+        let context = egui::Context::default();
+        let output = context.run_ui(
+            egui::RawInput {
+                screen_rect: Some(egui::Rect::from_min_size(
+                    egui::Pos2::ZERO,
+                    egui::vec2(760., 1200.),
+                )),
+                ..Default::default()
+            },
+            |ui| paint(ui),
+        );
+        fn collect(shape: &egui::epaint::Shape, text: &mut Vec<String>) {
+            match shape {
+                egui::epaint::Shape::Text(value) => text.push(value.galley.job.text.clone()),
+                egui::epaint::Shape::Vec(values) => {
+                    values.iter().for_each(|value| collect(value, text))
+                }
+                _ => {}
+            }
+        }
+        let mut text = Vec::new();
+        for shape in &output.shapes {
+            collect(&shape.shape, &mut text);
+        }
+        text.join("\n")
+    }
+    #[test]
+    fn cost_preview_shows_declared_counts_and_necessary_only_budget_warnings() {
+        let mut studio = studio();
+        let settings = reviewed(&mut studio);
+        let document = studio.document.clone().unwrap();
+        let source = source();
+        let plan = request(&document, &source, &settings).unwrap();
+        let mut estimate = estimate_fixture(&plan, &source);
+        let old = painted_text(|ui| cost_preview_ui(ui, &estimate));
+        assert!(old.contains("unavailable for this older estimate"));
+        assert!(!old.contains("0 trace samples"));
+        estimate.cost_preview = Some(wide_area_pair::WideCostPreview {
+            event_trace_samples: [3, 5],
+            event_tone_counts: [61, 126],
+            shared_shift_count: 11,
+            trace_fit_work_units_per_pair: 20207,
+            minimum_track_work_units_per_pair: 320,
+            retention_work_units_per_pair: 800,
+            index_build_work_units: 600,
+            minimum_grid_work_units: 700,
+            maximum_timing_pairs_after_minimum_grid_work: 0,
+            can_afford_minimum_first_receiver: false,
+            can_afford_minimum_first_pair: false,
+        });
+        let first = painted_text(|ui| cost_preview_ui(ui, &estimate));
+        for expected in [
+            "Event 1: 3 trace samples",
+            "61 tones",
+            "Event 2: 5 trace samples",
+            "126 tones",
+            "11 shared shifts",
+            "Detailed work breakdown",
+            "minimum setup for the first receiver",
+        ] {
+            assert!(first.contains(expected), "Missing {expected}: {first}");
+        }
+        assert!(
+            !first.contains("20207 trace-fit"),
+            "Detailed accounting should start collapsed"
+        );
+        let details =
+            painted_text(|ui| cost_details_ui(ui, estimate.cost_preview.as_ref().unwrap()));
+        assert!(details.contains("20207 trace-fit"));
+        assert!(details.contains("not a completion or runtime estimate"));
+        estimate
+            .cost_preview
+            .as_mut()
+            .unwrap()
+            .can_afford_minimum_first_receiver = true;
+        let pair = painted_text(|ui| cost_preview_ui(ui, &estimate));
+        assert!(pair.contains("minimum first timing-pair charge"));
+        estimate
+            .cost_preview
+            .as_mut()
+            .unwrap()
+            .can_afford_minimum_first_pair = true;
+        estimate
+            .cost_preview
+            .as_mut()
+            .unwrap()
+            .maximum_timing_pairs_after_minimum_grid_work = 3;
+        let permitted = painted_text(|ui| cost_preview_ui(ui, &estimate));
+        assert!(!permitted.contains("cannot cover"));
+        assert!(permitted.contains("Detailed work breakdown"));
+        assert_eq!(studio.document.as_ref(), Some(&document));
+        assert!(studio.undo.is_empty());
+    }
+    #[test]
+    fn zero_receiver_work_stop_shows_guidance_without_changing_evidence_or_budgets() {
+        let fixture = SavedRunFixture::new();
+        let mut studio = studio();
+        studio.wide.settings = reviewed(&mut studio);
+        let document = studio.document.clone().unwrap();
+        let settings = studio.wide.settings.clone();
+        let plan = request(&document, &source(), &settings).unwrap();
+        let mut report = wide_area_pair::run(
+            &plan,
+            &fixture.0.join("stopped"),
+            &AtomicBool::new(true),
+            |_| {},
+        )
+        .unwrap();
+        report.status = wide_area_pair::WideStatus::BudgetExceeded;
+        report.error = Some("Global wide-area work budget exhausted".into());
+        report.progress.scored_candidates = 102;
+        studio.accept_wide_reply(WideReply::Report(
+            Box::new(report.clone()),
+            Some(Box::new(document.clone())),
+        ));
+        let text = painted_text(|ui| {
+            studio.wide_results_ui(ui);
+        });
+        for expected in [
+            "No receiver finished",
+            "not a no-match result",
+            "102 provisional pair scores",
+            "raw integer",
+            "Raising only the time limit",
+            "re-estimate",
+        ] {
+            assert!(text.contains(expected), "Missing {expected}: {text}");
+        }
+        assert_eq!(studio.wide.settings, settings);
+        assert_eq!(studio.document.as_ref(), Some(&document));
+        assert!(studio.undo.is_empty() && studio.wide.source.is_none());
+        for (error, expected) in [
+            ("Global wide-area wall budget exhausted", "runtime budget"),
+            (
+                "Global wide-area output budget exhausted",
+                "output-byte budget",
+            ),
+            (
+                "Combined source/spatial-index/local-CPA memory needs 1024 bytes, exceeding the declared 512 bytes; no source pass or receiver was removed",
+                "Advanced memory limit",
+            ),
+            ("Synthetic unknown limit", "reported limit"),
+        ] {
+            report.error = Some(error.into());
+            let guidance = stop_guidance(&report).unwrap();
+            assert!(guidance.contains(expected));
+            assert!(!guidance.contains("Raising only the time limit"));
+        }
+        report.status = wide_area_pair::WideStatus::Completed;
+        assert!(stop_guidance(&report).is_none());
     }
     #[test]
     fn wide_index_memory_budget_binds_plan_without_changing_review_or_source() {
@@ -192,22 +565,7 @@ mod tests {
         let document = studio.document.clone().unwrap();
         let source = source();
         let request = request(&document, &source, &settings).unwrap();
-        let estimate = WideEstimate {
-            receiver_count: request.grid.count,
-            source_passes: source.passes as u64,
-            source_points: source.points,
-            unpruned_pass_checks: 1,
-            worst_scan_point_visits: 1,
-            minimum_output_bytes: 1,
-            source_time_origin_utc_s: source.origin,
-            minimum_work_units_per_timing_pair: 1,
-            maximum_timing_pairs_before_scan: 1,
-            source_metadata_bytes: 1,
-            spatial_index_memory_bytes: 1,
-            local_cpa_memory_reserve_bytes: 1,
-            required_index_memory_bytes: 3,
-            limitations: vec![],
-        };
+        let estimate = estimate_fixture(&request, &source);
         studio.wide.source = Some(source);
         studio.wide.settings = settings.clone();
         studio.wide.settings.max_index_memory_bytes = 64 * 1024 * 1024;
@@ -292,6 +650,8 @@ mod tests {
     fn wide_case_replacement_cancels_old_source_job_and_resets_binding() {
         let mut studio = studio();
         studio.wide.source = Some(source());
+        studio.wide.settings.speed = [[60., 100.], [150., 200.]];
+        studio.wide.settings.distance = [[1000., 2000.], [5000., 10000.]];
         studio.wide.running = true;
         let cancel = studio.wide.cancel.clone();
         let mut case = studio.case.clone().unwrap();
@@ -299,6 +659,8 @@ mod tests {
         studio.bind(&case);
         assert!(cancel.load(Ordering::Relaxed));
         assert!(studio.wide.source.is_none() && !studio.wide.running);
+        assert_eq!(studio.wide.settings.speed, [[40., 330.]; 2]);
+        assert_eq!(studio.wide.settings.distance, [[100., 100_000.]; 2]);
     }
     #[test]
     fn wide_source_deletion_is_scoped_and_retains_historical_result() {
@@ -404,22 +766,7 @@ mod tests {
         let document = studio.document.clone().unwrap();
         let source = source();
         let request = request(&document, &source, &settings).unwrap();
-        let estimate = WideEstimate {
-            receiver_count: request.grid.count,
-            source_passes: source.passes as u64,
-            source_points: source.points,
-            unpruned_pass_checks: 1,
-            worst_scan_point_visits: 1,
-            minimum_output_bytes: 1,
-            source_time_origin_utc_s: source.origin,
-            minimum_work_units_per_timing_pair: 1,
-            maximum_timing_pairs_before_scan: 1,
-            source_metadata_bytes: 1,
-            spatial_index_memory_bytes: 1,
-            local_cpa_memory_reserve_bytes: 1,
-            required_index_memory_bytes: 3,
-            limitations: vec![],
-        };
+        let estimate = estimate_fixture(&request, &source);
         studio.wide.source = Some(source);
         studio.wide.settings = settings.clone();
         studio.wide.running = true;
@@ -578,8 +925,8 @@ impl Default for Settings {
             event_ids: Default::default(),
             cpa_s: [0., 0.],
             tones: [[80., 200., 1.]; 2],
-            speed: [40., 330.],
-            distance: [100., 100_000.],
+            speed: [[40., 330.]; 2],
+            distance: [[100., 100_000.]; 2],
             separation_tolerance_s: 30.,
             shift: [-5., 5., 1.],
             utc_start: String::new(),
@@ -714,6 +1061,106 @@ fn reviewed_pair(doc: &ReviewWorkspace) -> Result<[&EvidenceEvent; 2], String> {
     }
     Ok([selected[0], selected[1]])
 }
+fn copy_reviewed_pair(doc: &ReviewWorkspace, settings: &mut Settings) -> Result<(), String> {
+    let pair = reviewed_pair(doc)?;
+    for (i, event) in pair.into_iter().enumerate() {
+        settings.event_ids[i] = event.id.clone();
+        settings.cpa_s[i] = event.arrival_s;
+        let low = event
+            .points
+            .iter()
+            .map(|p| p.frequency_hz)
+            .fold(f64::INFINITY, f64::min);
+        let high = event
+            .points
+            .iter()
+            .map(|p| p.frequency_hz)
+            .fold(0., f64::max);
+        settings.tones[i] = [(low * 0.9).max(0.1), high * 1.1, 1.];
+    }
+    // Copying measurements never changes the analyst's physical limits.
+    Ok(())
+}
+fn physical_range_ui(ui: &mut egui::Ui, label: &str, range: &mut [f64; 2], unit: &str, speed: f64) {
+    ui.horizontal_wrapped(|ui| {
+        ui.label(label);
+        ui.label("Min");
+        ui.add(
+            egui::DragValue::new(&mut range[0])
+                .suffix(unit)
+                .speed(speed),
+        );
+        ui.label("Max");
+        ui.add(
+            egui::DragValue::new(&mut range[1])
+                .suffix(unit)
+                .speed(speed),
+        );
+    });
+}
+fn stop_guidance(report: &WidePairReport) -> Option<&'static str> {
+    use wide_area_pair::WideStatus;
+    match report.status {
+        WideStatus::Completed => None,
+        WideStatus::BudgetExceeded => Some(match report.error.as_deref() {
+            Some("Global wide-area work budget exhausted") => {
+                "The work-unit limit stopped this run. Review each event's evidence-supported tone and physical ranges and the work-unit budget (a raw integer), then re-estimate. Raising only the time limit does not remove this limit; a larger work budget is not a completion guarantee."
+            }
+            Some("Global wide-area wall budget exhausted") => {
+                "The runtime limit stopped this run. Review the runtime budget and re-estimate before starting a new run. Extra time does not change the work or memory limits."
+            }
+            Some(
+                "Global wide-area output budget exhausted"
+                | "Wide-area output budget exhausted"
+                | "Wide-area checkpoint budget exhausted"
+                | "Wide-area final report exceeds its reserved output budget",
+            ) => {
+                "The output limit stopped this run. Review the output-byte budget and available disk space, then re-estimate before starting a new run."
+            }
+            Some(error)
+                if geosonnar::track_store::is_memory_limit_error(error)
+                    || error
+                        .starts_with("Combined source/spatial-index/local-CPA memory needs ") =>
+            {
+                "The source/index memory limit stopped this run. Review Advanced memory limit and available system memory, then re-estimate. This allowance is separate from the track cache and total application memory."
+            }
+            _ => {
+                "Review the reported limit and the applicable search setting, then re-estimate before starting a new run. The saved result remains incomplete; increasing an unrelated budget may not resolve the stop."
+            }
+        }),
+        WideStatus::Cancelled => Some(
+            "The saved run remains incomplete. Review the event ranges and budgets and re-estimate before starting a new run; reopening does not resume it.",
+        ),
+        WideStatus::Failed => Some(
+            "Review the saved error and source state before re-estimating a new run. An incomplete search cannot establish that no matching source exists.",
+        ),
+    }
+}
+fn cost_preview_ui(ui: &mut egui::Ui, estimate: &WideEstimate) {
+    let Some(cost) = &estimate.cost_preview else {
+        muted(
+            ui,
+            "Detailed work breakdown is unavailable for this older estimate; re-estimate to obtain it.",
+        );
+        return;
+    };
+    ui.label(format!("Event 1: {} trace samples × {} tones · Event 2: {} trace samples × {} tones · {} shared shifts",
+        cost.event_trace_samples[0], cost.event_tone_counts[0], cost.event_trace_samples[1], cost.event_tone_counts[1], cost.shared_shift_count));
+    egui::CollapsingHeader::new("Detailed work breakdown")
+        .id_salt("wide_cost_details")
+        .show(ui, |ui| cost_details_ui(ui, cost));
+    if !cost.can_afford_minimum_first_receiver {
+        ui.colored_label(tone(ui, AMBER), "The work budget cannot cover even the minimum setup for the first receiver. Review the work budget and re-estimate.");
+    } else if !cost.can_afford_minimum_first_pair {
+        ui.colored_label(tone(ui, AMBER), "The work budget cannot cover even the minimum first timing-pair charge. Review the work budget and re-estimate.");
+    }
+}
+fn cost_details_ui(ui: &mut egui::Ui, cost: &wide_area_pair::WideCostPreview) {
+    ui.label(format!("Minimum work per timing pair: {} trace-fit + {} track + {} retention units. Minimum spatial-index construction: {} units.",
+        cost.trace_fit_work_units_per_pair, cost.minimum_track_work_units_per_pair, cost.retention_work_units_per_pair, cost.index_build_work_units));
+    ui.label(format!("Full-grid work floor: {} units; at most {} timing pairs after that floor. Traversal, source census and joining cost more; this is not a completion or runtime estimate.",
+        cost.minimum_grid_work_units, cost.maximum_timing_pairs_after_minimum_grid_work));
+}
 fn request(
     doc: &ReviewWorkspace,
     source: &IndexedSource,
@@ -730,6 +1177,19 @@ fn request(
             "Copy the current reviewed pair into this plan, then inspect its timing and tone grids"
                 .into(),
         );
+    }
+    for i in 0..2 {
+        for (name, [low, high]) in [
+            ("speed", settings.speed[i]),
+            ("slant distance", settings.distance[i]),
+        ] {
+            if !low.is_finite() || !high.is_finite() || low < 0. || low > high {
+                return Err(format!(
+                    "Event {} needs finite, nonnegative, ordered {name} bounds",
+                    i + 1
+                ));
+            }
+        }
     }
     if settings
         .cpa_s
@@ -774,9 +1234,9 @@ fn request(
                 max_gap_s: source.max_gap_s,
             },
         },
-        coarse_bounds: std::array::from_fn(|_| geosonnar::verification::CoarseBounds {
-            speed_mps: settings.speed,
-            slant_distance_m: settings.distance,
+        coarse_bounds: std::array::from_fn(|i| geosonnar::verification::CoarseBounds {
+            speed_mps: settings.speed[i],
+            slant_distance_m: settings.distance[i],
         }),
         measured_separation_s: settings.cpa_s[1] - settings.cpa_s[0],
         separation_tolerance_s: settings.separation_tolerance_s,
@@ -1269,30 +1729,25 @@ impl Studio {
             ui.add(egui::DragValue::new(&mut doc.sound_speed_mps).suffix(" m/s sound speed"));
             muted(ui, "First wide-area pass uses this explicit constant receiver height and sound speed. Terrain/atmospheric refinement remains a separate reviewed comparison.");
             ui.separator(); ui.strong("2 · Reviewed pair and explicit physical assumptions");
-            if ui.button("Copy the two selected reviewed Doppler events").clicked() {
-                match reviewed_pair(doc) {
-                    Ok(pair) => {
-                        for (i, event) in pair.into_iter().enumerate() {
-                            self.wide.settings.event_ids[i] = event.id.clone(); self.wide.settings.cpa_s[i] = event.arrival_s;
-                            let low = event.points.iter().map(|p| p.frequency_hz).fold(f64::INFINITY, f64::min);
-                            let high = event.points.iter().map(|p| p.frequency_hz).fold(0., f64::max);
-                            self.wide.settings.tones[i] = [(low * 0.9).max(0.1), high * 1.1, 1.];
-                        }
-                    }
-                    Err(error) => self.notice = Some((true, error)),
-                }
+            if ui.button("Copy the two selected reviewed Doppler events").clicked()
+                && let Err(error) = copy_reviewed_pair(doc, &mut self.wide.settings) {
+                self.notice = Some((true, error));
             }
+            muted(ui, "Copy updates timing and tone suggestions. Each event's physical limits stay as entered; review them when changing the selected pair.");
             for i in 0..2 {
-                ui.label(format!("Event {}: {}", i + 1, self.wide.settings.event_ids[i]));
-                ui.add(egui::DragValue::new(&mut self.wide.settings.cpa_s[i]).suffix(" s CPA anchor").speed(0.1));
-                range_ui(ui, "Emitted tone grid — review the suggested range", &mut self.wide.settings.tones[i], " Hz");
+                ui.push_id(("wide_event", i), |ui| {
+                    ui.strong(format!("Event {}: {}", i + 1, self.wide.settings.event_ids[i]));
+                    ui.add(egui::DragValue::new(&mut self.wide.settings.cpa_s[i]).suffix(" s CPA anchor").speed(0.1));
+                    range_ui(ui, "Emitted tone grid — review the suggested range", &mut self.wide.settings.tones[i], " Hz");
+                    physical_range_ui(ui, &format!("Event {} speed", i + 1), &mut self.wide.settings.speed[i], " m/s", 1.);
+                    physical_range_ui(ui, &format!("Event {} slant distance", i + 1), &mut self.wide.settings.distance[i], " m", 100.);
+                });
             }
             range_ui(ui, "Shared shift around CPA-derived clock", &mut self.wide.settings.shift, " s");
             ui.add(egui::DragValue::new(&mut self.wide.settings.separation_tolerance_s).range(0.0..=3600.0).suffix(" s pair-separation tolerance"));
-            ui.horizontal_wrapped(|ui| { ui.label("Speed range m/s"); for v in &mut self.wide.settings.speed { ui.add(egui::DragValue::new(v)); } });
-            ui.horizontal_wrapped(|ui| { ui.label("Slant distance range m"); for v in &mut self.wide.settings.distance { ui.add(egui::DragValue::new(v).speed(100.)); } });
             ui.separator(); ui.strong("3 · Estimate, budgets and run");
             ui.add(egui::DragValue::new(&mut self.wide.settings.max_work).suffix(" work-unit budget").speed(100_000.));
+            muted(ui, "Work units are a raw integer budget. Runtime and memory have separate limits; increasing time alone does not resolve a work-unit stop.");
             ui.add(egui::DragValue::new(&mut self.wide.settings.max_seconds).range(1..=86400).suffix(" s runtime budget"));
             ui.add(egui::DragValue::new(&mut self.wide.settings.max_output).suffix(" output bytes").speed(1_048_576.));
             ui.add(egui::DragValue::new(&mut self.wide.settings.retain).range(1..=1000).suffix(" retained rows"));
@@ -1305,6 +1760,11 @@ impl Studio {
                 ui.label(format!("Minimum output reservation: {} bytes", e.minimum_output_bytes));
                 ui.label(format!("Source/index memory reservation: {:.1} MiB total · {:.1} MiB source/verification · {:.1} MiB spatial index · {:.1} MiB local CPA reserve. Separate track cache: 256 MiB.", e.required_index_memory_bytes as f64 / 1_048_576., e.source_metadata_bytes as f64 / 1_048_576., e.spatial_index_memory_bytes as f64 / 1_048_576., e.local_cpa_memory_reserve_bytes as f64 / 1_048_576.));
                 ui.colored_label(tone(ui, AMBER),format!("Budget upper bound before scanning: at most {} timing-pair attempts globally (at least {} work units each). Source scanning and index work reduce this ceiling; it is not a completion estimate.",e.maximum_timing_pairs_before_scan,e.minimum_work_units_per_timing_pair));
+                if self.document.as_ref() == Some(&prepared.document) && prepared.settings == self.wide.settings {
+                    cost_preview_ui(ui, e);
+                } else {
+                    ui.colored_label(tone(ui, AMBER), "Search settings changed. Estimate again before using these previous cost figures or running.");
+                }
             }
             let ready = self.wide.prepared.as_ref().is_some_and(|p| self.document.as_ref() == Some(&p.document) && p.settings == self.wide.settings);
             if ui.add_enabled(ready, egui::Button::new("Run reviewed wide-area plan")).clicked() { self.prepare_wide(ui.ctx(), true); }
@@ -1491,6 +1951,15 @@ impl Studio {
         ui.label(format!("Saved: {}", display_path(&report.output_directory)));
         if let Some(error) = &report.error {
             ui.colored_label(tone(ui, AMBER), error);
+        }
+        if let Some(guidance) = stop_guidance(&report) {
+            if report.progress.completed_receivers == 0 {
+                ui.colored_label(tone(ui, AMBER), "No receiver finished. This is not a no-match result; unfinished receiver scores are excluded from the completed results.");
+                if report.progress.scored_candidates > 0 {
+                    ui.label(format!("{} provisional pair scores were attempted before stopping; no completed receiver ranking is available.", report.progress.scored_candidates));
+                }
+            }
+            ui.label(guidance);
         }
         muted(
             ui,

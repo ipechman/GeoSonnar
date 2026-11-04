@@ -96,7 +96,41 @@ pub struct WideEstimate {
     pub local_cpa_memory_reserve_bytes: u64,
     #[serde(default)]
     pub required_index_memory_bytes: u64,
+    /// Added after the initial wide-area release. Older saved estimates have
+    /// no breakdown; absence must not be displayed as zero cost.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cost_preview: Option<WideCostPreview>,
     pub limitations: Vec<String>,
+}
+/// Checked arithmetic over the declared traces and verified source inventory,
+/// without a receiver search or sampling pilot. Work units describe the current
+/// operational accounting, not elapsed time or a sufficient completion budget.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct WideCostPreview {
+    pub event_trace_samples: [u64; 2],
+    pub event_tone_counts: [u64; 2],
+    pub shared_shift_count: u64,
+    /// Exact trace term: shifts * sum(samples * (tones + 128)).
+    pub trace_fit_work_units_per_pair: u64,
+    /// Lower bound: 16 * twice the shortest source pass. That pass need not
+    /// produce any eligible ordered CPA pair at any declared receiver.
+    pub minimum_track_work_units_per_pair: u64,
+    /// Exact bounded-ranking reservation included in every pair charge.
+    pub retention_work_units_per_pair: u64,
+    /// Exact once-per-run charge: passes * (bit_length(passes) + 4).
+    pub index_build_work_units: u64,
+    /// Index build plus one receiver-start and one root-query charge at each
+    /// receiver. Other traversal, track census, joining and all pairs are extra.
+    pub minimum_grid_work_units: u64,
+    /// Optimistic ceiling if the entire grid completes, after only its minimum
+    /// overhead. It is neither expected pair count nor sufficient capacity.
+    pub maximum_timing_pairs_after_minimum_grid_work: u64,
+    /// Necessary condition only: index build plus two first-receiver charges.
+    pub can_afford_minimum_first_receiver: bool,
+    /// Necessary condition for scoring even one pair: index build plus the two
+    /// first-receiver charges plus the minimum pair charge. Census/join costs
+    /// are still excluded. False does not prevent completing zero-pair receivers.
+    pub can_afford_minimum_first_pair: bool,
 }
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct WideProgress {
@@ -298,12 +332,14 @@ fn estimate_store(request: &WidePairRequest, store: &TrackStore) -> Result<WideE
         .ok_or("Empty source pool")?;
     let minimum_work_units_per_timing_pair =
         pair_work(request, mul(shortest_pass, 2)?, trace_work(request)?)?;
+    let cost_preview = cost_preview(request, store.passes().len() as u64, shortest_pass)?;
     Ok(WideEstimate { receiver_count:request.grid.count,source_passes:store.passes().len() as u64,
         source_points:store.total_points(),unpruned_pass_checks:mul(request.grid.count,store.passes().len() as u64)?,
         worst_scan_point_visits:mul(request.grid.count,store.total_points())?,minimum_output_bytes,
         source_time_origin_utc_s:origin,minimum_work_units_per_timing_pair,
         source_metadata_bytes:memory.source_metadata_bytes,spatial_index_memory_bytes:memory.spatial_index_memory_bytes,
         local_cpa_memory_reserve_bytes:memory.local_cpa_memory_reserve_bytes,required_index_memory_bytes:memory.total_bytes,
+        cost_preview:Some(cost_preview),
         maximum_timing_pairs_before_scan:request.budgets.max_work_units/minimum_work_units_per_timing_pair,limitations:vec![
             "Unpruned scan counts are conservative upper bounds, not a completion-time promise. Actual pair work is counted after the local-CPA separation join and charged to the same global budget.".into(),
             "The affordable-pair ceiling spends the entire work budget on the shortest possible pair. Actual capacity is lower after index traversal, pass census and longer tracks. It is not an ETA, required-pair estimate or guarantee that this grid can finish.".into(),
@@ -359,6 +395,60 @@ fn pair_work(request: &WidePairRequest, points: u64, trace_work: u64) -> Result<
         .checked_add(trace_work)
         .and_then(|n| n.checked_add(request.retain as u64 * 4))
         .ok_or_else(|| "Pair work overflow".to_owned())
+}
+
+fn cost_preview(
+    request: &WidePairRequest,
+    source_passes: u64,
+    shortest_pass_points: u64,
+) -> Result<WideCostPreview, String> {
+    if source_passes == 0 || shortest_pass_points == 0 {
+        return Err("Cost preview needs a nonempty verified source inventory".into());
+    }
+    let trace_fit_work_units_per_pair = trace_work(request)?;
+    let minimum_track_work_units_per_pair = mul(mul(shortest_pass_points, 2)?, 16)?;
+    let retention_work_units_per_pair = mul(request.retain as u64, 4)?;
+    let minimum_pair = pair_work(
+        request,
+        mul(shortest_pass_points, 2)?,
+        trace_fit_work_units_per_pair,
+    )?;
+    // Keep the same integer formula as run's existing index-build charge.
+    // This preview does not replace or change any runtime accounting.
+    let depth = 64 - source_passes.leading_zeros() as u64;
+    let index_build_work_units = mul(source_passes, depth + 4)?;
+    let minimum_grid_work_units = index_build_work_units
+        .checked_add(mul(request.grid.count, 2)?)
+        .ok_or("Minimum grid work overflow")?;
+    let minimum_first_receiver = index_build_work_units
+        .checked_add(2)
+        .ok_or("Minimum first-receiver work overflow")?;
+    let minimum_first_pair = minimum_first_receiver
+        .checked_add(minimum_pair)
+        .ok_or("Minimum first-pair work overflow")?;
+    Ok(WideCostPreview {
+        event_trace_samples: request
+            .events
+            .each_ref()
+            .map(|event| event.points.len() as u64),
+        event_tone_counts: request
+            .events
+            .each_ref()
+            .map(|event| event.f0_hz.len() as u64),
+        shared_shift_count: request.pair_config.shared_shifts_s.len() as u64,
+        trace_fit_work_units_per_pair,
+        minimum_track_work_units_per_pair,
+        retention_work_units_per_pair,
+        index_build_work_units,
+        minimum_grid_work_units,
+        maximum_timing_pairs_after_minimum_grid_work: request
+            .budgets
+            .max_work_units
+            .saturating_sub(minimum_grid_work_units)
+            / minimum_pair,
+        can_afford_minimum_first_receiver: request.budgets.max_work_units >= minimum_first_receiver,
+        can_afford_minimum_first_pair: request.budgets.max_work_units >= minimum_first_pair,
+    })
 }
 
 type CpaEntry = (usize, usize, ClosestApproach);
