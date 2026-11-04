@@ -240,7 +240,8 @@ pub fn load_report(directory: &Path) -> Result<WidePairReport, String> {
         || report.location_verified
         || report.best_hypotheses.len() > request.retain
         || report.best_flight_pairs.len() > request.retain
-        || report.progress.work_units > request.budgets.max_work_units
+        || (request.budgets.work_limit_enabled
+            && report.progress.work_units > request.budgets.max_work_units)
         || report.source != request.source
         || report
             .source_time_origin_utc_s

@@ -29,11 +29,24 @@ fn default_index_memory_bytes() -> u64 {
 fn is_default_index_memory_bytes(value: &u64) -> bool {
     *value == DEFAULT_INDEX_MEMORY_BYTES
 }
+fn work_limit_enabled_by_default() -> bool {
+    true
+}
+fn is_work_limit_enabled(value: &bool) -> bool {
+    *value
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct WideBudgets {
     pub max_work_units: u64,
+    /// The numeric value is retained without validation when false. Missing/true is
+    /// the historical policy and is omitted to preserve existing request hashes.
+    #[serde(
+        default = "work_limit_enabled_by_default",
+        skip_serializing_if = "is_work_limit_enabled"
+    )]
+    pub work_limit_enabled: bool,
     pub max_output_bytes: u64,
     pub max_duration_s: u64,
     /// Combined source metadata, spatial-index construction/query and retained
@@ -49,6 +62,7 @@ impl Default for WideBudgets {
     fn default() -> Self {
         Self {
             max_work_units: 250_000_000,
+            work_limit_enabled: true,
             max_output_bytes: 256 * 1024 * 1024,
             max_duration_s: 1800,
             max_index_memory_bytes: DEFAULT_INDEX_MEMORY_BYTES,
@@ -85,7 +99,8 @@ pub struct WideEstimate {
     /// source pass twice (one continuous aircraft may supply distinct passes).
     pub minimum_work_units_per_timing_pair: u64,
     /// Optimistic ceiling before any index, census or other work is charged.
-    pub maximum_timing_pairs_before_scan: u64,
+    /// None when the work-unit limit is disabled; not an unlimited capacity claim.
+    pub maximum_timing_pairs_before_scan: Option<u64>,
     /// Verified-store reservation, including retained metadata and final source
     /// verification scratch; this is not a measured process-RAM value.
     #[serde(default)]
@@ -124,13 +139,16 @@ pub struct WideCostPreview {
     pub minimum_grid_work_units: u64,
     /// Optimistic ceiling if the entire grid completes, after only its minimum
     /// overhead. It is neither expected pair count nor sufficient capacity.
-    pub maximum_timing_pairs_after_minimum_grid_work: u64,
+    /// None when the work-unit limit is disabled.
+    pub maximum_timing_pairs_after_minimum_grid_work: Option<u64>,
     /// Necessary condition only: index build plus two first-receiver charges.
-    pub can_afford_minimum_first_receiver: bool,
+    /// None when the work-unit limit is disabled.
+    pub can_afford_minimum_first_receiver: Option<bool>,
     /// Necessary condition for scoring even one pair: index build plus the two
     /// first-receiver charges plus the minimum pair charge. Census/join costs
     /// are still excluded. False does not prevent completing zero-pair receivers.
-    pub can_afford_minimum_first_pair: bool,
+    /// None when the work-unit limit is disabled.
+    pub can_afford_minimum_first_pair: Option<bool>,
 }
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct WideProgress {
@@ -225,17 +243,18 @@ pub(crate) fn validate_request(request: &WidePairRequest) -> Result<(), String> 
     request.grid.validate()?;
     request_sha256(request)?;
     let b = &request.budgets;
-    if b.max_work_units == 0
-        || b.max_work_units > 100_000_000_000
+    if (b.work_limit_enabled && (b.max_work_units == 0 || b.max_work_units > 100_000_000_000))
         || b.max_output_bytes < 16 * 1024 * 1024
         || b.max_output_bytes > 8 * 1024 * 1024 * 1024
         || b.max_duration_s == 0
         || b.max_duration_s > 86400
         || !(64 * 1024 * 1024..=4 * 1024 * 1024 * 1024).contains(&b.max_index_memory_bytes)
     {
-        return Err(
-            "Declare positive work, 16 MiB..8 GiB output, 1..86400 s wall and 64 MiB..4 GiB index-memory limits".into(),
-        );
+        return Err(if b.work_limit_enabled {
+            "Declare positive work, 16 MiB..8 GiB output, 1..86400 s wall and 64 MiB..4 GiB index-memory limits"
+        } else {
+            "Declare 16 MiB..8 GiB output, 1..86400 s wall and 64 MiB..4 GiB index-memory limits; the work-unit limit is disabled"
+        }.into());
     }
     let config = &request.pair_config;
     if !config.event1_cpa_recording_s.is_finite()
@@ -320,7 +339,8 @@ fn estimate_store(request: &WidePairRequest, store: &TrackStore) -> Result<WideE
         .checked_add(16 * 1024 * 1024)
         .ok_or("Output estimate overflow")?;
     if minimum_output_bytes > request.budgets.max_output_bytes
-        || request.grid.count > request.budgets.max_work_units
+        || (request.budgets.work_limit_enabled
+            && request.grid.count > request.budgets.max_work_units)
     {
         return Err("The full declared grid cannot fit the explicit minimum work/output budget; no receivers were removed".into());
     }
@@ -333,19 +353,24 @@ fn estimate_store(request: &WidePairRequest, store: &TrackStore) -> Result<WideE
     let minimum_work_units_per_timing_pair =
         pair_work(request, mul(shortest_pass, 2)?, trace_work(request)?)?;
     let cost_preview = cost_preview(request, store.passes().len() as u64, shortest_pass)?;
-    Ok(WideEstimate { receiver_count:request.grid.count,source_passes:store.passes().len() as u64,
+    let mut estimate = WideEstimate { receiver_count:request.grid.count,source_passes:store.passes().len() as u64,
         source_points:store.total_points(),unpruned_pass_checks:mul(request.grid.count,store.passes().len() as u64)?,
         worst_scan_point_visits:mul(request.grid.count,store.total_points())?,minimum_output_bytes,
         source_time_origin_utc_s:origin,minimum_work_units_per_timing_pair,
         source_metadata_bytes:memory.source_metadata_bytes,spatial_index_memory_bytes:memory.spatial_index_memory_bytes,
         local_cpa_memory_reserve_bytes:memory.local_cpa_memory_reserve_bytes,required_index_memory_bytes:memory.total_bytes,
         cost_preview:Some(cost_preview),
-        maximum_timing_pairs_before_scan:request.budgets.max_work_units/minimum_work_units_per_timing_pair,limitations:vec![
+        maximum_timing_pairs_before_scan:request.budgets.work_limit_enabled.then(||request.budgets.max_work_units/minimum_work_units_per_timing_pair),limitations:vec![
             "Unpruned scan counts are conservative upper bounds, not a completion-time promise. Actual pair work is counted after the local-CPA separation join and charged to the same global budget.".into(),
             "The affordable-pair ceiling spends the entire work budget on the shortest possible pair. Actual capacity is lower after index traversal, pass census and longer tracks. It is not an ETA, required-pair estimate or guarantee that this grid can finish.".into(),
             "The global equal-angle receiver lattice includes every boundary; displayed previews may be sparse. All physics uses full indexed continuous passes and fixed trace samples.".into(),
             "Index memory is a conservative allocation budget for verified source metadata/verification scratch, spatial-index construction/query and the bounded local-CPA inventory/working arrays. It is separate from the 256 MiB track cache, other native pass/model preparation and report buffers, and is not an OS process-RAM hard limit. No source-count cutoff or silent pruning is used.".into(),
-        ] })
+        ] };
+    if !request.budgets.work_limit_enabled {
+        estimate.limitations[0] = "Unpruned scan counts are conservative upper bounds, not a completion-time promise. Actual pair work is counted after the local-CPA separation join; the work-unit counter is diagnostic and has no configured stopping limit.".into();
+        estimate.limitations[1] = "The work-unit limit is disabled. Budget-derived pair ceilings and affordability flags are unavailable, not zero or unlimited-capacity estimates. Time, memory, output and cancellation limits still apply; the first receiver or the full grid may remain incomplete.".into();
+    }
+    Ok(estimate)
 }
 pub fn estimate(request: &WidePairRequest) -> Result<WideEstimate, String> {
     estimate_with_cancel(request, &AtomicBool::new(false), |_| {})
@@ -441,13 +466,23 @@ fn cost_preview(
         retention_work_units_per_pair,
         index_build_work_units,
         minimum_grid_work_units,
-        maximum_timing_pairs_after_minimum_grid_work: request
+        maximum_timing_pairs_after_minimum_grid_work: request.budgets.work_limit_enabled.then(
+            || {
+                request
+                    .budgets
+                    .max_work_units
+                    .saturating_sub(minimum_grid_work_units)
+                    / minimum_pair
+            },
+        ),
+        can_afford_minimum_first_receiver: request
             .budgets
-            .max_work_units
-            .saturating_sub(minimum_grid_work_units)
-            / minimum_pair,
-        can_afford_minimum_first_receiver: request.budgets.max_work_units >= minimum_first_receiver,
-        can_afford_minimum_first_pair: request.budgets.max_work_units >= minimum_first_pair,
+            .work_limit_enabled
+            .then_some(request.budgets.max_work_units >= minimum_first_receiver),
+        can_afford_minimum_first_pair: request
+            .budgets
+            .work_limit_enabled
+            .then_some(request.budgets.max_work_units >= minimum_first_pair),
     })
 }
 
@@ -779,17 +814,17 @@ impl Guard<'_> {
                 reason: "Global wide-area wall budget exhausted".into(),
             });
         }
-        if progress
-            .work_units
-            .checked_add(units)
-            .is_none_or(|n| n > self.budgets.max_work_units)
-        {
+        let charged = progress.work_units.checked_add(units).ok_or_else(|| Stop {
+            status: WideStatus::BudgetExceeded,
+            reason: "Wide-area work counter overflow; unfinished receiver was not committed".into(),
+        })?;
+        if self.budgets.work_limit_enabled && charged > self.budgets.max_work_units {
             return Err(Stop {
                 status: WideStatus::BudgetExceeded,
                 reason: "Global wide-area work budget exhausted".into(),
             });
         }
-        progress.work_units += units;
+        progress.work_units = charged;
         Ok(())
     }
 }
@@ -1056,6 +1091,9 @@ pub fn run<F: FnMut(WideProgress)>(
             "The full bounded work of each pair is reserved before it starts; a cancelled pair may consume less CPU than its charged reservation. A cancellation is not a rejected acoustic match.".into(),
             "The declared index-memory budget covers verified source metadata/verification scratch, conservative spatial-index construction/query buffers and local-CPA inventory/working arrays. The 256 MiB track cache, other native model preparation and report buffers are separate; this is not a process-RAM hard limit. There is no source-pass count cutoff. The separate 250000-entry local-CPA cap stops with a provisional budget-exceeded result instead of dropping sources.".into(),
         ]};
+    if !request.budgets.work_limit_enabled {
+        report.limitations[7] = "The work-unit limit is disabled. Work counters still record index traversal, full track preparation, trace/frequency/shared-shift evaluations and bounded ranking reservations, but are diagnostic rather than a configured stopping cap. Time, memory, output and cancellation limits remain active; counter overflow still stops safely.".into();
+    }
     let mut guard = Guard {
         start: started,
         cancel,
@@ -1185,6 +1223,73 @@ pub fn load_report(directory: &Path) -> Result<WidePairReport, String> {
 #[cfg(test)]
 mod index_memory_tests {
     use super::*;
+
+    #[test]
+    fn optional_work_guard_counts_without_cap_and_stops_on_overflow_without_mutation() {
+        let cancel = AtomicBool::new(false);
+        let budgets = WideBudgets {
+            work_limit_enabled: false,
+            max_work_units: 0,
+            ..Default::default()
+        };
+        let mut guard = Guard {
+            start: Instant::now(),
+            cancel: &cancel,
+            budgets: &budgets,
+        };
+        let mut progress = WideProgress::default();
+        guard.charge(u64::MAX, &mut progress).unwrap();
+        assert_eq!(progress.work_units, u64::MAX);
+        let stop = guard.charge(1, &mut progress).unwrap_err();
+        assert_eq!(stop.status, WideStatus::BudgetExceeded);
+        assert!(stop.reason.contains("counter overflow"));
+        assert_eq!(progress.work_units, u64::MAX);
+        let capped = WideBudgets::default();
+        let mut guard = Guard {
+            start: Instant::now(),
+            cancel: &cancel,
+            budgets: &capped,
+        };
+        assert!(
+            guard
+                .charge(1, &mut progress)
+                .unwrap_err()
+                .reason
+                .contains("counter overflow")
+        );
+        assert_eq!(progress.work_units, u64::MAX);
+    }
+
+    #[test]
+    fn disabled_work_guard_still_prioritizes_cancellation_and_wall_deadlines() {
+        let cancel = AtomicBool::new(true);
+        let budgets = WideBudgets {
+            work_limit_enabled: false,
+            max_work_units: 0,
+            max_duration_s: 1,
+            ..Default::default()
+        };
+        let mut progress = WideProgress {
+            work_units: u64::MAX,
+            ..Default::default()
+        };
+        let mut guard = Guard {
+            start: Instant::now(),
+            cancel: &cancel,
+            budgets: &budgets,
+        };
+        assert_eq!(
+            guard.charge(1, &mut progress).unwrap_err().status,
+            WideStatus::Cancelled
+        );
+        assert_eq!(progress.work_units, u64::MAX);
+        cancel.store(false, Ordering::Relaxed);
+        guard.start = Instant::now() - std::time::Duration::from_secs(2);
+        let stop = guard.charge(1, &mut progress).unwrap_err();
+        assert_eq!(stop.status, WideStatus::BudgetExceeded);
+        assert!(stop.reason.contains("wall budget"));
+        assert_eq!(progress.work_units, u64::MAX);
+    }
 
     #[test]
     fn index_memory_preflight_has_no_two_hundred_fifty_thousand_pass_cutoff() {

@@ -614,7 +614,7 @@ fn estimate_cancellation_and_affordable_pair_ceiling_preserve_declared_science()
     assert_eq!(estimate.minimum_work_units_per_timing_pair, minimum);
     assert_eq!(
         estimate.maximum_timing_pairs_before_scan,
-        fixture.request.budgets.max_work_units / minimum
+        Some(fixture.request.budgets.max_work_units / minimum)
     );
     assert_eq!(serde_json::to_value(&fixture.request).unwrap(), before);
 }
@@ -643,10 +643,10 @@ fn cost_preview_breaks_down_asymmetric_traces_without_changing_the_request() {
     assert_eq!(preview.minimum_grid_work_units, 20);
     assert_eq!(
         preview.maximum_timing_pairs_after_minimum_grid_work,
-        (fixture.request.budgets.max_work_units - 20) / 7936
+        Some((fixture.request.budgets.max_work_units - 20) / 7936)
     );
-    assert!(preview.can_afford_minimum_first_receiver);
-    assert!(preview.can_afford_minimum_first_pair);
+    assert_eq!(preview.can_afford_minimum_first_receiver, Some(true));
+    assert_eq!(preview.can_afford_minimum_first_pair, Some(true));
     assert_eq!(
         wide_area_pair::request_sha256(&fixture.request).unwrap(),
         before
@@ -670,10 +670,16 @@ fn cost_preview_affordability_flags_are_necessary_conditions_at_exact_boundaries
             .unwrap()
             .cost_preview
             .unwrap();
-        assert_eq!(preview.can_afford_minimum_first_receiver, receiver_possible);
-        assert_eq!(preview.can_afford_minimum_first_pair, pair_possible);
+        assert_eq!(
+            preview.can_afford_minimum_first_receiver,
+            Some(receiver_possible)
+        );
+        assert_eq!(preview.can_afford_minimum_first_pair, Some(pair_possible));
         if budget < preview.minimum_grid_work_units {
-            assert_eq!(preview.maximum_timing_pairs_after_minimum_grid_work, 0);
+            assert_eq!(
+                preview.maximum_timing_pairs_after_minimum_grid_work,
+                Some(0)
+            );
         }
     }
 }
@@ -698,9 +704,12 @@ fn cost_preview_does_not_reject_complete_zero_pair_receivers() {
     let preview = estimate.cost_preview.unwrap();
     assert_eq!(fixture.request.grid.count, 4);
     assert_eq!(preview.minimum_grid_work_units, 20);
-    assert_eq!(preview.maximum_timing_pairs_after_minimum_grid_work, 0);
-    assert!(preview.can_afford_minimum_first_receiver);
-    assert!(!preview.can_afford_minimum_first_pair);
+    assert_eq!(
+        preview.maximum_timing_pairs_after_minimum_grid_work,
+        Some(0)
+    );
+    assert_eq!(preview.can_afford_minimum_first_receiver, Some(true));
+    assert_eq!(preview.can_afford_minimum_first_pair, Some(false));
     let report = wide_area_pair::run(
         &fixture.request,
         &fixture.output("zero-pair-preview"),
@@ -734,6 +743,211 @@ fn saved_estimates_without_cost_preview_remain_readable_without_invented_values(
     let restored: wide_area_pair::WideEstimate =
         serde_json::from_value(serde_json::to_value(&estimate).unwrap()).unwrap();
     assert_eq!(restored.cost_preview, estimate.cost_preview);
+}
+
+#[test]
+fn optional_work_limit_preserves_legacy_budget_bytes_and_request_hashes() {
+    let legacy =
+        br#"{"max_work_units":250000000,"max_output_bytes":268435456,"max_duration_s":1800}"#;
+    let budgets: WideBudgets = serde_json::from_slice(legacy).unwrap();
+    assert!(budgets.work_limit_enabled);
+    assert!(WideBudgets::default().work_limit_enabled);
+    assert_eq!(serde_json::to_vec(&budgets).unwrap(), legacy);
+    let mut fixture = Fixture::new(7, false);
+    let original = serde_json::to_vec(&fixture.request).unwrap();
+    assert!(!String::from_utf8_lossy(&original).contains("work_limit_enabled"));
+    let explicit_true = String::from_utf8(original.clone()).unwrap().replacen(
+        "\"max_work_units\":250000000",
+        "\"max_work_units\":250000000,\"work_limit_enabled\":true",
+        1,
+    );
+    let restored: WidePairRequest = serde_json::from_str(&explicit_true).unwrap();
+    assert_eq!(serde_json::to_vec(&restored).unwrap(), original);
+    assert_eq!(
+        wide_area_pair::request_sha256(&restored).unwrap(),
+        sha(&original)
+    );
+    fixture.request.budgets.work_limit_enabled = false;
+    let disabled = serde_json::to_vec(&fixture.request).unwrap();
+    assert!(String::from_utf8_lossy(&disabled).contains("\"work_limit_enabled\":false"));
+    assert_ne!(sha(&disabled), sha(&original));
+    let restored: WidePairRequest = serde_json::from_slice(&disabled).unwrap();
+    assert!(!restored.budgets.work_limit_enabled);
+    assert_eq!(serde_json::to_vec(&restored).unwrap(), disabled);
+}
+
+#[test]
+fn disabled_work_limit_preserves_inactive_values_and_exposes_no_budget_ceilings() {
+    let mut fixture = Fixture::new(7, false);
+    for inactive in [0, u64::MAX] {
+        fixture.request.budgets.max_work_units = inactive;
+        fixture.request.budgets.work_limit_enabled = false;
+        let before = wide_area_pair::request_sha256(&fixture.request).unwrap();
+        let estimate = wide_area_pair::estimate(&fixture.request).unwrap();
+        assert_eq!(estimate.maximum_timing_pairs_before_scan, None);
+        let preview = estimate.cost_preview.as_ref().unwrap();
+        assert_eq!(preview.maximum_timing_pairs_after_minimum_grid_work, None);
+        assert_eq!(preview.can_afford_minimum_first_receiver, None);
+        assert_eq!(preview.can_afford_minimum_first_pair, None);
+        assert!(preview.trace_fit_work_units_per_pair > 0);
+        assert!(
+            estimate
+                .limitations
+                .iter()
+                .any(|line| line.contains("work-unit limit is disabled"))
+        );
+        let json = serde_json::to_value(estimate).unwrap();
+        assert!(json["maximum_timing_pairs_before_scan"].is_null());
+        for key in [
+            "maximum_timing_pairs_after_minimum_grid_work",
+            "can_afford_minimum_first_receiver",
+            "can_afford_minimum_first_pair",
+        ] {
+            assert!(json["cost_preview"][key].is_null());
+        }
+        assert_eq!(fixture.request.budgets.max_work_units, inactive);
+        assert_eq!(
+            wide_area_pair::request_sha256(&fixture.request).unwrap(),
+            before
+        );
+        fixture.request.budgets.work_limit_enabled = true;
+        assert!(wide_area_pair::estimate(&fixture.request).is_err());
+    }
+    fixture.request.budgets.work_limit_enabled = false;
+    fixture.request.budgets.max_duration_s = 0;
+    assert!(
+        wide_area_pair::estimate(&fixture.request)
+            .unwrap_err()
+            .contains("wall")
+    );
+    fixture.request.budgets.max_duration_s = 1800;
+    fixture.request.budgets.max_output_bytes = 0;
+    assert!(
+        wide_area_pair::estimate(&fixture.request)
+            .unwrap_err()
+            .contains("output")
+    );
+    fixture.request.budgets.max_output_bytes = 256 * 1024 * 1024;
+    fixture.request.budgets.max_index_memory_bytes = 0;
+    assert!(
+        wide_area_pair::estimate(&fixture.request)
+            .unwrap_err()
+            .contains("index-memory")
+    );
+}
+
+#[test]
+fn disabled_work_limit_finishes_with_identical_physics_and_journal_rechecks_its_policy() {
+    let mut fixture = Fixture::new(7, false);
+    let capped = wide_area_pair::run(
+        &fixture.request,
+        &fixture.output("large-cap"),
+        &AtomicBool::new(false),
+        |_| {},
+    )
+    .unwrap();
+    assert_eq!(capped.status, WideStatus::Completed);
+    assert!(!capped.best_hypotheses.is_empty());
+    fixture.request.budgets.max_work_units = 1;
+    fixture.request.budgets.work_limit_enabled = false;
+    let output = fixture.output("no-work-cap");
+    let uncapped =
+        wide_area_pair::run(&fixture.request, &output, &AtomicBool::new(false), |_| {}).unwrap();
+    assert_eq!(uncapped.status, WideStatus::Completed);
+    assert!(uncapped.progress.work_units > 1);
+    assert!(uncapped.source_verified_at_end);
+    assert!(uncapped.limitations[7].contains("work-unit limit is disabled"));
+    let reopened = wide_area_pair::load_report(&output).unwrap();
+    assert_eq!(
+        serde_json::to_value(&reopened).unwrap(),
+        serde_json::to_value(&uncapped).unwrap()
+    );
+    let comparable = |report: &wide_area_pair::WidePairReport| {
+        let mut value = serde_json::to_value(report).unwrap();
+        let map = value.as_object_mut().unwrap();
+        map.remove("request_sha256");
+        map.remove("output_directory");
+        map.remove("limitations");
+        value
+    };
+    assert_eq!(comparable(&uncapped), comparable(&capped));
+    for index in 0..capped.limitations.len() {
+        if index != 7 {
+            assert_eq!(uncapped.limitations[index], capped.limitations[index]);
+        }
+    }
+    // Rehash all edited envelopes: the loader must enforce the newly enabled
+    // policy itself, rather than relying only on stale hashes to reject it.
+    fixture.request.budgets.work_limit_enabled = true;
+    let request_bytes = serde_json::to_vec(&fixture.request).unwrap();
+    fs::write(output.join("request.json"), &request_bytes).unwrap();
+    let mut changed = uncapped;
+    changed.request_sha256 = sha(&request_bytes);
+    let report_bytes = serde_json::to_vec(&changed).unwrap();
+    fs::write(output.join("report.json"), &report_bytes).unwrap();
+    fs::write(
+        output.join("terminal.json"),
+        serde_json::to_vec(&json!({
+            "schema_version":1,"request_sha256":sha(&request_bytes),
+            "report_sha256":sha(&report_bytes),"report_bytes":report_bytes.len()
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    assert!(
+        wide_area_pair::load_report(&output)
+            .unwrap_err()
+            .contains("inconsistent")
+    );
+}
+
+#[test]
+fn disabled_work_limit_still_honors_source_and_pair_cancellation_and_output_limit() {
+    let mut fixture = Fixture::new(7, false);
+    fixture.request.budgets.work_limit_enabled = false;
+    fixture.request.budgets.max_work_units = 0;
+    for (name, stage, stop_at) in [
+        ("cancel-open-uncapped", "verifying_source", 10),
+        ("cancel-pair-uncapped", "shared_clock_pair_scoring", 5),
+    ] {
+        let cancel = AtomicBool::new(false);
+        let mut calls = 0;
+        let report = wide_area_pair::run(
+            &fixture.request,
+            &fixture.output(name),
+            &cancel,
+            |progress| {
+                if progress.stage == stage {
+                    calls += 1;
+                    if calls == stop_at {
+                        cancel.store(true, Ordering::Relaxed);
+                    }
+                }
+            },
+        )
+        .unwrap();
+        assert_eq!(calls, stop_at);
+        assert_eq!(report.status, WideStatus::Cancelled);
+        assert_eq!(report.progress.completed_receivers, 0);
+        assert!(report.best_hypotheses.is_empty());
+        assert_eq!(
+            wide_area_pair::load_report(&fixture.output(name))
+                .unwrap()
+                .status,
+            WideStatus::Cancelled
+        );
+    }
+    fixture.request.budgets.max_output_bytes = 16 * 1024 * 1024 + 400;
+    let report = wide_area_pair::run(
+        &fixture.request,
+        &fixture.output("output-uncapped"),
+        &AtomicBool::new(false),
+        |_| {},
+    )
+    .unwrap();
+    assert_eq!(report.status, WideStatus::BudgetExceeded);
+    assert_eq!(report.progress.completed_receivers, 0);
+    assert!(report.error.as_deref().unwrap().contains("output"));
 }
 
 #[test]

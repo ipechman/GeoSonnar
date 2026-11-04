@@ -20,6 +20,7 @@ struct Settings {
     shift: [f64; 3],
     utc_start: String,
     utc_end: String,
+    work_limit_enabled: bool,
     max_work: u64,
     max_output: u64,
     max_seconds: u64,
@@ -124,7 +125,7 @@ mod tests {
             minimum_output_bytes: 1,
             source_time_origin_utc_s: source.origin,
             minimum_work_units_per_timing_pair: 1,
-            maximum_timing_pairs_before_scan: 1,
+            maximum_timing_pairs_before_scan: request.budgets.work_limit_enabled.then_some(1),
             source_metadata_bytes: 1,
             spatial_index_memory_bytes: 1,
             local_cpa_memory_reserve_bytes: 1,
@@ -142,6 +143,114 @@ mod tests {
         assert_eq!(studio.document, before);
         assert!(studio.wide.source.is_none() && studio.wide.prepared.is_none());
         assert!(!studio.wide.running && !studio.busy() && studio.receiver.try_recv().is_err());
+    }
+    #[test]
+    fn gui_default_disables_only_work_limit_and_legacy_requests_keep_the_cap() {
+        let mut studio = studio();
+        let mut settings = reviewed(&mut studio);
+        let before = studio.document.clone().unwrap();
+        let source = source();
+        let native = WideBudgets::default();
+        assert!(native.work_limit_enabled);
+        assert!(!settings.work_limit_enabled);
+        let plan = request(&before, &source, &settings).unwrap();
+        assert!(!plan.budgets.work_limit_enabled);
+        assert_eq!(plan.budgets.max_work_units, native.max_work_units);
+        assert_eq!(plan.budgets.max_duration_s, native.max_duration_s);
+        assert_eq!(plan.budgets.max_output_bytes, native.max_output_bytes);
+        assert_eq!(
+            plan.budgets.max_index_memory_bytes,
+            native.max_index_memory_bytes
+        );
+        assert!(plan.budgets.max_duration_s > 0);
+        let mut uncapped = serde_json::to_value(&plan).unwrap();
+        assert_eq!(uncapped["budgets"]["work_limit_enabled"], false);
+        settings.work_limit_enabled = true;
+        let legacy = request(&before, &source, &settings).unwrap();
+        let encoded = serde_json::to_string(&legacy).unwrap();
+        let restored: WidePairRequest = serde_json::from_str(&encoded).unwrap();
+        assert!(restored.budgets.work_limit_enabled);
+        assert_eq!(serde_json::to_string(&restored).unwrap(), encoded);
+        assert_eq!(
+            wide_area_pair::request_sha256(&restored).unwrap(),
+            wide_area_pair::request_sha256(&legacy).unwrap()
+        );
+        uncapped["budgets"]
+            .as_object_mut()
+            .unwrap()
+            .remove("work_limit_enabled");
+        assert_eq!(serde_json::to_value(&legacy).unwrap(), uncapped);
+        assert_ne!(
+            wide_area_pair::request_sha256(&legacy).unwrap(),
+            wide_area_pair::request_sha256(&plan).unwrap()
+        );
+        assert_eq!(studio.document.as_ref(), Some(&before));
+        assert!(studio.undo.is_empty());
+    }
+    #[test]
+    fn work_limit_toggle_preserves_budget_and_invalidates_previous_estimate() {
+        let mut studio = studio();
+        studio.wide.settings = reviewed(&mut studio);
+        studio.wide.settings.max_work = 7654321;
+        let source = source();
+        studio.wide.source = Some(source.clone());
+        let before = studio.document.clone().unwrap();
+        let original = studio.wide.settings.clone();
+        let plan = request(&before, &source, &original).unwrap();
+        let ctx = egui::Context::default();
+        let mut position = egui::Pos2::ZERO;
+        let _ = ctx.run_ui(egui::RawInput::default(), |ui| {
+            position = work_limit_ui(ui, &mut studio.wide.settings).rect.center();
+        });
+        for enabled in [true, false] {
+            for pressed in [true, false] {
+                let _ = ctx.run_ui(
+                    egui::RawInput {
+                        events: vec![
+                            egui::Event::PointerMoved(position),
+                            egui::Event::PointerButton {
+                                pos: position,
+                                button: egui::PointerButton::Primary,
+                                pressed,
+                                modifiers: egui::Modifiers::NONE,
+                            },
+                        ],
+                        ..Default::default()
+                    },
+                    |ui| {
+                        work_limit_ui(ui, &mut studio.wide.settings);
+                    },
+                );
+            }
+            assert_eq!(studio.wide.settings.work_limit_enabled, enabled);
+            assert_eq!(studio.wide.settings.max_work, original.max_work);
+            if enabled {
+                studio.accept_wide_reply(WideReply::Estimated(Box::new(Prepared {
+                    estimate: estimate_fixture(&plan, &source),
+                    request: plan.clone(),
+                    document: before.clone(),
+                    settings: original.clone(),
+                })));
+                assert!(studio.wide.prepared.is_none());
+                assert!(
+                    studio
+                        .notice
+                        .as_ref()
+                        .unwrap()
+                        .1
+                        .contains("options changed")
+                );
+                let mut actual =
+                    serde_json::to_value(request(&before, &source, &studio.wide.settings).unwrap())
+                        .unwrap();
+                actual["budgets"]["work_limit_enabled"] = false.into();
+                assert_eq!(actual, serde_json::to_value(&plan).unwrap());
+            }
+        }
+        assert_eq!(studio.wide.settings, original);
+        assert_eq!(studio.document.as_ref(), Some(&before));
+        assert_eq!(studio.wide.source.as_ref().unwrap().binding, source.binding);
+        assert!(studio.undo.is_empty());
     }
     #[test]
     fn wide_national_plan_preserves_all_receivers_exact_traces_and_source_gap() {
@@ -226,11 +335,15 @@ mod tests {
         let mut settings = reviewed(&mut studio);
         settings.speed = [[55., 100.], [160., 290.]];
         settings.distance = [[2000., 7000.], [15000., 40000.]];
+        settings.work_limit_enabled = true;
+        settings.max_work = 123456;
         let before = studio.document.clone().unwrap();
         let original = settings.clone();
         copy_reviewed_pair(&before, &mut settings).unwrap();
         assert_eq!(settings.speed, original.speed);
         assert_eq!(settings.distance, original.distance);
+        assert_eq!(settings.work_limit_enabled, original.work_limit_enabled);
+        assert_eq!(settings.max_work, original.max_work);
         assert_eq!(
             settings.cpa_s,
             [before.events[0].arrival_s, before.events[1].arrival_s]
@@ -238,10 +351,13 @@ mod tests {
         assert_eq!(settings.tones[0], [118. * 0.9, 120. * 1.1, 1.]);
         let mut replacement = before.clone();
         replacement.events[0].id = "replacement-reviewed-event".into();
+        settings.work_limit_enabled = false;
         copy_reviewed_pair(&replacement, &mut settings).unwrap();
         assert_eq!(settings.event_ids[0], "replacement-reviewed-event");
         assert_eq!(settings.speed, original.speed);
         assert_eq!(settings.distance, original.distance);
+        assert!(!settings.work_limit_enabled);
+        assert_eq!(settings.max_work, original.max_work);
         replacement.events[1].review = ReviewState::Pending;
         let unchanged = settings.clone();
         assert!(copy_reviewed_pair(&replacement, &mut settings).is_err());
@@ -316,6 +432,7 @@ mod tests {
         for legacy in [true, false] {
             let mut studio = studio();
             let mut settings = reviewed(&mut studio);
+            settings.work_limit_enabled = legacy;
             if !legacy {
                 settings.speed = [[60., 110.], [140., 250.]];
                 settings.distance = [[1000., 6000.], [8000., 30000.]];
@@ -343,8 +460,18 @@ mod tests {
             assert_eq!(report.status, wide_area_pair::WideStatus::Cancelled);
             assert_eq!(report.progress.completed_receivers, 0);
             let saved = std::fs::read(output.join("request.json")).unwrap();
+            let saved_json: serde_json::Value = serde_json::from_slice(&saved).unwrap();
+            assert_eq!(
+                saved_json["budgets"].get("work_limit_enabled"),
+                if legacy {
+                    None
+                } else {
+                    Some(&serde_json::Value::Bool(false))
+                }
+            );
             studio.wide.settings.speed = [[1., 2.], [3., 4.]];
             studio.wide.settings.distance = [[5., 6.], [7., 8.]];
+            studio.wide.settings.work_limit_enabled = !legacy;
             let draft = studio.wide.settings.clone();
             studio.accept_wide_reply(load_saved_wide(&output).unwrap());
             assert_eq!(
@@ -360,6 +487,7 @@ mod tests {
             assert!(studio.wide.source.is_none() && studio.wide.prepared.is_none());
             assert_eq!(std::fs::read(output.join("request.json")).unwrap(), saved);
             let reopened: WidePairRequest = serde_json::from_slice(&saved).unwrap();
+            assert_eq!(reopened.budgets.work_limit_enabled, legacy);
             for i in 0..2 {
                 assert_eq!(reopened.coarse_bounds[i].speed_mps, settings.speed[i]);
                 assert_eq!(
@@ -399,7 +527,8 @@ mod tests {
     #[test]
     fn cost_preview_shows_declared_counts_and_necessary_only_budget_warnings() {
         let mut studio = studio();
-        let settings = reviewed(&mut studio);
+        let mut settings = reviewed(&mut studio);
+        settings.work_limit_enabled = true;
         let document = studio.document.clone().unwrap();
         let source = source();
         let plan = request(&document, &source, &settings).unwrap();
@@ -416,9 +545,9 @@ mod tests {
             retention_work_units_per_pair: 800,
             index_build_work_units: 600,
             minimum_grid_work_units: 700,
-            maximum_timing_pairs_after_minimum_grid_work: 0,
-            can_afford_minimum_first_receiver: false,
-            can_afford_minimum_first_pair: false,
+            maximum_timing_pairs_after_minimum_grid_work: Some(0),
+            can_afford_minimum_first_receiver: Some(false),
+            can_afford_minimum_first_pair: Some(false),
         });
         let first = painted_text(|ui| cost_preview_ui(ui, &estimate));
         for expected in [
@@ -444,23 +573,92 @@ mod tests {
             .cost_preview
             .as_mut()
             .unwrap()
-            .can_afford_minimum_first_receiver = true;
+            .can_afford_minimum_first_receiver = Some(true);
         let pair = painted_text(|ui| cost_preview_ui(ui, &estimate));
         assert!(pair.contains("minimum first timing-pair charge"));
         estimate
             .cost_preview
             .as_mut()
             .unwrap()
-            .can_afford_minimum_first_pair = true;
+            .can_afford_minimum_first_pair = Some(true);
         estimate
             .cost_preview
             .as_mut()
             .unwrap()
-            .maximum_timing_pairs_after_minimum_grid_work = 3;
+            .maximum_timing_pairs_after_minimum_grid_work = Some(3);
         let permitted = painted_text(|ui| cost_preview_ui(ui, &estimate));
         assert!(!permitted.contains("cannot cover"));
         assert!(permitted.contains("Detailed work breakdown"));
         assert_eq!(studio.document.as_ref(), Some(&document));
+        assert!(studio.undo.is_empty());
+    }
+    #[test]
+    fn uncapped_cost_preview_preserves_counts_without_false_affordability_claims() {
+        let mut studio = studio();
+        let mut settings = reviewed(&mut studio);
+        let before = studio.document.clone().unwrap();
+        let source = source();
+        let plan = request(&before, &source, &settings).unwrap();
+        let mut estimate = estimate_fixture(&plan, &source);
+        estimate.cost_preview = Some(wide_area_pair::WideCostPreview {
+            event_trace_samples: [3, 5],
+            event_tone_counts: [61, 126],
+            shared_shift_count: 11,
+            trace_fit_work_units_per_pair: 20207,
+            minimum_track_work_units_per_pair: 320,
+            retention_work_units_per_pair: 800,
+            index_build_work_units: 600,
+            minimum_grid_work_units: 700,
+            maximum_timing_pairs_after_minimum_grid_work: None,
+            can_afford_minimum_first_receiver: None,
+            can_afford_minimum_first_pair: None,
+        });
+        let text = painted_text(|ui| {
+            runtime_and_work_ui(ui, &mut settings);
+            cost_preview_ui(ui, &estimate);
+        });
+        for expected in [
+            "Stop after",
+            "No work-unit limit; time/memory/output limits still apply",
+            "Advanced work limit",
+            "Event 1: 3 trace samples",
+            "126 tones",
+            "11 shared shifts",
+        ] {
+            assert!(text.contains(expected), "Missing {expected}: {text}");
+        }
+        for absent in [
+            "Budget upper bound",
+            "at most",
+            "cannot cover",
+            "minimum first timing-pair charge",
+        ] {
+            assert!(!text.contains(absent), "Unexpected {absent}: {text}");
+        }
+        let details =
+            painted_text(|ui| cost_details_ui(ui, estimate.cost_preview.as_ref().unwrap()));
+        assert!(details.contains("20207 trace-fit") && details.contains("700 units"));
+        assert!(details.contains("not a completion or runtime estimate"));
+        assert!(!details.contains("at most"));
+        for stored in [0, u64::MAX] {
+            settings.max_work = stored;
+            let _ = painted_text(|ui| {
+                work_limit_ui(ui, &mut settings);
+            });
+            assert_eq!(
+                settings.max_work, stored,
+                "A disabled limit must not normalize its stored value"
+            );
+            assert!(!settings.work_limit_enabled);
+            assert_eq!(
+                request(&before, &source, &settings)
+                    .unwrap()
+                    .budgets
+                    .max_work_units,
+                stored
+            );
+        }
+        assert_eq!(studio.document.as_ref(), Some(&before));
         assert!(studio.undo.is_empty());
     }
     #[test]
@@ -652,6 +850,8 @@ mod tests {
         studio.wide.source = Some(source());
         studio.wide.settings.speed = [[60., 100.], [150., 200.]];
         studio.wide.settings.distance = [[1000., 2000.], [5000., 10000.]];
+        studio.wide.settings.work_limit_enabled = true;
+        studio.wide.settings.max_work = 123456;
         studio.wide.running = true;
         let cancel = studio.wide.cancel.clone();
         let mut case = studio.case.clone().unwrap();
@@ -661,6 +861,11 @@ mod tests {
         assert!(studio.wide.source.is_none() && !studio.wide.running);
         assert_eq!(studio.wide.settings.speed, [[40., 330.]; 2]);
         assert_eq!(studio.wide.settings.distance, [[100., 100_000.]; 2]);
+        assert!(!studio.wide.settings.work_limit_enabled);
+        assert_eq!(
+            studio.wide.settings.max_work,
+            WideBudgets::default().max_work_units
+        );
     }
     #[test]
     fn wide_source_deletion_is_scoped_and_retains_historical_result() {
@@ -931,6 +1136,7 @@ impl Default for Settings {
             shift: [-5., 5., 1.],
             utc_start: String::new(),
             utc_end: String::new(),
+            work_limit_enabled: false,
             max_work: budget.max_work_units,
             max_output: budget.max_output_bytes,
             max_seconds: budget.max_duration_s,
@@ -1137,6 +1343,9 @@ fn stop_guidance(report: &WidePairReport) -> Option<&'static str> {
     }
 }
 fn cost_preview_ui(ui: &mut egui::Ui, estimate: &WideEstimate) {
+    if let Some(ceiling) = estimate.maximum_timing_pairs_before_scan {
+        ui.colored_label(tone(ui, AMBER),format!("Budget upper bound before scanning: at most {ceiling} timing-pair attempts globally (at least {} work units each). Source scanning and index work reduce this ceiling; it is not a completion estimate.", estimate.minimum_work_units_per_timing_pair));
+    }
     let Some(cost) = &estimate.cost_preview else {
         muted(
             ui,
@@ -1149,17 +1358,55 @@ fn cost_preview_ui(ui: &mut egui::Ui, estimate: &WideEstimate) {
     egui::CollapsingHeader::new("Detailed work breakdown")
         .id_salt("wide_cost_details")
         .show(ui, |ui| cost_details_ui(ui, cost));
-    if !cost.can_afford_minimum_first_receiver {
+    if cost.can_afford_minimum_first_receiver == Some(false) {
         ui.colored_label(tone(ui, AMBER), "The work budget cannot cover even the minimum setup for the first receiver. Review the work budget and re-estimate.");
-    } else if !cost.can_afford_minimum_first_pair {
+    } else if cost.can_afford_minimum_first_pair == Some(false) {
         ui.colored_label(tone(ui, AMBER), "The work budget cannot cover even the minimum first timing-pair charge. Review the work budget and re-estimate.");
     }
 }
 fn cost_details_ui(ui: &mut egui::Ui, cost: &wide_area_pair::WideCostPreview) {
     ui.label(format!("Minimum work per timing pair: {} trace-fit + {} track + {} retention units. Minimum spatial-index construction: {} units.",
         cost.trace_fit_work_units_per_pair, cost.minimum_track_work_units_per_pair, cost.retention_work_units_per_pair, cost.index_build_work_units));
-    ui.label(format!("Full-grid work floor: {} units; at most {} timing pairs after that floor. Traversal, source census and joining cost more; this is not a completion or runtime estimate.",
-        cost.minimum_grid_work_units, cost.maximum_timing_pairs_after_minimum_grid_work));
+    if let Some(ceiling) = cost.maximum_timing_pairs_after_minimum_grid_work {
+        ui.label(format!("Full-grid work floor: {} units; at most {ceiling} timing pairs after that floor. Traversal, source census and joining cost more; this is not a completion or runtime estimate.", cost.minimum_grid_work_units));
+    } else {
+        ui.label(format!("Full-grid work floor: {} units. No work-unit limit is enabled; traversal, source census and joining still cost work. This is not a completion or runtime estimate.", cost.minimum_grid_work_units));
+    }
+}
+fn work_limit_ui(ui: &mut egui::Ui, settings: &mut Settings) -> egui::Response {
+    let response = ui.checkbox(&mut settings.work_limit_enabled, "Also limit work units");
+    ui.add_enabled(
+        settings.work_limit_enabled,
+        egui::DragValue::new(&mut settings.max_work)
+            .suffix(" work-unit budget")
+            .speed(100_000.),
+    );
+    muted(
+        ui,
+        "Work units are a raw integer allowance, separate from elapsed time. Turning this limit off keeps the stored value for later use.",
+    );
+    response
+}
+fn runtime_and_work_ui(ui: &mut egui::Ui, settings: &mut Settings) {
+    ui.horizontal_wrapped(|ui| {
+        ui.label("Stop after");
+        ui.add(
+            egui::DragValue::new(&mut settings.max_seconds)
+                .range(1..=86400)
+                .suffix(" s"),
+        );
+    });
+    if !settings.work_limit_enabled {
+        muted(
+            ui,
+            "No work-unit limit; time/memory/output limits still apply.",
+        );
+    }
+    egui::CollapsingHeader::new("Advanced work limit")
+        .id_salt("wide_optional_work_limit")
+        .show(ui, |ui| {
+            work_limit_ui(ui, settings);
+        });
 }
 fn request(
     doc: &ReviewWorkspace,
@@ -1241,6 +1488,7 @@ fn request(
         measured_separation_s: settings.cpa_s[1] - settings.cpa_s[0],
         separation_tolerance_s: settings.separation_tolerance_s,
         budgets: WideBudgets {
+            work_limit_enabled: settings.work_limit_enabled,
             max_work_units: settings.max_work,
             max_output_bytes: settings.max_output,
             max_duration_s: settings.max_seconds,
@@ -1746,9 +1994,7 @@ impl Studio {
             range_ui(ui, "Shared shift around CPA-derived clock", &mut self.wide.settings.shift, " s");
             ui.add(egui::DragValue::new(&mut self.wide.settings.separation_tolerance_s).range(0.0..=3600.0).suffix(" s pair-separation tolerance"));
             ui.separator(); ui.strong("3 · Estimate, budgets and run");
-            ui.add(egui::DragValue::new(&mut self.wide.settings.max_work).suffix(" work-unit budget").speed(100_000.));
-            muted(ui, "Work units are a raw integer budget. Runtime and memory have separate limits; increasing time alone does not resolve a work-unit stop.");
-            ui.add(egui::DragValue::new(&mut self.wide.settings.max_seconds).range(1..=86400).suffix(" s runtime budget"));
+            runtime_and_work_ui(ui, &mut self.wide.settings);
             ui.add(egui::DragValue::new(&mut self.wide.settings.max_output).suffix(" output bytes").speed(1_048_576.));
             ui.add(egui::DragValue::new(&mut self.wide.settings.retain).range(1..=1000).suffix(" retained rows"));
             self.wide_index_memory_ui(ui);
@@ -1759,7 +2005,6 @@ impl Studio {
                 ui.label(format!("Unpruned ceiling: {} pass checks / {} point visits. Filtering determines actual pair work.", e.unpruned_pass_checks, e.worst_scan_point_visits));
                 ui.label(format!("Minimum output reservation: {} bytes", e.minimum_output_bytes));
                 ui.label(format!("Source/index memory reservation: {:.1} MiB total · {:.1} MiB source/verification · {:.1} MiB spatial index · {:.1} MiB local CPA reserve. Separate track cache: 256 MiB.", e.required_index_memory_bytes as f64 / 1_048_576., e.source_metadata_bytes as f64 / 1_048_576., e.spatial_index_memory_bytes as f64 / 1_048_576., e.local_cpa_memory_reserve_bytes as f64 / 1_048_576.));
-                ui.colored_label(tone(ui, AMBER),format!("Budget upper bound before scanning: at most {} timing-pair attempts globally (at least {} work units each). Source scanning and index work reduce this ceiling; it is not a completion estimate.",e.maximum_timing_pairs_before_scan,e.minimum_work_units_per_timing_pair));
                 if self.document.as_ref() == Some(&prepared.document) && prepared.settings == self.wide.settings {
                     cost_preview_ui(ui, e);
                 } else {

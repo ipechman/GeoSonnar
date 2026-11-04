@@ -1,4 +1,40 @@
-GeoSonnar 0.11.3 - Windows review workspace
+GeoSonnar 0.11.4 - Windows review workspace
+
+VERSION 0.11.4 - OPTIONAL WORK LIMIT
+New Search > Wide-area two-pass Doppler plans show Stop after (1800 seconds /
+30 minutes by default). The work-unit cap is off by default for new GUI plans.
+To use that additional cap, open Advanced work limit and check Also limit work
+units. Turning it off preserves its stored value, data, grid and scoring choices.
+Re-estimate after changing the setting before running.
+
+Time, memory, output and cancellation limits still apply. The first location or
+the full grid may remain unfinished when a limit is reached. Work counters remain
+visible diagnostics; budget-derived pair ceilings and affordability flags are
+unavailable when no work cap is enabled. No estimated capacity or runtime is
+invented. A partial result is still incomplete, even with this cap disabled.
+
+Old saved requests retain their cap and request hash. CLI requests without
+budgets.work_limit_enabled use true. Set that field explicitly to false to disable
+only the work cap; keep the other resource limits. Opening a saved result does
+not rewrite it or resume its computation.
+
+The 0.11.4 source passed 907 native tests (227 headless GUI/launcher checks
+included), the separate 2.1-million-point storage control, nine media/cached-data
+integrations, formatting, Clippy and the portable static-C-runtime build. Python
+controls passed 132 tests with one unsupported fixture skipped. New controls cover
+legacy request identity, optional-cap behavior, inactive values, unchanged scoring,
+cancellation, time/output limits, overflow and stale estimates. These are software
+checks; independent field accuracy remains unvalidated.
+Receipts: output/benchmarks/optional-work-001/.
+
+The built CLI exactly preserved both capped 50-cell searches, their scores,
+ordering, counters and saved pages. Four estimates passed, including the USA
+196,647-location grid. With only the work cap disabled, the broad settings reached
+122,991,465,779 work units but still completed 0/50 locations before the unchanged
+540-second time limit. Final source verification was incomplete; no completed rows
+were available for comparison. Removing this cap does not solve broad-search
+throughput. This validates the limit behavior, not practical nationwide completion,
+an import speedup, or location accuracy.
 
 VERSION 0.11.3 - INDIVIDUAL EVENT BOUNDS AND SEARCH COSTS
 In Search > Wide-area two-pass Doppler, each event has its own speed and slant-
@@ -47,6 +83,10 @@ For complete-day ADS-B data and a USA-size grid, use the indexed wide-area path:
    Review altitude/gap settings, disk budget and Advanced memory limit (512 MiB by
    default), then Build indexed flight data. Select the new indexed copy and choose
    Use indexed flight data. Its exact points remain on disk, not in the map buffer.
+   In later sessions, select the completed Indexed tracks entry and choose Use
+   indexed flight data to reuse it. Build indexed flight data always creates a new
+   copy and currently repeats the import even with identical source/settings.
+   Import again when you explicitly need different source coverage or normalization.
 2. In Audio review, confirm and source-assess exactly two selected Doppler events
    with nonoverlapping intervals and at least three measured points each.
    Search > Wide-area two-pass Doppler > Copy the two selected reviewed Doppler
