@@ -200,14 +200,14 @@ fn invariant_hash(document: &ReviewWorkspace) -> Result<String, String> {
 fn read_bounded(path: &Path) -> Result<Vec<u8>, String> {
     let file = File::open(path).map_err(|error| error.to_string())?;
     if file.metadata().map_err(|error| error.to_string())?.len() > MAX_INPUT_BYTES {
-        return Err("Input exceeds 64 MiB".into());
+        return Err("Input exceeds 0.0625 GiB".into());
     }
     let mut bytes = Vec::new();
     file.take(MAX_INPUT_BYTES + 1)
         .read_to_end(&mut bytes)
         .map_err(|error| error.to_string())?;
     if bytes.len() as u64 > MAX_INPUT_BYTES {
-        return Err("Input grew beyond 64 MiB during reading".into());
+        return Err("Input grew beyond 0.0625 GiB during reading".into());
     }
     Ok(bytes)
 }
@@ -373,7 +373,7 @@ struct BoundedWriter {
 impl Write for BoundedWriter {
     fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
         if self.bytes + bytes.len() as u64 > MAX_OUTPUT_BYTES {
-            return Err(io::Error::other("Prediction report exceeds 256 MiB"));
+            return Err(io::Error::other("Prediction report exceeds 0.250 GiB"));
         }
         let written = self.file.write(bytes)?;
         self.bytes += written as u64;

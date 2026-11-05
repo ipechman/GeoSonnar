@@ -86,7 +86,7 @@ def read(path, limit=16 * 1024 * 1024):
 def write(path, value, replace=False):
     path = Path(path)
     data = (json.dumps(value, indent=2, allow_nan=False) + "\n").encode()
-    require(len(data) <= 16 * 1024 * 1024, "Receipt exceeds 16 MiB")
+    require(len(data) <= 16 * 1024 * 1024, "Receipt exceeds 0.015625 GiB")
     if replace:
         temporary = path.with_name(path.name + ".writing")
         with temporary.open("xb") as stream:

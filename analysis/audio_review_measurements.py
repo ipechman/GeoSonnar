@@ -28,7 +28,7 @@ def digest(path):
 
 def spectrum(path):
     if Path(path).stat().st_size > 256 * 1024 * 1024:
-        raise ValueError("Audio-only review is limited to 256 MiB of source PCM per run")
+        raise ValueError("Audio-only review is limited to 0.250 GiB of source PCM per run")
     before = digest(path)
     rate, samples = wavfile.read(path)
     if samples.ndim != 1 or samples.dtype not in (np.dtype("int16"), np.dtype("int32")) or rate < 4000 or rate % 4000:

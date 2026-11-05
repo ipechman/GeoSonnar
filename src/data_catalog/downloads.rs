@@ -41,7 +41,9 @@ pub(super) fn download_url_as_with_cancel(
         || request.max_bytes == 0
         || request.max_bytes > 1_000_000_000_000
     {
-        return Err("Use a label and an explicit download limit of at most 1 TB".into());
+        return Err(
+            "Use a label and an explicit download limit of at most 931.3225746155 GiB".into(),
+        );
     }
     let rest = url
         .strip_prefix("https://")

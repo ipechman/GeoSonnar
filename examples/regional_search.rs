@@ -86,7 +86,7 @@ fn compiled_sources() -> BTreeMap<&'static str, String> {
 fn write_new(path: &Path, value: &impl Serialize) -> Result<String, String> {
     let bytes = serde_json::to_vec_pretty(value).map_err(|e| e.to_string())?;
     if bytes.len() > 64 * 1024 * 1024 {
-        return Err("Per-file report exceeds 64 MiB".into());
+        return Err("Per-file report exceeds 0.0625 GiB".into());
     }
     let mut file = OpenOptions::new()
         .write(true)
@@ -105,7 +105,7 @@ fn run(input: &Path, output: &Path) -> Result<(), String> {
         .read_to_end(&mut bytes)
         .map_err(|e| e.to_string())?;
     if bytes.len() > 64 * 1024 * 1024 {
-        return Err("Input exceeds 64 MiB".into());
+        return Err("Input exceeds 0.0625 GiB".into());
     }
     let input_sha = digest(&bytes);
     let batch: Batch = serde_json::from_slice(&bytes).map_err(|e| e.to_string())?;

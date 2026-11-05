@@ -69,7 +69,7 @@ def main():
             destination.write_bytes(data)
             results.append({"member": member.name, "local_path": str(destination), "bytes": size, "sha256": actual_hash})
             remaining.remove(name)
-            print(f"Verified and extracted {name} ({size:,} bytes)", flush=True)
+            print(f"Verified and extracted {name} ({size / (1 << 30):.10f} GiB)", flush=True)
             if not remaining:
                 break
     if remaining:

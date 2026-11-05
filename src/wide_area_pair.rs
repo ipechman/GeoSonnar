@@ -899,7 +899,7 @@ impl IndexMemoryPlan {
             return Err(Stop {
                 status: WideStatus::BudgetExceeded,
                 reason: format!(
-                    "Combined source/spatial-index/local-CPA memory needs {needed}, exceeding the declared {allowed}; increase the source/index memory allowance and estimate again. No source pass or receiver was removed"
+                    "Source/index memory allowance is too small: combined source, spatial-index and local-CPA memory needs {needed}; your allowance is {allowed}. Increase the source/index memory allowance and estimate again. Your search area, grid, and aircraft sources are unchanged."
                 ),
             });
         }
@@ -910,7 +910,7 @@ fn allocation_stop(label: &str) -> Stop {
     Stop {
         status: WideStatus::BudgetExceeded,
         reason: format!(
-            "Cannot reserve bounded {label} memory; no source pass or receiver was removed"
+            "Cannot reserve bounded {label} memory. Your search area, grid, and aircraft sources are unchanged."
         ),
     }
 }
@@ -1759,7 +1759,15 @@ mod index_memory_tests {
         assert!(
             error
                 .reason
-                .contains("no source pass or receiver was removed")
+                .contains("Your search area, grid, and aircraft sources are unchanged")
+        );
+        let (needed, allowed) =
+            crate::data_size::format_gib_pair(memory.total_bytes, 64 * 1024 * 1024);
+        assert!(error.reason.contains(&needed) && error.reason.contains(&allowed));
+        assert!(
+            error
+                .reason
+                .contains("Source/index memory allowance is too small")
         );
         assert_eq!(
             memory

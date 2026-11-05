@@ -168,12 +168,12 @@ def _source_bytes(path, root):
         raise ValueError(f"Unexpected source file type: {relative}")
     before = _no_reparse(path, relative)
     if before.st_size > MAX_FILE_BYTES:
-        raise ValueError(f"Source file exceeds the 10 MiB limit: {relative}")
+        raise ValueError(f"Source file exceeds the 0.009765625 GiB limit: {relative}")
     with path.open("rb") as stream:
         data = stream.read(MAX_FILE_BYTES + 1)
     after = _no_reparse(path, relative)
     if len(data) > MAX_FILE_BYTES:
-        raise ValueError(f"Source file exceeds the 10 MiB limit: {relative}")
+        raise ValueError(f"Source file exceeds the 0.009765625 GiB limit: {relative}")
     if (before.st_ino, before.st_size, before.st_mtime_ns) != (after.st_ino, after.st_size, after.st_mtime_ns):
         raise ValueError(f"Source file changed during reading: {relative}")
     try:

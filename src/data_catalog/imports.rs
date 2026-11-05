@@ -44,7 +44,7 @@ pub fn import_file_with_cancel(
         || request.max_bytes == 0
         || request.max_bytes > 1_000_000_000_000
     {
-        return Err("Use a label and a positive import limit of at most 1 TB".into());
+        return Err("Use a label and a positive import limit of at most 931.3225746155 GiB".into());
     }
     let source = source.canonicalize().map_err(|e| e.to_string())?;
     regular(&source, false)?;

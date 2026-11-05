@@ -48,7 +48,7 @@ try again. Example names below are arbitrary and do not identify historical runs
 the whole-tier deadline. These are explicit resource ceilings, not runtime
 predictions. Increase them deliberately for a slower machine; the runner never
 automatically retries or silently removes tests. Each command retains at most
-16 MiB per output stream and stops if the limit is exceeded.
+0.015625 GiB per output stream and stops if the limit is exceeded.
 
 ## External prerequisites are explicit
 

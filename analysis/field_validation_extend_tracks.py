@@ -64,5 +64,5 @@ if __name__ == "__main__":
     parser.add_argument("--max-bytes", type=int, default=30_000_000)
     args = parser.parse_args()
     if not 1 <= args.max_bytes <= 95_000_000:
-        raise ValueError("Supplemental transfer cap must be1..95MB")
+        raise ValueError("Supplemental transfer cap must be0.0000000009..0.0884756446 GiB")
     complete(args.source, args.output, args.max_bytes)

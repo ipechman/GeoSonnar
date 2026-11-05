@@ -50,8 +50,8 @@
     },
     {
       "path": "analysis/audio_review_measurements.py",
-      "bytes": 8739,
-      "sha256": "e4d1a0f64b489ae6c9c999289c9f8e0f510141b0639423d43353bea13da7c735"
+      "bytes": 8741,
+      "sha256": "57bc2a230d85af55598cce73805d1b96ca4a698ebdb763ba2639bbb7ee37bd0b"
     },
     {
       "path": "analysis/audit_livermore_timing.py",
@@ -105,8 +105,8 @@
     },
     {
       "path": "analysis/extract_reference_archive.py",
-      "bytes": 4441,
-      "sha256": "5b38e737d36ce1084a7f9780ef3ac8accbc1923116083f33638985dee0dbbb08"
+      "bytes": 4454,
+      "sha256": "6e916fc7b817f3bd452d513e5d4306ba0ee4176c61e7f238bd4970d1f19b8852"
     },
     {
       "path": "analysis/field_validation_acquire.py",
@@ -130,8 +130,8 @@
     },
     {
       "path": "analysis/field_validation_extend_tracks.py",
-      "bytes": 3745,
-      "sha256": "f3bddd157342e7f1b76cfa72b9cbf835d5b0ffa4fa635f3086d21fc0885e4253"
+      "bytes": 3768,
+      "sha256": "9d4e2531a5ddb8dbdabc3db04e4d4e608c7312a1d75c2997049d7fd57d3815d1"
     },
     {
       "path": "analysis/field_validation_fresh.py",
@@ -285,8 +285,8 @@
     },
     {
       "path": "analysis/package_source.py",
-      "bytes": 13261,
-      "sha256": "4fada9c37d5b32687d1b8743972203de1dbe6c0dc034ff11a0c2fcfc7f0c85b5"
+      "bytes": 13279,
+      "sha256": "b96971379490ef06181e98c7e45ad3753eb9e774884189e764b0b9a0bd3fff6f"
     },
     {
       "path": "analysis/package_windows.py",
@@ -970,23 +970,23 @@
     },
     {
       "path": "examples/hybrid_ablation.rs",
-      "bytes": 19819,
-      "sha256": "3d2b048fea1f5a168e0e95b9963d748ef8cf5c23b9b6a86a8b34c1dd3349ba5c"
+      "bytes": 19829,
+      "sha256": "e6bf6e589a45f54d81135c3cd26a800ed793d663f3cb0b9bf7bbd961ba6e223e"
     },
     {
       "path": "examples/prediction_overlay.rs",
-      "bytes": 2882,
-      "sha256": "dc6770c97a818e23aeee1f772708a574ec098597a86da48dcb604fe53f571927"
+      "bytes": 2890,
+      "sha256": "9be8caf55dd48d4ae318144d5d88d3c02594f7d314858f6e9195e65d28278618"
     },
     {
       "path": "examples/regional_search.rs",
-      "bytes": 7043,
-      "sha256": "dbbd775afa7403b285e17071b91c857fed2eb09772f123184cdcc0ed92a80088"
+      "bytes": 7051,
+      "sha256": "fbaa53ced9cef873a32158416b08856b0b5ce6f72f9e3b4ad4f59993dbad10e4"
     },
     {
       "path": "examples/reopen_investigation.rs",
-      "bytes": 15338,
-      "sha256": "8c129197b4d7d46ea56e24070d04321648b3c8baa9ca65764c2fc7ccb083e6a9"
+      "bytes": 15348,
+      "sha256": "065fc4ab79ce3324d5916caa96c7d75665bbcaaca2cadb42439910017560e5f1"
     },
     {
       "path": "examples/storm_audio.rs",
@@ -1025,8 +1025,8 @@
     },
     {
       "path": "src/adsblol_acquisition.rs",
-      "bytes": 29945,
-      "sha256": "b67ae17b59b398b9e1505cebd8f2b5af6b3ed1c9f3e532bd3f80f126c5299b8a"
+      "bytes": 29959,
+      "sha256": "4055c28da2d32b53c6b3cb5a8f0e527d05ab8825a8b8417adcc164a48f7a859e"
     },
     {
       "path": "src/adsblol_history.rs",
@@ -1085,8 +1085,8 @@
     },
     {
       "path": "src/data_catalog/downloads.rs",
-      "bytes": 6543,
-      "sha256": "3e2a57b49d52aec7c6f1db574bf6300e7f254abb804512ab4cc6ed551cf545e9"
+      "bytes": 6580,
+      "sha256": "3010350a2b8afb9e621d64f7c9fa96d2e06677febe390844c3cd0c9c49ac4232"
     },
     {
       "path": "src/data_catalog/fmi_tests.rs",
@@ -1100,8 +1100,8 @@
     },
     {
       "path": "src/data_catalog/imports.rs",
-      "bytes": 13237,
-      "sha256": "c47ceba578b3b425e6bbf1ee9ea9852d8362eb9bef7c54593191d30f97bb2276"
+      "bytes": 13251,
+      "sha256": "f22bf72749f86f2489572df237cee2542839b0807aa21bbe648201b54089b7d2"
     },
     {
       "path": "src/data_catalog/indexed_reuse.rs",
@@ -1585,8 +1585,8 @@
     },
     {
       "path": "src/wide_area_pair.rs",
-      "bytes": 78580,
-      "sha256": "1f8bae82cc094668f22827fc9e469599c9799ce6682798417b84f1bd12911153"
+      "bytes": 79029,
+      "sha256": "3f0a2e88b254369aac744de6d61921ba51df64d4eabb70ad5310ccb24086580b"
     },
     {
       "path": "src/workspace.rs",
@@ -1865,8 +1865,8 @@
     },
     {
       "path": "tools/README.md",
-      "bytes": 8969,
-      "sha256": "3c6efadd62d973c4eff00677ab72be0ef8f117d99c8a72a878b477f053e99e93"
+      "bytes": 8975,
+      "sha256": "2c5fb189e74adf9ad7aabbf1352dfa69d8ed58a7568bbf499e1f0237c8d5ecf9"
     },
     {
       "path": "tools/__init__.py",
@@ -1875,8 +1875,8 @@
     },
     {
       "path": "tools/evidence.py",
-      "bytes": 6812,
-      "sha256": "1ba31e0a46faefbe2aa2689ed3d91f99375aee85bcd301db705fcd68e8f20cc4"
+      "bytes": 6818,
+      "sha256": "e034512bfa3b64db86f6f824d5ed428b461f59635f2524cc974931b3198c3f86"
     },
     {
       "path": "tools/probe_process.py",

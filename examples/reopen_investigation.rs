@@ -32,7 +32,7 @@ struct Request {
 fn write_json(path: &Path, value: &impl serde::Serialize) -> Result<(), String> {
     let bytes = serde_json::to_vec_pretty(value).map_err(|e| e.to_string())?;
     if bytes.len() > 64 * 1024 * 1024 {
-        return Err("Replay result exceeds 64 MiB".into());
+        return Err("Replay result exceeds 0.0625 GiB".into());
     }
     let mut file = OpenOptions::new()
         .write(true)
@@ -171,7 +171,7 @@ fn run(input: &Path, manifest: &Path, output: &Path) -> Result<(), String> {
         .read_to_end(&mut bytes)
         .map_err(|e| e.to_string())?;
     if bytes.len() > 64 * 1024 * 1024 {
-        return Err("Request exceeds 64 MiB".into());
+        return Err("Request exceeds 0.0625 GiB".into());
     }
     let request: Request = serde_json::from_slice(&bytes).map_err(|e| e.to_string())?;
     request.document.validate_acoustic_sources_for_scoring()?;
@@ -259,7 +259,7 @@ fn run(input: &Path, manifest: &Path, output: &Path) -> Result<(), String> {
         let size = fs::metadata(&source).map_err(|e| e.to_string())?.len();
         total = total.checked_add(size).ok_or("Source copy size overflow")?;
         if total > 512 * 1024 * 1024 {
-            return Err("Missing-source control exceeds 512 MiB".into());
+            return Err("Missing-source control exceeds 0.500 GiB".into());
         }
         let extension = source
             .extension()

@@ -34,7 +34,7 @@ fn run(input: &Path, output: &Path) -> Result<(), String> {
         .read_to_end(&mut bytes)
         .map_err(|e| e.to_string())?;
     if bytes.len() > 64 * 1024 * 1024 {
-        return Err("Inspection input exceeds 64 MiB".into());
+        return Err("Inspection input exceeds 0.0625 GiB".into());
     }
     let request: Request = serde_json::from_slice(&bytes).map_err(|e| e.to_string())?;
     let overlay = prediction_overlay::build(
@@ -60,7 +60,7 @@ fn run(input: &Path, output: &Path) -> Result<(), String> {
     });
     let bytes = serde_json::to_vec_pretty(&document).map_err(|e| e.to_string())?;
     if bytes.len() > 64 * 1024 * 1024 {
-        return Err("Inspection output exceeds 64 MiB".into());
+        return Err("Inspection output exceeds 0.0625 GiB".into());
     }
     let mut file = OpenOptions::new()
         .write(true)

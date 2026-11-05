@@ -153,7 +153,7 @@ fn validate_request(request: &AcquisitionRequest) -> Result<(), String> {
     date_parts(&request.date_utc)?;
     require(
         request.max_download_bytes > 0 && request.max_download_bytes <= 1_000_000_000_000,
-        "Download budget must be positive and no greater than 1 TB",
+        "Download budget must be positive and no greater than 931.3225746155 GiB",
     )?;
     if let Some(instance) = &request.instance {
         require(
