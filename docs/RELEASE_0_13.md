@@ -15,6 +15,12 @@ This release concentrates on making the project easier to understand, verify and
 
 This work preserves the saved case/review/request formats, source identities, numerical scoring, iteration and tie ordering, cancellation, stale-response rejection and explicit incomplete outcomes. Small extraction corrections concern internal import paths, visibility and text encoding. They do not introduce a new search method or alter scoring assumptions.
 
+## Separately requested usability fixes
+
+[Issue #1](https://github.com/ipechman/GeoSonnar/issues/1) adds consistent GiB storage/memory inputs and displays, specific required-versus-allowed budget feedback, and four wide-search sections with visible estimate/run guidance. Exact byte defaults and machine-readable formats remain intact. A preliminary output reservation is labeled as a minimum; it does not predict that a search will finish within its resource allowances. Original source JSON and saved diagnostics remain available for copying while their presentation uses GiB.
+
+Background busy indicators use static status marks with timed refreshes. Progress notifications and input still request immediate redraws. This removes an animation-driven repaint loop identified after a report of high integrated-GPU use. It does not move search calculations onto the GPU, and a change in actual hardware utilization still needs measurement on the user's machine.
+
 Lower Doppler RMSE indicates a better model fit; higher thunder-envelope cosine similarity indicates a better envelope match. Neither is a calibrated location probability. This documentation clarification also appears in the introduction.
 
 ## Verification and limitations

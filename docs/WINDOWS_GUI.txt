@@ -14,6 +14,11 @@ Follow Case > Audio review > Data > Search > Results. Guided view shows common
 choices. All controls exposes detailed settings without changing your evidence.
 Each processing operation requires an explicit action.
 
+Storage and memory amounts use GiB throughout the interface, including values
+smaller than one GiB. Enter decimal GiB values directly; saved machine-readable
+byte fields retain their original representation. Source-record inspection uses
+a GiB display copy and offers Copy original JSON for the unchanged original.
+
 This release reorganizes the implementation and contributor workflow. Search
 methods, saved formats and review controls retain their existing contracts.
 Historical version notes and earlier validation counts are in
@@ -116,8 +121,8 @@ requests must be split manually; they are not silently shortened.
 
 Prepare bounded history request is local and does not check live availability.
 Review the request and caps, then explicitly Fetch reviewed history request.
-The default is 64 full traces and 100 MB cumulative HTTP payload; the supported
-maximum is 256 traces and 250 MB. Replay files cover broader areas. If the trace
+The default is 64 full traces and 0.0931322575 GiB cumulative HTTP payload; the supported
+maximum is 256 traces and 0.2328306437 GiB. Replay files cover broader areas. If the trace
 cap is reached, candidates are chosen by aircraft-ID order, not relevance.
 Inspect source types, omitted identities, cap omissions, replay gaps and failed
 requests. Complete means the selected files finished, never complete sky
@@ -136,7 +141,7 @@ its registered raw responses, reports and hashes remain available for auditing.
 
 Global day archive remains available for broader requests. Enter a UTC date and
 download limit, check availability and size, then explicitly Download planned
-archive. These global archives can be several gigabytes; filtering by region and
+archive. These global archives can be several GiB; filtering by region and
 time happens during native import. Interrupted downloads retain resumable data.
 One import covers one UTC day. Missing positions/heights and broken support
 remain gaps. Neither acquisition route establishes complete aircraft coverage.

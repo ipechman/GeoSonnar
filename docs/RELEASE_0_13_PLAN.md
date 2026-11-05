@@ -4,6 +4,8 @@
 
 The goal is to let a contributor locate a responsibility, understand its inputs and outputs, make a bounded change, and verify it from the public repository. Success means clearer ownership and reproducible work, not just smaller files or more folders.
 
+The user subsequently requested [issue #1](https://github.com/ipechman/GeoSonnar/issues/1) and investigation of background GUI GPU load. Those usability fixes are tracked separately from the mechanical refactor in the [release notes](RELEASE_0_13.md) and receive additional regression checks.
+
 ## What needs attention
 
 The 0.12 code already has useful modules and substantial tests, but some responsibilities have grown together:
