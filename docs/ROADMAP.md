@@ -1,10 +1,12 @@
 # Roadmap
 
-GeoSonnar 0.12 is a usable experimental release, not a completed research program. The priorities below remain explicit after publication.
+GeoSonnar 0.13 is an experimental investigation workbench. The organization release is complete; performance and independent accuracy remain open goals.
 
-## Next release: 0.13 organization and maintainability
+## Completed: 0.13 organization and maintainability
 
-The next release will make the code, tests, documentation and release process easier to understand and change. See the [0.13 implementation plan](RELEASE_0_13_PLAN.md) for concrete milestones and completion criteria. It starts with a code map and a self-contained public validation workflow, then separates responsibilities in data management and GUI coordination through small, behavior-preserving changes.
+The [0.13 release](https://github.com/ipechman/GeoSonnar/releases/tag/v0.13.0) separates data and GUI responsibilities and provides a code map, compatibility contracts, a test map and a self-contained public validation workflow. The [completed plan](RELEASE_0_13_PLAN.md) records acceptance evidence.
+
+**Next step:** freeze the worldwide performance benchmark below before changing candidate discovery. Declare the cases, hardware, coverage and limits first, then measure runtime and candidate recall together.
 
 The worldwide performance target below remains a project goal. Its implementation follows this organization work; it is not a requirement for completing 0.13.
 
@@ -35,7 +37,7 @@ Before claiming this goal is met:
 
 Atmospheric refinement remains optional. It follows evidence association, data coverage, performance and field validation rather than being a prerequisite for publishing useful releases.
 
-## What 0.12 does not claim
+## What 0.13 does not claim
 
 - Worldwide discovery within 30 minutes.
 - Calibrated location confidence or proven accuracy on arbitrary recordings.

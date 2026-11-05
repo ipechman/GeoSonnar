@@ -29,3 +29,9 @@ Lower Doppler RMSE indicates a better model fit; higher thunder-envelope cosine 
 Use the [public validation workflow](../tools/README.md) to reproduce software checks and packaging from the source. Each run records actual executed tests, optional or unavailable integrations, source identities and artifacts. Verification rechecks retained evidence, and cleanup only removes the marked scratch directory owned by that run.
 
 The [0.13 plan](RELEASE_0_13_PLAN.md) defines the completion gate. Software validation does not establish independent field accuracy, worldwide historical lightning coverage, interrupted-location resume or worldwide discovery within 30 minutes. Those remain explicit [roadmap](ROADMAP.md) items.
+
+## Published verification
+
+[Version 0.13.0](https://github.com/ipechman/GeoSonnar/releases/tag/v0.13.0) was built from commit `2a425b62fea284c660c201713507e9b5f9f58726`. The complete headless gate passed: 984 native executions (including 252 GUI checks), one separate large-store test, six separate media checks, 149 Python checks, formatting, Clippy, static builds and exact package verification. Optional external-data comparisons remain explicitly unrequested; one platform symlink test was skipped. The preserved historical search completed 50/50 locations with exact numerical outputs and result pages, after normalizing its output directory and one cache-unit label.
+
+The [completed plan](RELEASE_0_13_PLAN.md#completion-record) records scope and accounting. This documentation-only completion update follows the tested release tag; its binaries and archives are unchanged. The next step is to freeze the worldwide benchmark before implementing candidate discovery. Hardware GPU improvement and independent location accuracy remain unmeasured.

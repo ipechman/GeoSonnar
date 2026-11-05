@@ -35,11 +35,11 @@ See the [Windows guide](docs/WINDOWS_GUI.txt) for media setup, data import and t
 - Managed data, reusable flight indexes, background jobs and cancellation.
 - Saved cases, input identities, run history and a command-line pipeline.
 
-## Status: experimental 0.13 development
+## Status: experimental 0.13.0
 
-The 0.13 work focuses on organization: clearer data and GUI responsibilities, a documented architecture, and public validation/release tools. It retains the reviewed-event workflow and search contracts introduced in earlier releases. Lower Doppler error is better; higher thunder-envelope similarity is better. **Neither is a calibrated probability or a verified location.**
+[Version 0.13.0 is available](https://github.com/ipechman/GeoSonnar/releases/tag/v0.13.0). This release focuses on organization: clearer data and GUI responsibilities, a documented architecture, and public validation/release tools. It retains the reviewed-event workflow and search contracts introduced in earlier releases. Lower Doppler error is better; higher thunder-envelope similarity is better. **Neither is a calibrated probability or a verified location.**
 
-For development, start with **[Contributing](CONTRIBUTING.md)**, the [architecture map](docs/ARCHITECTURE.md), and the [documentation index](docs/README.md). The [0.13 plan](docs/RELEASE_0_13_PLAN.md) tracks its completion criteria. Released downloads remain on the Releases page.
+For development, start with **[Contributing](CONTRIBUTING.md)**, the [architecture map](docs/ARCHITECTURE.md), and the [documentation index](docs/README.md). The [completed 0.13 plan](docs/RELEASE_0_13_PLAN.md) records the verification results; the [release notes](docs/RELEASE_0_13.md) explain changes and limitations.
 
 Broad searches remain expensive. The next performance goal is **worldwide discovery followed by local refinement within 30 minutes**. That goal remains open; see its [acceptance criteria and next steps](docs/ROADMAP.md).
 
