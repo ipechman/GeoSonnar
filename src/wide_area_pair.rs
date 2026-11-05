@@ -23,6 +23,13 @@ const MAX_EVENT_POINTS: usize = 10_000;
 const MAX_CPA_ENTRIES: usize = 250_000;
 pub const DEFAULT_INDEX_MEMORY_BYTES: u64 = 512 * 1024 * 1024;
 
+#[path = "retention_bound.rs"]
+mod retention_bound;
+
+fn is_zero_counter(value: &u64) -> bool {
+    *value == 0
+}
+
 fn default_index_memory_bytes() -> u64 {
     DEFAULT_INDEX_MEMORY_BYTES
 }
@@ -159,8 +166,24 @@ pub struct WideProgress {
     pub bbox_excluded_passes: u64,
     pub timing_candidates: u64,
     pub scored_candidates: u64,
+    /// Ranking-dominated pairs; their second-event support was not evaluated.
+    #[serde(default, skip_serializing_if = "is_zero_counter")]
+    pub score_bound_pruned_candidates: u64,
     pub work_units: u64,
     pub stage: String,
+    /// An uncommitted receiver only. Absence in older reports is unknown,
+    /// not evidence that a stopped run had no active receiver.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub active_receiver: Option<WideActiveReceiverProgress>,
+}
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct WideActiveReceiverProgress {
+    pub receiver_index: u64,
+    /// Unknown until the complete local-CPA census and timing join count finish.
+    pub eligible_pair_total: Option<u64>,
+    /// Incremented before scoring; includes the currently attempted pair.
+    pub attempted_pairs: u64,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -180,6 +203,8 @@ pub struct WideCandidate {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct WidePairReport {
     pub schema_version: u32,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub scoring_implementation: String,
     pub request_sha256: String,
     pub source: TrackStoreBinding,
     /// None when preparation stopped before the source was verified.
@@ -210,6 +235,8 @@ pub struct ReceiverResult {
     pub eligible_event_cpas: [usize; 2],
     pub timing_candidates: u64,
     pub scored_candidates: u64,
+    #[serde(default, skip_serializing_if = "is_zero_counter")]
+    pub score_bound_pruned_candidates: u64,
     pub model_rejections: u64,
     pub scoring_rejections: u64,
     pub best: Option<WideCandidate>,
@@ -487,6 +514,282 @@ fn cost_preview(
 }
 
 type CpaEntry = (usize, usize, ClosestApproach);
+
+#[cfg(test)]
+mod progress_total_tests {
+    use super::*;
+
+    fn native_inventories() -> (Vec<CpaEntry>, Vec<CpaEntry>) {
+        let origin = physics::geodetic_to_ecef(0., 0., 0.).unwrap();
+        let model = physics::ModelConfig {
+            sound_speed_mps: 1000.,
+            ..Default::default()
+        };
+        let loop_track = physics::Track {
+            flight_id: "synthetic-loop".into(),
+            points: [
+                (-2000., 0.),
+                (0., 20.),
+                (2000., 40.),
+                (0., 60.),
+                (-2000., 80.),
+            ]
+            .into_iter()
+            .map(|(y, t_s)| physics::TrackPoint {
+                t_s,
+                xyz_m: [origin[0] + 1000., y, 0.],
+            })
+            .collect(),
+        };
+        let mut duplicate_geometry = loop_track.clone();
+        duplicate_geometry.flight_id = "synthetic-distinct-flight".into();
+        let boundary_track = physics::Track {
+            flight_id: "synthetic-boundary".into(),
+            points: [(0., 0.), (1000., 10.), (2000., 20.)]
+                .into_iter()
+                .map(|(y, t_s)| physics::TrackPoint {
+                    t_s,
+                    xyz_m: [origin[0] + 1000., y, 0.],
+                })
+                .collect(),
+        };
+        let mut event = Vec::new();
+        let mut excluded_boundary = false;
+        let bounds = CoarseBounds {
+            speed_mps: [0., 300.],
+            slant_distance_m: [0., 8000.],
+        };
+        for (pass, track) in [loop_track, duplicate_geometry, boundary_track]
+            .iter()
+            .enumerate()
+        {
+            for (index, cpa) in physics::local_closest_approaches(track, origin, model)
+                .unwrap()
+                .into_iter()
+                .enumerate()
+            {
+                excluded_boundary |= cpa.at_track_boundary;
+                if in_bounds(&cpa, &bounds) {
+                    event.push((pass, index, cpa));
+                }
+            }
+        }
+        assert!(
+            excluded_boundary,
+            "The fixture must exercise native boundary exclusion"
+        );
+        assert!(event.iter().all(|(_, _, cpa)| !cpa.at_track_boundary));
+        let mut second = event.clone();
+        second.sort_by(|a, b| a.2.arrival_time_s.total_cmp(&b.2.arrival_time_s));
+        (event, second)
+    }
+
+    fn old_join(
+        first: CpaEntry,
+        event2: &[CpaEntry],
+        separation: f64,
+        tolerance: f64,
+    ) -> Vec<(usize, usize)> {
+        let (i, first_index, cpa1) = first;
+        let target = cpa1.arrival_time_s + separation;
+        let begin = event2.partition_point(|(_, _, c)| c.arrival_time_s < target - tolerance);
+        event2[begin..]
+            .iter()
+            .take_while(|(_, _, c)| {
+                c.arrival_time_s.partial_cmp(&(target + tolerance))
+                    != Some(std::cmp::Ordering::Greater)
+            })
+            .filter(|(j, index, c)| {
+                !(c.arrival_time_s <= cpa1.arrival_time_s || (i == *j && first_index == *index))
+            })
+            .map(|(j, index, _)| (*j, *index))
+            .collect()
+    }
+
+    #[test]
+    fn exact_pair_ranges_match_original_join_on_native_cpas_ties_self_pairs_and_boundaries() {
+        let (first, second) = native_inventories();
+        for separation in [0.5, 40., 80., f64::MAX] {
+            for tolerance in [0., f64::EPSILON, 40., 100., f64::MAX] {
+                let mut enumerated = 0;
+                for entry in &first {
+                    let expected = old_join(*entry, &second, separation, tolerance);
+                    let range = eligible_partner_range(
+                        &second,
+                        entry.2.arrival_time_s,
+                        separation,
+                        tolerance,
+                    );
+                    let actual: Vec<_> = second[range.clone()]
+                        .iter()
+                        .map(|(pass, index, _)| (*pass, *index))
+                        .collect();
+                    assert_eq!(
+                        actual, expected,
+                        "separation={separation} tolerance={tolerance}"
+                    );
+                    assert_eq!(range.len(), expected.len());
+                    enumerated += expected.len() as u64;
+                }
+                assert_eq!(
+                    count_eligible_pairs(&first, &second, separation, tolerance, || Ok(()))
+                        .unwrap(),
+                    enumerated
+                );
+            }
+        }
+        let origin = first
+            .iter()
+            .find(|(pass, _, _)| *pass == 0)
+            .copied()
+            .unwrap();
+        let exact_boundary = old_join(origin, &second, 40., 0.);
+        assert_eq!(
+            exact_boundary.len(),
+            2,
+            "Inclusive timing boundary and equal-arrival alternatives survive"
+        );
+        assert!(
+            exact_boundary
+                .iter()
+                .any(|(pass, index)| *pass == origin.0 && *index != origin.1),
+            "A later distinct CPA of the same continuous pass remains eligible"
+        );
+        assert!(!old_join(origin, &second, 0.5, 100.).contains(&(origin.0, origin.1)));
+        // A positive overflow target must preserve the legacy comparisons too.
+        let mut huge = origin;
+        huge.0 = usize::MAX;
+        huge.2.arrival_time_s = f64::MAX;
+        let expected = old_join(huge, &second, f64::MAX, f64::MAX);
+        let range = eligible_partner_range(&second, huge.2.arrival_time_s, f64::MAX, f64::MAX);
+        assert_eq!(range.len(), expected.len());
+        assert!(expected.is_empty());
+    }
+
+    #[test]
+    fn pair_count_checkpoints_cancel_and_expire_without_charging_scientific_work() {
+        let (first, second) = native_inventories();
+        let many: Vec<_> = (0..2050)
+            .map(|pass| (pass + 100, first[0].1, first[0].2))
+            .collect();
+        let cancel = AtomicBool::new(false);
+        let budgets = WideBudgets {
+            max_duration_s: 1,
+            ..Default::default()
+        };
+        let mut progress = WideProgress {
+            work_units: 123,
+            ..Default::default()
+        };
+        let mut guard = Guard {
+            start: Instant::now(),
+            cancel: &cancel,
+            budgets: &budgets,
+        };
+        let mut checkpoints = 0;
+        let stopped = count_eligible_pairs(&many, &second, 40., 0., || {
+            checkpoints += 1;
+            if checkpoints == 2 {
+                cancel.store(true, Ordering::Relaxed);
+            }
+            guard.charge(0, &mut progress)
+        })
+        .unwrap_err();
+        assert_eq!(stopped.status, WideStatus::Cancelled);
+        assert_eq!(checkpoints, 2);
+        assert_eq!(progress.work_units, 123);
+        cancel.store(false, Ordering::Relaxed);
+        guard.start = Instant::now() - std::time::Duration::from_secs(2);
+        assert_eq!(
+            count_eligible_pairs(&first, &second, 40., 0., || guard.charge(0, &mut progress))
+                .unwrap_err()
+                .status,
+            WideStatus::BudgetExceeded
+        );
+        assert_eq!(progress.work_units, 123);
+        assert_eq!(
+            add_pair_count(u64::MAX, 1).unwrap_err().status,
+            WideStatus::BudgetExceeded
+        );
+    }
+
+    #[test]
+    fn absent_active_progress_preserves_legacy_serialization() {
+        let old = serde_json::to_vec(&WideProgress::default()).unwrap();
+        let value: serde_json::Value = serde_json::from_slice(&old).unwrap();
+        assert!(value.get("active_receiver").is_none());
+        let restored: WideProgress = serde_json::from_slice(&old).unwrap();
+        assert!(restored.active_receiver.is_none());
+        assert_eq!(serde_json::to_vec(&restored).unwrap(), old);
+    }
+}
+
+/// The exact contiguous timing window in the sorted native CPA inventory.
+/// Keep the original floating expressions and inclusive upper comparison:
+/// reassociation or epsilon changes would change the searched hypotheses.
+fn eligible_partner_range(
+    event2: &[CpaEntry],
+    first_arrival: f64,
+    measured_separation_s: f64,
+    separation_tolerance_s: f64,
+) -> std::ops::Range<usize> {
+    let target = first_arrival + measured_separation_s;
+    let first =
+        event2.partition_point(|(_, _, c)| c.arrival_time_s < target - separation_tolerance_s);
+    let last = first
+        + event2[first..].partition_point(|(_, _, c)| {
+            c.arrival_time_s
+                .partial_cmp(&(target + separation_tolerance_s))
+                != Some(std::cmp::Ordering::Greater)
+        });
+    let later = event2.partition_point(|(_, _, c)| c.arrival_time_s <= first_arrival);
+    // Each (pass_index, cpa_index) is copied from the same native CPA exactly
+    // once into each event inventory. Thus the identical CPA has identical
+    // arrival and is already excluded by strict ordering. Different later CPAs
+    // of the same pass remain eligible. Scoring retains its explicit identity
+    // predicate below as well; arbitrary inconsistent CPA identities are not
+    // valid native inventories. Finite native arrivals make these predicates
+    // monotone even when the computed target/upper overflow to positive infinity.
+    first.max(later).min(last)..last
+}
+
+fn add_pair_count(total: u64, additional: u64) -> Result<u64, Stop> {
+    total.checked_add(additional).ok_or_else(|| Stop {
+        status: WideStatus::BudgetExceeded,
+        reason: "Wide-area timing-pair counter overflow; unfinished receiver was not committed"
+            .into(),
+    })
+}
+
+fn count_eligible_pairs(
+    event1: &[CpaEntry],
+    event2: &[CpaEntry],
+    measured_separation_s: f64,
+    separation_tolerance_s: f64,
+    mut checkpoint: impl FnMut() -> Result<(), Stop>,
+) -> Result<u64, Stop> {
+    let mut total = 0;
+    // O(event1 * log(event2)), no second traversal of the possibly enormous
+    // Cartesian pair stream and no additional scientific work-unit charge.
+    for (index, (_, _, cpa)) in event1.iter().enumerate() {
+        if index.is_multiple_of(1024) {
+            checkpoint()?;
+        }
+        let range = eligible_partner_range(
+            event2,
+            cpa.arrival_time_s,
+            measured_separation_s,
+            separation_tolerance_s,
+        );
+        let count = u64::try_from(range.len()).map_err(|_| Stop {
+            status: WideStatus::BudgetExceeded,
+            reason: "Wide-area timing-pair count cannot be represented".into(),
+        })?;
+        total = add_pair_count(total, count)?;
+    }
+    checkpoint()?;
+    Ok(total)
+}
 
 struct IndexMemoryPlan {
     source_metadata_bytes: u64,
@@ -935,6 +1238,15 @@ fn receiver<F: FnMut(WideProgress)>(
     progress: &mut WideProgress,
     callback: &mut F,
 ) -> Result<LocalResult, Stop> {
+    progress.active_receiver = Some(WideActiveReceiverProgress {
+        receiver_index,
+        eligible_pair_total: None,
+        attempted_pairs: 0,
+    });
+    progress.stage = "local_cpa_census".into();
+    guard.charge(0, progress)?;
+    callback(progress.clone());
+    guard.charge(0, progress)?;
     let observer = request.grid.observer(receiver_index)?;
     let xyz = physics::geodetic_to_ecef(
         observer.latitude_deg,
@@ -950,7 +1262,6 @@ fn receiver<F: FnMut(WideProgress)>(
     let mut event2 = Vec::new();
     let mut local_cpas = 0;
     let mut boundary = 0;
-    progress.stage = "local_cpa_census".into();
     for (position, &pass_index) in pass_indices.iter().enumerate() {
         guard.charge(
             mul(store.passes()[pass_index].point_count as u64, 16)?,
@@ -983,6 +1294,23 @@ fn receiver<F: FnMut(WideProgress)>(
         }
     }
     event2.sort_by(|a, b| a.2.arrival_time_s.total_cmp(&b.2.arrival_time_s));
+    progress.stage = "counting_timing_pairs".into();
+    let pair_total = count_eligible_pairs(
+        &event1,
+        &event2,
+        request.measured_separation_s,
+        request.separation_tolerance_s,
+        || {
+            guard.charge(0, progress)?;
+            callback(progress.clone());
+            guard.charge(0, progress)
+        },
+    )?;
+    progress
+        .active_receiver
+        .as_mut()
+        .ok_or("Missing active receiver progress")?
+        .eligible_pair_total = Some(pair_total);
     let mut local = LocalResult {
         row: ReceiverResult {
             receiver_index,
@@ -991,6 +1319,7 @@ fn receiver<F: FnMut(WideProgress)>(
             eligible_event_cpas: [event1.len(), event2.len()],
             timing_candidates: 0,
             scored_candidates: 0,
+            score_bound_pruned_candidates: 0,
             model_rejections: 0,
             scoring_rejections: 0,
             best: None,
@@ -1002,21 +1331,21 @@ fn receiver<F: FnMut(WideProgress)>(
         boundary,
     };
     progress.stage = "shared_clock_pair_scoring".into();
+    guard.charge(0, progress)?;
+    callback(progress.clone());
+    guard.charge(0, progress)?;
     let trace_work = trace_work(request)?;
     for (i, cpa1_index, cpa1) in event1 {
         guard.charge(1, progress)?;
-        let target = cpa1.arrival_time_s + request.measured_separation_s;
-        let first = event2.partition_point(|(_, _, c)| {
-            c.arrival_time_s < target - request.separation_tolerance_s
-        });
-        let mut partners = event2[first..]
+        let range = eligible_partner_range(
+            &event2,
+            cpa1.arrival_time_s,
+            request.measured_separation_s,
+            request.separation_tolerance_s,
+        );
+        let mut partners = event2[range]
             .iter()
             .copied()
-            .take_while(|(_, _, cpa2)| {
-                cpa2.arrival_time_s
-                    .partial_cmp(&(target + request.separation_tolerance_s))
-                    != Some(std::cmp::Ordering::Greater)
-            })
             .filter(|(j, cpa2_index, cpa2)| {
                 !(cpa2.arrival_time_s <= cpa1.arrival_time_s
                     || (i == *j && cpa1_index == *cpa2_index))
@@ -1050,13 +1379,30 @@ fn receiver<F: FnMut(WideProgress)>(
             }
             let second_track = cache.load(j, store, request.pair_config.model)?;
             let encounter = progress.timing_candidates;
-            progress.timing_candidates += 1;
-            local.row.timing_candidates += 1;
+            let global_attempts = add_pair_count(progress.timing_candidates, 1)?;
+            let local_attempts = add_pair_count(local.row.timing_candidates, 1)?;
+            let active = progress
+                .active_receiver
+                .as_mut()
+                .ok_or("Missing active receiver progress")?;
+            let attempted = add_pair_count(active.attempted_pairs, 1)?;
+            if attempted > pair_total {
+                return Err("Timing-pair enumeration exceeded the exact counted inventory".into());
+            }
+            active.attempted_pairs = attempted;
+            progress.timing_candidates = global_attempts;
+            local.row.timing_candidates = local_attempts;
             let mut stopped = None;
-            match first_event.score(&second_track, cpa2_index, || {
+            let cutoff = retention_bound::cutoff(
+                &local.candidates,
+                &local.pairs,
+                [&first_track.flight_id, &second_track.flight_id],
+                request.retain,
+            );
+            match first_event.score_bounded(&second_track, cpa2_index, cutoff, || {
                 source_checkpoint(guard, progress, callback, &mut stopped)
             }) {
-                Ok(score) => {
+                Ok(crate::cached_pair::PairOutcome::Scored(score)) => {
                     let candidate = WideCandidate {
                         receiver_index,
                         observer: observer.clone(),
@@ -1074,6 +1420,13 @@ fn receiver<F: FnMut(WideProgress)>(
                     local.row.scored_candidates += 1;
                     progress.scored_candidates += 1;
                 }
+                Ok(crate::cached_pair::PairOutcome::Pruned {
+                    lower_bound_rmse_hz,
+                }) => {
+                    debug_assert!(cutoff.is_some_and(|threshold| lower_bound_rmse_hz > threshold));
+                    local.row.score_bound_pruned_candidates += 1;
+                    progress.score_bound_pruned_candidates += 1;
+                }
                 Err(error) => {
                     cache_scoring_error(error, stopped)?;
                     local.row.scoring_rejections += 1;
@@ -1084,6 +1437,9 @@ fn receiver<F: FnMut(WideProgress)>(
                 callback(progress.clone());
             }
         }
+    }
+    if local.row.timing_candidates != pair_total {
+        return Err("Timing-pair enumeration differs from the exact counted inventory".into());
     }
     local.row.best = local.candidates.first().cloned();
     local.row.status = if local.row.best.is_some() {
@@ -1108,7 +1464,7 @@ pub fn run<F: FnMut(WideProgress)>(
     let started = Instant::now();
     validate_request(request)?;
     let mut journal = Journal::create(output, request)?;
-    let mut report=WidePairReport{schema_version:1,request_sha256:request_sha256(request)?,source:request.source.clone(),source_time_origin_utc_s:None,
+    let mut report=WidePairReport{schema_version:1,scoring_implementation:"whole_pair_first_support_cache_v1".into(),request_sha256:request_sha256(request)?,source:request.source.clone(),source_time_origin_utc_s:None,
         status:WideStatus::Completed,progress:WideProgress{total_receivers:request.grid.count,stage:"verifying_source".into(),..Default::default()},best_hypotheses:Vec::new(),best_flight_pairs:Vec::new(),retain:request.retain,retained_truncated:false,pair_retention_truncated:false,
         local_cpa_count:0,boundary_cpa_rejections:0,model_rejections:0,scoring_rejections:0,output_directory:journal.directory.clone(),pages:Vec::new(),error:None,location_verified:false,source_verified_at_end:false,
         limitations:vec![
@@ -1126,6 +1482,7 @@ pub fn run<F: FnMut(WideProgress)>(
     if !request.budgets.work_limit_enabled {
         report.limitations[7] = "The work-unit limit is disabled. Work counters still record index traversal, full track preparation, trace/frequency/shared-shift evaluations and bounded ranking reservations, but are diagnostic rather than a configured stopping cap. Time, memory, output and cancellation limits remain active; counter overflow still stops safely.".into();
     }
+    report.limitations.push("This search excludes a whole timing-compatible pair only when completed first-event fits, together with cached deterministic first-event support failures, cover every admissible clock and prove that its equal-event RMSE cannot improve either local retained ranking. A certificate needs at least one finite fitted clock; an entirely unsupported first event keeps the ordinary coverage error. Only first-event factor failures are reusable; cancellation, frequency-fit failures and second-event failures are not negative-cached. Strict comparisons retain ties. Pruned pairs are counted separately: their second-event support and fitting errors are unknown, so they are neither scored successes nor acoustic rejections. Existing full pair-work reservations remain. Ranking preservation is checked by exhaustive software controls; this is not field-accuracy validation.".into());
     let mut guard = Guard {
         start: started,
         cancel,
@@ -1213,6 +1570,7 @@ pub fn run<F: FnMut(WideProgress)>(
                 );
             }
             report.progress.completed_receivers += 1;
+            report.progress.active_receiver = None;
             callback(report.progress.clone());
         }
         guard.charge(0, &mut report.progress)?;

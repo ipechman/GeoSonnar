@@ -1028,3 +1028,216 @@ fn cli_wide_search_accepts_relative_output_and_preserves_existing_run() {
         serde_json::to_value(after).unwrap()
     );
 }
+
+#[test]
+fn active_receiver_pair_totals_match_committed_pages_and_clear_after_commit() {
+    let fixture = Fixture::new(7, false);
+    let output = fixture.output("active-progress-complete");
+    let mut observed = Vec::new();
+    let report = wide_area_pair::run(
+        &fixture.request,
+        &output,
+        &AtomicBool::new(false),
+        |progress| {
+            observed.push(progress);
+        },
+    )
+    .unwrap();
+    assert_eq!(report.status, WideStatus::Completed);
+    assert!(report.progress.active_receiver.is_none());
+    assert!(
+        serde_json::to_value(&report.progress)
+            .unwrap()
+            .get("active_receiver")
+            .is_none()
+    );
+    let mut rows = Vec::new();
+    for page in &report.pages {
+        for line in fs::read_to_string(output.join(&page.name)).unwrap().lines() {
+            rows.push(serde_json::from_str::<wide_area_pair::ReceiverResult>(line).unwrap());
+        }
+    }
+    assert_eq!(rows.len() as u64, fixture.request.grid.count);
+    for row in &rows {
+        let active: Vec<_> = observed
+            .iter()
+            .filter_map(|p| p.active_receiver.as_ref())
+            .filter(|active| active.receiver_index == row.receiver_index)
+            .collect();
+        assert!(!active.is_empty());
+        assert!(
+            active
+                .iter()
+                .any(|a| a.eligible_pair_total.is_none() && a.attempted_pairs == 0)
+        );
+        assert!(
+            active
+                .iter()
+                .any(|a| a.eligible_pair_total == Some(row.timing_candidates))
+        );
+        assert_eq!(
+            active.iter().map(|a| a.attempted_pairs).max(),
+            Some(row.timing_candidates)
+        );
+        assert!(observed.iter().any(
+            |p| p.completed_receivers == row.receiver_index + 1 && p.active_receiver.is_none()
+        ));
+    }
+    for progress in &observed {
+        if let Some(active) = &progress.active_receiver {
+            assert_eq!(active.receiver_index, progress.completed_receivers);
+            match active.eligible_pair_total {
+                Some(total) => assert!(active.attempted_pairs <= total),
+                None => assert_eq!(active.attempted_pairs, 0),
+            }
+        }
+    }
+    let reopened = wide_area_pair::load_report(&output).unwrap();
+    assert_eq!(
+        serde_json::to_vec(&reopened).unwrap(),
+        serde_json::to_vec(&report).unwrap()
+    );
+}
+
+#[test]
+fn cancelling_pair_count_preserves_unknown_total_and_no_committed_receiver() {
+    let fixture = Fixture::new(7, false);
+    let output = fixture.output("cancel-pair-count");
+    let cancel = AtomicBool::new(false);
+    let mut count_callbacks = 0;
+    let report = wide_area_pair::run(&fixture.request, &output, &cancel, |progress| {
+        if progress.stage == "counting_timing_pairs" {
+            count_callbacks += 1;
+            let active = progress.active_receiver.as_ref().unwrap();
+            assert_eq!(active.receiver_index, 0);
+            assert_eq!(active.eligible_pair_total, None);
+            assert_eq!(active.attempted_pairs, 0);
+            cancel.store(true, Ordering::Relaxed);
+        }
+    })
+    .unwrap();
+    assert_eq!(count_callbacks, 1);
+    assert_eq!(report.status, WideStatus::Cancelled);
+    assert_eq!(report.progress.completed_receivers, 0);
+    assert_eq!(report.progress.timing_candidates, 0);
+    assert!(report.pages.is_empty());
+    let active = report.progress.active_receiver.as_ref().unwrap();
+    assert_eq!(active.eligible_pair_total, None);
+    assert_eq!(active.attempted_pairs, 0);
+    assert_eq!(
+        wide_area_pair::load_report(&output)
+            .unwrap()
+            .progress
+            .active_receiver,
+        report.progress.active_receiver
+    );
+}
+
+fn rewrite_progress_report(output: &std::path::Path, value: &serde_json::Value) {
+    let bytes = serde_json::to_vec(value).unwrap();
+    fs::write(output.join("report.json"), &bytes).unwrap();
+    let mut terminal: serde_json::Value =
+        serde_json::from_slice(&fs::read(output.join("terminal.json")).unwrap()).unwrap();
+    terminal["report_bytes"] = json!(bytes.len());
+    terminal["report_sha256"] = json!(sha(&bytes));
+    fs::write(
+        output.join("terminal.json"),
+        serde_json::to_vec(&terminal).unwrap(),
+    )
+    .unwrap();
+}
+
+#[test]
+fn partial_active_progress_reopens_and_rejects_rehashed_inconsistent_counts() {
+    let fixture = Fixture::new(7, false);
+    let output = fixture.output("partial-active-progress");
+    let cancel = AtomicBool::new(false);
+    let report = wide_area_pair::run(&fixture.request, &output, &cancel, |progress| {
+        if progress.completed_receivers == 1
+            && progress
+                .active_receiver
+                .as_ref()
+                .is_some_and(|a| a.attempted_pairs > 0)
+        {
+            cancel.store(true, Ordering::Relaxed);
+        }
+    })
+    .unwrap();
+    assert_eq!(report.status, WideStatus::Cancelled);
+    assert_eq!(report.progress.completed_receivers, 1);
+    let active = report.progress.active_receiver.as_ref().unwrap();
+    assert_eq!(active.receiver_index, 1);
+    assert!(active.attempted_pairs > 0);
+    assert!(active.attempted_pairs <= active.eligible_pair_total.unwrap());
+    assert_eq!(
+        wide_area_pair::load_report(&output)
+            .unwrap()
+            .progress
+            .active_receiver,
+        report.progress.active_receiver
+    );
+    let original = serde_json::to_value(&report).unwrap();
+    let mut changes = Vec::new();
+    let mut bad = original.clone();
+    bad["progress"]["active_receiver"]["receiver_index"] = json!(0);
+    changes.push(bad);
+    let mut bad = original.clone();
+    bad["progress"]["active_receiver"]["receiver_index"] = json!(fixture.request.grid.count);
+    changes.push(bad);
+    let mut bad = original.clone();
+    bad["progress"]["active_receiver"]["eligible_pair_total"] = serde_json::Value::Null;
+    changes.push(bad);
+    let mut bad = original.clone();
+    bad["progress"]["active_receiver"]["eligible_pair_total"] = json!(0);
+    changes.push(bad);
+    // This passes the simple attempted<=total check but fails the page-derived
+    // residual: committed first-receiver attempts must not be counted again.
+    let mut bad = original.clone();
+    bad["progress"]["active_receiver"]["attempted_pairs"] = json!(0);
+    changes.push(bad);
+    let mut bad = original.clone();
+    bad["progress"]["timing_candidates"] = json!(report.progress.timing_candidates + 1);
+    changes.push(bad);
+    let mut bad = original.clone();
+    bad["progress"]
+        .as_object_mut()
+        .unwrap()
+        .remove("active_receiver");
+    changes.push(bad);
+    let mut bad = original.clone();
+    bad["progress"]["score_bound_pruned_candidates"] = json!(report.progress.timing_candidates + 1);
+    changes.push(bad);
+    let mut bad = original.clone();
+    bad["scoring_implementation"] = json!("unsupported-pruning-implementation");
+    changes.push(bad);
+    for changed in changes {
+        rewrite_progress_report(&output, &changed);
+        assert!(
+            wide_area_pair::load_report(&output).is_err(),
+            "Rehashed invalid active progress was accepted: {changed}"
+        );
+    }
+    rewrite_progress_report(&output, &original);
+    assert!(wide_area_pair::load_report(&output).is_ok());
+    // Old stopped reports intentionally had no active-receiver metadata.
+    let mut legacy = original;
+    legacy
+        .as_object_mut()
+        .unwrap()
+        .remove("scoring_implementation");
+    legacy["progress"]
+        .as_object_mut()
+        .unwrap()
+        .remove("active_receiver");
+    rewrite_progress_report(&output, &legacy);
+    let reopened_legacy = wide_area_pair::load_report(&output).unwrap();
+    assert!(reopened_legacy.progress.active_receiver.is_none());
+    assert!(reopened_legacy.scoring_implementation.is_empty());
+    assert!(
+        serde_json::to_value(&reopened_legacy)
+            .unwrap()
+            .get("scoring_implementation")
+            .is_none()
+    );
+    assert_eq!(reopened_legacy.status, WideStatus::Cancelled);
+}

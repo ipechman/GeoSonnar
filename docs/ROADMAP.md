@@ -1,6 +1,6 @@
 # Roadmap
 
-The target for GeoSonnar 0.12 is a usable experimental release, not a completed research program. The priorities below remain explicit after publication.
+GeoSonnar 0.12 is a usable experimental release, not a completed research program. The priorities below remain explicit after publication.
 
 ## Goal: worldwide discovery and local refinement in 30 minutes
 

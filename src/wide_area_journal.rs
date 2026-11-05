@@ -234,6 +234,11 @@ pub fn load_report(directory: &Path) -> Result<WidePairReport, String> {
         return Err("Wide-area saved result identity changed".into());
     }
     let report: WidePairReport = serde_json::from_slice(&bytes).map_err(|e| e.to_string())?;
+    if !report.scoring_implementation.is_empty()
+        && report.scoring_implementation != "whole_pair_first_support_cache_v1"
+    {
+        return Err("Saved wide-area scoring implementation is unsupported".into());
+    }
     if report.request_sha256 != terminal.request_sha256
         || report.progress.total_receivers != request.grid.count
         || report.progress.completed_receivers > report.progress.total_receivers
@@ -259,7 +264,26 @@ pub fn load_report(directory: &Path) -> Result<WidePairReport, String> {
     {
         return Err("Saved wide-area report has inconsistent completion or retention".into());
     }
+    if let Some(active) = &report.progress.active_receiver
+        && (active.receiver_index != report.progress.completed_receivers
+            || active.receiver_index >= report.progress.total_receivers
+            || report.status == crate::wide_area_pair::WideStatus::Completed
+            || report.source_time_origin_utc_s.is_none()
+            || active.attempted_pairs > report.progress.timing_candidates
+            || match active.eligible_pair_total {
+                Some(total) => active.attempted_pairs > total,
+                None => active.attempted_pairs != 0,
+            })
+    {
+        return Err("Saved active receiver progress is inconsistent".into());
+    }
+    let strict_pruning_accounting =
+        report.scoring_implementation == "whole_pair_first_support_cache_v1";
     let mut next = 0;
+    let mut committed_attempts = 0_u64;
+    let mut committed_scored = 0_u64;
+    let mut committed_pruned = 0_u64;
+    let mut committed_rejected = 0_u64;
     for (index, page) in report.pages.iter().enumerate() {
         if page.name != format!("receivers-{index:08}.jsonl")
             || page.first_receiver != next
@@ -285,6 +309,32 @@ pub fn load_report(directory: &Path) -> Result<WidePairReport, String> {
             {
                 return Err("Wide-area receiver coordinate/order changed".into());
             }
+            if report.progress.active_receiver.is_some() || strict_pruning_accounting {
+                committed_attempts = committed_attempts
+                    .checked_add(row.timing_candidates)
+                    .ok_or("Saved receiver timing counters overflow")?;
+            }
+            if strict_pruning_accounting {
+                let accounted = row
+                    .scored_candidates
+                    .checked_add(row.scoring_rejections)
+                    .and_then(|n| n.checked_add(row.score_bound_pruned_candidates));
+                if accounted != Some(row.timing_candidates) {
+                    return Err(
+                        "Saved receiver scoring/pruning counters differ from its timing pairs"
+                            .into(),
+                    );
+                }
+                committed_scored = committed_scored
+                    .checked_add(row.scored_candidates)
+                    .ok_or("Saved receiver score counters overflow")?;
+                committed_pruned = committed_pruned
+                    .checked_add(row.score_bound_pruned_candidates)
+                    .ok_or("Saved receiver pruning counters overflow")?;
+                committed_rejected = committed_rejected
+                    .checked_add(row.scoring_rejections)
+                    .ok_or("Saved receiver rejection counters overflow")?;
+            }
             count += 1;
             next += 1;
         }
@@ -294,6 +344,49 @@ pub fn load_report(directory: &Path) -> Result<WidePairReport, String> {
     }
     if next != report.progress.completed_receivers {
         return Err("Wide-area completed receiver inventory is incomplete".into());
+    }
+    if let Some(active) = &report.progress.active_receiver
+        && report
+            .progress
+            .timing_candidates
+            .checked_sub(committed_attempts)
+            != Some(active.attempted_pairs)
+    {
+        return Err("Saved active pair count differs from completed receiver pages".into());
+    }
+    if strict_pruning_accounting {
+        // Global attempted/scored/pruned counts include unfinished work, while
+        // report rejection totals contain only committed receiver rows. A pair
+        // may be interrupted after attempted++ but before any score or rejection.
+        let active_attempts = report
+            .progress
+            .active_receiver
+            .as_ref()
+            .map_or(0, |active| active.attempted_pairs);
+        let active_scored = report
+            .progress
+            .scored_candidates
+            .checked_sub(committed_scored);
+        let active_pruned = report
+            .progress
+            .score_bound_pruned_candidates
+            .checked_sub(committed_pruned);
+        if report
+            .progress
+            .timing_candidates
+            .checked_sub(committed_attempts)
+            != Some(active_attempts)
+            || report.scoring_rejections != committed_rejected
+            || active_scored
+                .zip(active_pruned)
+                .and_then(|(scored, pruned)| scored.checked_add(pruned))
+                .is_none_or(|finished| finished > active_attempts)
+        {
+            return Err(
+                "Saved global scoring/pruning counters differ from committed and active receivers"
+                    .into(),
+            );
+        }
     }
     Ok(report)
 }

@@ -525,6 +525,145 @@ mod tests {
         text.join("\n")
     }
     #[test]
+    fn wide_progress_distinguishes_pair_work_from_finished_locations() {
+        let mut studio = studio();
+        studio.wide.settings = reviewed(&mut studio);
+        let document = studio.document.clone();
+        let settings = studio.wide.settings.clone();
+        let undo_count = studio.undo.len();
+        studio.wide.running = true;
+        studio.wide.progress = Some(WideProgress {
+            stage: "shared_clock_pair_scoring".into(),
+            total_receivers: 50,
+            completed_receivers: 0,
+            scanned_passes: 1234,
+            timing_candidates: 1248,
+            scored_candidates: 765,
+            score_bound_pruned_candidates: 123,
+            ..Default::default()
+        });
+        let before = serde_json::to_value(&studio.wide.progress).unwrap();
+        let text = painted_text(|ui| studio.wide_progress_ui(ui));
+        for expected in [
+            "Comparing Doppler pairs",
+            "Finished locations: 0 / 50",
+            "50 remaining",
+            "Timing-compatible pairs tried: 1248",
+            "Valid pair scores: 765",
+            "Pairs excluded by score bound: 123",
+            "Flight passes examined: 1234",
+            "unfinished location",
+            "only after all its eligible pairs are examined",
+        ] {
+            assert!(text.contains(expected), "Missing {expected}: {text}");
+        }
+        for absent in [
+            "shared_clock_pair_scoring",
+            "matches found",
+            "ETA",
+            "%",
+            "Location 1",
+        ] {
+            assert!(!text.contains(absent), "Unexpected {absent}: {text}");
+        }
+        assert_eq!(serde_json::to_value(&studio.wide.progress).unwrap(), before);
+        assert_eq!(studio.document, document);
+        assert_eq!(studio.wide.settings, settings);
+        assert_eq!(studio.undo.len(), undo_count);
+        assert!(studio.wide.running && !studio.wide.cancel.load(Ordering::Relaxed));
+    }
+    #[test]
+    fn wide_progress_shows_source_verification_without_claiming_search_completion() {
+        let mut studio = studio();
+        studio.wide.settings = reviewed(&mut studio);
+        let document = studio.document.clone();
+        let settings = studio.wide.settings.clone();
+        studio.wide.running = true;
+        for (stage, label, completed) in [
+            ("verifying_source", "Verifying flight data", 0),
+            ("preparing_index", "Preparing the location search", 0),
+            ("verifying_source_final", "Checking source files again", 50),
+        ] {
+            studio.wide.progress = Some(WideProgress {
+                stage: stage.into(),
+                total_receivers: 50,
+                completed_receivers: completed,
+                ..Default::default()
+            });
+            let before = serde_json::to_value(&studio.wide.progress).unwrap();
+            let text = painted_text(|ui| studio.wide_progress_ui(ui));
+            assert!(text.contains(label), "Missing {label}: {text}");
+            assert!(text.contains(&format!("Finished locations: {completed} / 50")));
+            assert!(text.contains("Timing-compatible pairs tried: 0"));
+            assert!(text.contains("Valid pair scores: 0"));
+            for absent in [
+                stage,
+                "Comparing Doppler pairs",
+                "Search complete",
+                "matches found",
+                "ETA",
+                "%",
+                "Location 1",
+            ] {
+                assert!(!text.contains(absent), "Unexpected {absent}: {text}");
+            }
+            assert_eq!(serde_json::to_value(&studio.wide.progress).unwrap(), before);
+            assert_eq!(studio.document, document);
+            assert_eq!(studio.wide.settings, settings);
+            assert!(studio.undo.is_empty());
+            assert!(studio.wide.running && !studio.wide.cancel.load(Ordering::Relaxed));
+        }
+    }
+    #[test]
+    fn wide_progress_displays_known_pair_total_without_finishing_the_location() {
+        let mut studio = studio();
+        studio.wide.settings = reviewed(&mut studio);
+        let document = studio.document.clone();
+        let settings = studio.wide.settings.clone();
+        studio.wide.running = true;
+        for (total, attempted) in [(None, 0), (Some(2000), 1248), (Some(1248), 1248)] {
+            studio.wide.progress = Some(WideProgress {
+                stage: if total.is_none() {
+                    "counting_timing_pairs"
+                } else {
+                    "shared_clock_pair_scoring"
+                }
+                .into(),
+                total_receivers: 50,
+                completed_receivers: 0,
+                timing_candidates: attempted,
+                active_receiver: Some(wide_area_pair::WideActiveReceiverProgress {
+                    receiver_index: 0,
+                    eligible_pair_total: total,
+                    attempted_pairs: attempted,
+                }),
+                ..Default::default()
+            });
+            let before = serde_json::to_value(&studio.wide.progress).unwrap();
+            let text = painted_text(|ui| studio.wide_progress_ui(ui));
+            assert!(text.contains("Finished locations: 0 / 50"));
+            assert!(text.contains("Current location: 1 / 50"));
+            if let Some(total) = total {
+                assert!(text.contains(&format!(
+                    "Pairs tried at this location: {attempted} / {total}"
+                )));
+                assert!(text.contains("unfinished location"));
+            } else {
+                assert!(text.contains("Counting timing-compatible pairs"));
+                assert!(text.contains("Finding and counting flight pairs at this location"));
+                assert!(!text.contains("Pairs tried at this location:"));
+            }
+            for absent in ["Finished locations: 1 /", "Search complete", "ETA", "%"] {
+                assert!(!text.contains(absent), "Unexpected {absent}: {text}");
+            }
+            assert_eq!(serde_json::to_value(&studio.wide.progress).unwrap(), before);
+            assert_eq!(studio.document, document);
+            assert_eq!(studio.wide.settings, settings);
+            assert!(studio.undo.is_empty());
+            assert!(studio.wide.running && !studio.wide.cancel.load(Ordering::Relaxed));
+        }
+    }
+    #[test]
     fn cost_preview_shows_declared_counts_and_necessary_only_budget_warnings() {
         let mut studio = studio();
         let mut settings = reviewed(&mut studio);
@@ -873,6 +1012,7 @@ mod tests {
         let source = source();
         studio.wide.source = Some(source.clone());
         let report = WidePairReport {
+            scoring_implementation: String::new(),
             schema_version: 1,
             request_sha256: "c".repeat(64),
             source: source.binding.clone(),
@@ -1266,6 +1406,7 @@ mod tests {
         let mut studio = studio();
         let source = source();
         let report = WidePairReport {
+            scoring_implementation: String::new(),
             schema_version: 1,
             request_sha256: "c".repeat(64),
             source: source.binding,
@@ -1597,6 +1738,25 @@ fn physical_range_ui(ui: &mut egui::Ui, label: &str, range: &mut [f64; 2], unit:
                 .speed(speed),
         );
     });
+}
+fn wide_progress_stage_label(stage: &str) -> &'static str {
+    match stage {
+        "verifying_source" => "Verifying flight data",
+        "preparing_index" => "Preparing the location search",
+        "local_cpa_census" => "Finding candidate flight passes",
+        "counting_timing_pairs" => "Counting timing-compatible pairs",
+        "shared_clock_pair_scoring" => "Comparing Doppler pairs",
+        "verifying_source_final" => "Checking source files again",
+        "estimated" => "Estimate ready",
+        "finished" => "Run finished",
+        _ => "Working",
+    }
+}
+fn score_bound_progress_ui(ui: &mut egui::Ui, count: u64) {
+    if count > 0 {
+        ui.label(format!("Pairs excluded by score bound: {count}"))
+            .on_hover_text("These pairs cannot improve the retained rankings. They are counted separately from valid scores; their acoustic support was not fully evaluated.");
+    }
 }
 fn stop_guidance(report: &WidePairReport) -> Option<&'static str> {
     use wide_area_pair::WideStatus;
@@ -2450,8 +2610,50 @@ impl Studio {
             }
         });
         if let Some(progress) = &self.wide.progress {
-            ui.label(format!("{} · {} / {} receivers · {} remaining · {} pass checks · {} timing pairs · {} scored", progress.stage,
-                progress.completed_receivers, progress.total_receivers, progress.total_receivers.saturating_sub(progress.completed_receivers), progress.scanned_passes, progress.timing_candidates, progress.scored_candidates));
+            ui.strong(wide_progress_stage_label(&progress.stage));
+            ui.label(format!(
+                "Finished locations: {} / {} · {} remaining",
+                progress.completed_receivers,
+                progress.total_receivers,
+                progress
+                    .total_receivers
+                    .saturating_sub(progress.completed_receivers)
+            ));
+            ui.label(format!(
+                "Timing-compatible pairs tried: {} · Valid pair scores: {}",
+                progress.timing_candidates, progress.scored_candidates
+            ));
+            score_bound_progress_ui(ui, progress.score_bound_pruned_candidates);
+            ui.label(format!(
+                "Flight passes examined: {}",
+                progress.scanned_passes
+            ));
+            if let Some(active) = &progress.active_receiver {
+                ui.label(format!(
+                    "Current location: {} / {}",
+                    active.receiver_index.saturating_add(1),
+                    progress.total_receivers
+                ));
+                if let Some(total) = active.eligible_pair_total {
+                    ui.label(format!(
+                        "Pairs tried at this location: {} / {}",
+                        active.attempted_pairs, total
+                    ));
+                } else {
+                    muted(ui, "Finding and counting flight pairs at this location.");
+                }
+            }
+            if progress.completed_receivers < progress.total_receivers
+                && (matches!(
+                    progress.stage.as_str(),
+                    "local_cpa_census" | "shared_clock_pair_scoring"
+                ) || progress.timing_candidates > 0)
+            {
+                muted(
+                    ui,
+                    "Pair counts may include work on an unfinished location. A location enters results only after all its eligible pairs are examined.",
+                );
+            }
         }
         ui.ctx().request_repaint_after(Duration::from_millis(200));
     }
@@ -2715,6 +2917,7 @@ impl Studio {
                 .saturating_sub(report.progress.completed_receivers)
         ));
         ui.label(format!("Saved: {}", display_path(&report.output_directory)));
+        score_bound_progress_ui(ui, report.progress.score_bound_pruned_candidates);
         if let Some(error) = &report.error {
             ui.colored_label(tone(ui, AMBER), error);
         }

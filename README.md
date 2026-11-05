@@ -35,9 +35,9 @@ See the [Windows guide](docs/WINDOWS_GUI.txt) for media setup, data import and t
 - Managed data, reusable flight indexes, background jobs and cancellation.
 - Saved cases, input identities, run history and a command-line pipeline.
 
-## Status: experimental
+## Status: experimental 0.12
 
-The current portable download is **0.11.5**. Version **0.12 is in preparation** and focuses on usability and search throughput. Its planned changes include clearer per-location progress and reuse or safe exclusion of repeated Doppler calculations. **A lower score is a better fit under the selected model—not a calibrated probability or a verified location.**
+This release focuses on usability and search throughput. It adds clearer per-location progress and reuses or safely excludes repeated Doppler calculations. **A lower score is a better fit under the selected model—not a calibrated probability or a verified location.**
 
 Broad searches remain expensive. The next performance goal is **worldwide discovery followed by local refinement within 30 minutes**. That goal is **not achieved by 0.12**; see its [acceptance criteria and next steps](docs/ROADMAP.md).
 

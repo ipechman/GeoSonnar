@@ -1,4 +1,23 @@
-GeoSonnar 0.11.5 - Windows review workspace
+GeoSonnar 0.12.0 - Windows review workspace
+
+VERSION 0.12.0 - SEARCH PROGRESS AND DOPPLER THROUGHPUT
+
+Search progress separates finished locations from attempted flight pairs and valid
+scores. After scanning flights at a location, it shows that location's exact number
+of timing-compatible pairs. A location remains unfinished until its result is saved;
+attempting its last pair does not by itself complete it.
+
+Wide-area Doppler scoring reuses first-event fits and deterministic missing-coverage
+results, and safely excludes whole pairs that cannot improve either retained ranking.
+Excluded pairs are counted separately; they are not valid scores or proven acoustic
+rejections. Reviewed traces, search bounds and the scoring method stay explicit.
+
+This is an experimental release. Worldwide discovery followed by local refinement
+within 30 minutes is a development goal, not a capability claimed by this version.
+Independent field accuracy, false-match calibration and resuming work inside an
+unfinished location remain open. See docs/ROADMAP.md in the source repository.
+
+The earlier release notes below are historical and retain their original test scope.
 
 VERSION 0.11.5 - REUSE COMPLETED INDEXED IMPORTS
 In Data > Stored datasets, select the original archive and import settings.
