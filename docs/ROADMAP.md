@@ -2,6 +2,12 @@
 
 GeoSonnar 0.12 is a usable experimental release, not a completed research program. The priorities below remain explicit after publication.
 
+## Next release: 0.13 organization and maintainability
+
+The next release will make the code, tests, documentation and release process easier to understand and change. See the [0.13 implementation plan](RELEASE_0_13_PLAN.md) for concrete milestones and completion criteria. It starts with a code map and a self-contained public validation workflow, then separates responsibilities in data management and GUI coordination through small, behavior-preserving changes.
+
+The worldwide performance target below remains a project goal. Its implementation follows this organization work; it is not a requirement for completing 0.13.
+
 ## Goal: worldwide discovery and local refinement in 30 minutes
 
 **Status: not achieved.** The intended workflow finds promising locations worldwide, then refines those candidates locally. It does not promise exhaustive scoring of every worldwide cell at an arbitrary resolution.
@@ -16,7 +22,7 @@ Before claiming this goal is met:
 - Measure candidate recall and false matches alongside runtime using independent known-location cases, weak evidence and misleading alternatives. A fast wrong or unsupported result is not success.
 - Run headless Windows benchmarks, record peak resources and cancellation behavior, and publish the workload and results. The development machine's 20% CPU test limit must be stated when used; it is not a hidden hardware assumption.
 
-## Next steps
+## Subsequent performance and validation work
 
 | Priority | Deliverable | Done when |
 | --- | --- | --- |

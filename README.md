@@ -37,7 +37,9 @@ See the [Windows guide](docs/WINDOWS_GUI.txt) for media setup, data import and t
 
 ## Status: experimental 0.12
 
-This release focuses on usability and search throughput. It adds clearer per-location progress and reuses or safely excludes repeated Doppler calculations. **A lower score is a better fit under the selected model—not a calibrated probability or a verified location.**
+This release focuses on usability and search throughput. It adds clearer per-location progress and reuses or safely excludes repeated Doppler calculations. Lower Doppler error is better; higher thunder-envelope similarity is better. **Neither is a calibrated probability or a verified location.**
+
+Next: **[0.13 — project organization and maintainability](docs/RELEASE_0_13_PLAN.md)**, with clearer module boundaries and a reproducible contributor workflow.
 
 Broad searches remain expensive. The next performance goal is **worldwide discovery followed by local refinement within 30 minutes**. That goal is **not achieved by 0.12**; see its [acceptance criteria and next steps](docs/ROADMAP.md).
 
