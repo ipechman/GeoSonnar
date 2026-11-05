@@ -35,7 +35,9 @@ pub fn is_memory_limit_error(message: &str) -> bool {
 
 pub fn validate_index_memory_limit(bytes: u64) -> Result<(), String> {
     if !(64 * 1024 * 1024..=4 * 1024 * 1024 * 1024).contains(&bytes) {
-        return Err(format!("{INDEX_MEMORY_LIMIT_PREFIX}: declare64MiB..4GiB"));
+        return Err(format!(
+            "{INDEX_MEMORY_LIMIT_PREFIX}: declare 0.0625 GiB..4.000 GiB"
+        ));
     }
     Ok(())
 }
@@ -266,7 +268,11 @@ impl LegacyTrackStoreWriter {
     ) -> Result<Self, String> {
         crate::adsblol::validate_config(config)?;
         if !(1024 * 1024..=1_000_000_000_000).contains(&limit) {
-            return Err("Declare a track-store disk budget between1MiB and1TB".into());
+            return Err(format!(
+                "Declare a track-store disk budget between {} and {}",
+                crate::data_size::format_gib(1024 * 1024),
+                crate::data_size::format_gib(1_000_000_000_000)
+            ));
         }
         Ok(Self {
             root: root.into(),

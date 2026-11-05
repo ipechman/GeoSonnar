@@ -261,3 +261,96 @@ fn data_progress_cancel_errors_and_source_assumptions_remain_visible_in_both_vie
             .is_none()
     );
 }
+
+fn assert_gib_only(output: &egui::FullOutput) -> String {
+    let text = labels(output)
+        .into_iter()
+        .map(|(text, _)| text)
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(text.contains("GiB"), "Missing GiB presentation: {text}");
+    for old in [" MiB", " MB", " GB", " bytes", " KiB", " KB"] {
+        assert!(!text.contains(old), "Unexpected size unit {old}: {text}");
+    }
+    text
+}
+
+#[test]
+fn data_request_panels_use_gib_without_changing_exact_default_allowances() {
+    let mut studio = studio();
+    assert_eq!(studio.data.max_bytes, 6_000_000_000);
+    assert_eq!(studio.data.history.request.max_download_bytes, 100_000_000);
+    assert_eq!(studio.data.fmi.request.max_total_bytes, 64 * 1_048_576);
+    let before = studio.document.clone();
+    // Odd-byte values make an accidental display-roundtrip visible.
+    studio.data.max_bytes += 1;
+    studio.data.history.request.max_download_bytes += 1;
+    studio.data.fmi.request.max_total_bytes -= 1;
+    for source in [
+        SourceAction::Local,
+        SourceAction::Adsb,
+        SourceAction::Lightning,
+    ] {
+        let ctx = egui::Context::default();
+        studio.data.source_action = source;
+        let output = settled(&mut studio, &ctx, Pane::Data);
+        assert_gib_only(&output);
+        assert_eq!(studio.data.max_bytes, 6_000_000_001);
+        assert_eq!(studio.import_request().max_bytes, 6_000_000_001);
+        assert_eq!(studio.data.history.request.max_download_bytes, 100_000_001);
+        assert_eq!(studio.data.fmi.request.max_total_bytes, 64 * 1_048_576 - 1);
+    }
+    assert_eq!(studio.document, before);
+    assert!(studio.undo.is_empty() && !studio.busy() && !studio.data.refresh_requested);
+}
+
+#[test]
+fn transfer_progress_uses_gib_for_small_payloads_and_distinguishes_one_byte_limit() {
+    let mut studio = studio();
+    studio.busy = Some("Synthetic transfer".into());
+    studio.data.show_history();
+    studio.data.downloading = Some("history".into());
+    studio.data.history.progress = Some(geosonnar::adsblol_history::HistoryProgress {
+        stage: "Receiving fixture".into(),
+        completed_files: 1,
+        selected_files: 3,
+        http_payload_bytes: 1_073_741_824,
+        max_download_bytes: 1_073_741_825,
+    });
+    let text = assert_gib_only(&settled(&mut studio, &egui::Context::default(), Pane::Data));
+    assert!(text.contains("1.000000000 GiB / 1.000000001 GiB"));
+    studio.data.show_fmi();
+    studio.data.downloading = Some("fmi".into());
+    studio.data.fmi.progress = Some(data_catalog::fmi::FmiProgress {
+        chunks_total: 3,
+        chunks_complete: 1,
+        transferred_bytes: 1,
+        message: "Receiving fixture".into(),
+    });
+    let text = assert_gib_only(&settled(&mut studio, &egui::Context::default(), Pane::Data));
+    assert!(text.contains("0.000000001 GiB received"));
+    assert!(!studio.download_cancel.load(Ordering::Relaxed));
+}
+
+#[test]
+fn source_record_gib_display_preserves_original_json_and_non_size_counts() {
+    let original = serde_json::json!({
+        "bytes": 1,
+        "maximum_bytes": 1_073_741_824u64,
+        "points": 1048576,
+        "nested": [{"source_bytes": 256, "chunks": 3, "source": "provider"}],
+        "byte_order": "little-endian",
+        "bytes_text": "Retained provider note"
+    });
+    let before = serde_json::to_vec(&original).unwrap();
+    let display = source_record_gib(&original);
+    assert_eq!(display["bytes"], "0.000000001 GiB");
+    assert_eq!(display["maximum_bytes"], "1.000 GiB");
+    assert_eq!(display["nested"][0]["source_bytes"], size(256));
+    for key in ["points", "byte_order", "bytes_text"] {
+        assert_eq!(display[key], original[key]);
+    }
+    assert_eq!(display["nested"][0]["chunks"], 3);
+    assert_eq!(display["nested"][0]["source"], "provider");
+    assert_eq!(serde_json::to_vec(&original).unwrap(), before);
+}

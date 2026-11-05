@@ -94,7 +94,7 @@ pub(super) fn read<T: serde::de::DeserializeOwned>(path: &Path) -> Result<T, Str
     regular(path, false)?;
     let file = File::open(path).map_err(|e| e.to_string())?;
     if file.metadata().map_err(|e| e.to_string())?.len() > MAX_METADATA_BYTES {
-        return Err("Catalog metadata exceeds 128 MiB".into());
+        return Err("Catalog metadata exceeds 0.125 GiB".into());
     }
     let mut bytes = Vec::new();
     file.take(MAX_METADATA_BYTES + 1)
@@ -109,7 +109,7 @@ pub(super) fn read<T: serde::de::DeserializeOwned>(path: &Path) -> Result<T, Str
 pub(super) fn write_new(path: &Path, value: &impl Serialize) -> Result<(), String> {
     let bytes = serde_json::to_vec_pretty(value).map_err(|e| e.to_string())?;
     if bytes.len() as u64 > MAX_METADATA_BYTES {
-        return Err("Catalog metadata exceeds 128 MiB".into());
+        return Err("Catalog metadata exceeds 0.125 GiB".into());
     }
     let staged = path.with_file_name(format!(".pending-{}", nonce()?));
     let mut file = OpenOptions::new()

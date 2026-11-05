@@ -156,5 +156,5 @@ pub fn adsblol_progress(manifest: &Path, id: &str) -> Result<DownloadProgress, S
             }
         }
     }
-    Ok(DownloadProgress{planned_bytes:plan.planned_bytes,downloaded_bytes:downloaded.min(plan.planned_bytes),complete:entry.format=="adsblol_archive" && downloaded==plan.planned_bytes && !directory.join("deletion.json").exists(),notes:vec!["Byte counts are progress, not a checksum verdict. Full SHA-256 verification completes before registration.".into(),entry.notes]})
+    Ok(DownloadProgress{planned_bytes:plan.planned_bytes,downloaded_bytes:downloaded.min(plan.planned_bytes),complete:entry.format=="adsblol_archive" && downloaded==plan.planned_bytes && !directory.join("deletion.json").exists(),notes:vec!["Transfer progress is not a checksum verdict. Full SHA-256 verification completes before registration.".into(),entry.notes]})
 }

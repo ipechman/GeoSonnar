@@ -248,7 +248,7 @@ pub(super) struct LibraryState {
     label: String,
     date: String,
     url: String,
-    max_gb: f64,
+    max_bytes: u64,
     notes: String,
     selected: Option<String>,
     delete_pending: Option<String>,
@@ -285,7 +285,7 @@ impl Default for LibraryState {
             label: String::new(),
             date: String::new(),
             url: String::new(),
-            max_gb: 6.0,
+            max_bytes: 6_000_000_000,
             notes: String::new(),
             selected: None,
             delete_pending: None,
@@ -359,10 +359,31 @@ fn kind_name(kind: DataKind) -> &'static str {
     }
 }
 fn size(bytes: u64) -> String {
-    if bytes >= 1_000_000_000 {
-        format!("{:.2} GB", bytes as f64 / 1e9)
-    } else {
-        format!("{:.1} MB", bytes as f64 / 1e6)
+    geosonnar::data_size::format_gib(bytes)
+}
+
+/// A display-only copy: provider metadata and exported machine records remain exact.
+fn source_record_gib(value: &serde_json::Value) -> serde_json::Value {
+    match value {
+        serde_json::Value::Object(fields) => serde_json::Value::Object(
+            fields
+                .iter()
+                .map(|(key, value)| {
+                    let display = if (key == "bytes" || key.ends_with("_bytes"))
+                        && let Some(bytes) = value.as_u64()
+                    {
+                        serde_json::Value::String(size(bytes))
+                    } else {
+                        source_record_gib(value)
+                    };
+                    (key.clone(), display)
+                })
+                .collect(),
+        ),
+        serde_json::Value::Array(items) => {
+            serde_json::Value::Array(items.iter().map(source_record_gib).collect())
+        }
+        other => other.clone(),
     }
 }
 
@@ -704,7 +725,7 @@ impl Studio {
             date_utc: (!self.data.date.trim().is_empty()).then(|| self.data.date.trim().to_owned()),
             bounds: self.document.as_ref().map(|d| d.map.bounds),
             notes: self.data.notes.clone(),
-            max_bytes: (self.data.max_gb * 1e9) as u64,
+            max_bytes: self.data.max_bytes,
         }
     }
     pub fn library_ui(&mut self, ui: &mut egui::Ui) {
@@ -745,7 +766,7 @@ impl Studio {
                     ui.label("UTC date");accessible_text(ui,"data_date",&mut self.data.date,"YYYY-MM-DD",false,110.0);
                     if ui.button("Use recording date").clicked()&&let Some(doc)=&self.document&&workspace::parse_utc(&doc.recording_start_utc).is_ok(){self.data.date=doc.recording_start_utc.trim()[..10].to_owned();}
                 }
-                if self.data.source_action!=SourceAction::Atmosphere && !(self.data.source_action==SourceAction::Adsb && self.data.history.enabled || self.data.source_action==SourceAction::Lightning && self.data.fmi.enabled) { ui.add(egui::DragValue::new(&mut self.data.max_gb).range(0.001..=100.0).speed(0.1).suffix(" GB limit")); }
+                if self.data.source_action!=SourceAction::Atmosphere && !(self.data.source_action==SourceAction::Adsb && self.data.history.enabled || self.data.source_action==SourceAction::Lightning && self.data.fmi.enabled) { ui.label("Size allowance (GiB)"); data_size_input(ui, &mut self.data.max_bytes, 1_000_000..=100_000_000_000); }
             });
             ui.horizontal_wrapped(|ui|{
                 if self.data.source_action==SourceAction::Local&&ui.add_enabled(!self.busy(),egui::Button::new("Import local file…")).clicked()&&let Some(path)=rfd::FileDialog::new().pick_file(){
@@ -771,7 +792,7 @@ impl Studio {
                     ui.strong("ADSB.lol historical archive");
                     muted(ui,"Check a date first. The provider supplies global day archives; geographic and time filtering happens during import.");
                     if ui.add_enabled(!self.busy(),egui::Button::new("Check availability & download size")).clicked(){
-                        let request=geosonnar::adsblol_acquisition::AcquisitionRequest{date_utc:self.data.date.trim().into(),instance:None,max_download_bytes:(self.data.max_gb*1e9)as u64};
+                        let request=geosonnar::adsblol_acquisition::AcquisitionRequest{date_utc:self.data.date.trim().into(),instance:None,max_download_bytes:self.data.max_bytes};
                         let bounds=self.document.as_ref().map(|d|d.map.bounds);let manifest=manifest.clone();
                         self.spawn(ui.ctx(),"Requesting archive availability…",move||data_catalog::plan_adsblol(&manifest,&request,bounds).map(ResultValue::Planned));
                     }
@@ -823,7 +844,15 @@ impl Studio {
                     if ui.add_enabled(!self.busy()&&item.status!="deleted",egui::Button::new("Delete managed copy…")).clicked(){self.data.delete_pending=Some(item.entry.id.clone());}
                 });
                 if item.entry.format=="adsblol_archive"{self.archive_import_controls(ui,&item.entry);}
-                egui::CollapsingHeader::new("Files and source record").show(ui,|ui|{let _=catalog_file_list(ui,&item.entry);ui.label(display_path_text(&serde_json::to_string_pretty(&item.entry.source).unwrap_or_default()));});
+                egui::CollapsingHeader::new("Files and source record").show(ui,|ui|{
+                    let _=catalog_file_list(ui,&item.entry);
+                    ui.strong("Source record (GiB display)");
+                    muted(ui,"Sizes use GiB here. The original machine record is retained unchanged.");
+                    if ui.button("Copy original JSON").clicked() {
+                        ui.ctx().copy_text(serde_json::to_string_pretty(&item.entry.source).unwrap_or_default());
+                    }
+                    ui.label(display_path_text(&serde_json::to_string_pretty(&source_record_gib(&item.entry.source)).unwrap_or_default()));
+                });
             }
             egui::CollapsingHeader::new("Lightning interchange format").show(ui,|ui|{ui.monospace("id,time_utc_s,latitude_deg,longitude_deg,altitude_m,intensity");ui.label("UTF-8 CSV; first four columns required. Time is Unix UTC seconds. Altitude and intensity are optional. JSON accepts {schema_version:1,strikes:[…]} with the same field names. Keep the provider name and altitude assumptions with the import.");});
             }
@@ -853,8 +882,8 @@ impl Studio {
             if let Some(progress) = &self.data.progress {
                 let fraction = progress.downloaded_bytes as f32 / progress.planned_bytes.max(1) as f32;
                 ui.add(egui::ProgressBar::new(fraction.clamp(0.0,1.0))
-                    .text(format!("{} / {}",size(progress.downloaded_bytes),size(progress.planned_bytes))));
-            } else { ui.spinner(); }
+                    .text({ let (received, allowed) = geosonnar::data_size::format_gib_pair(progress.downloaded_bytes, progress.planned_bytes); format!("{received} / {allowed}") }));
+            } else { crate::gui::activity::indicator(ui); }
             if ui.button("Cancel data transfer").clicked() {
                 self.download_cancel.store(true,Ordering::Relaxed);
                 self.notice=Some((false,"Cancellation requested. Historical requests stop the active transfer and preserve an incomplete receipt; day archives stop after the current chunk/retry and retain reusable parts.".into()));
@@ -865,20 +894,20 @@ impl Studio {
             && let Some(progress) = &self.data.history.progress
         {
             ui.label(format!(
-                "Aircraft data: {} / {} files · {:.1} MB received",
+                "Aircraft data: {} / {} files · {} received",
                 progress.completed_files,
                 progress.selected_files,
-                progress.http_payload_bytes as f64 / 1e6
+                size(progress.http_payload_bytes)
             ));
         }
         if self.data.downloading.as_deref() == Some("fmi")
             && let Some(progress) = &self.data.fmi.progress
         {
             ui.label(format!(
-                "Lightning data: {} / {} chunks · {:.1} MiB received",
+                "Lightning data: {} / {} chunks · {} received",
                 progress.chunks_complete,
                 progress.chunks_total,
-                progress.transferred_bytes as f64 / 1_048_576.0
+                size(progress.transferred_bytes)
             ));
         }
         if !self.detailed_controls && self.data.view == LibraryView::Stored {
@@ -929,7 +958,7 @@ impl Studio {
                     requests::plan_terrain(
                         d.map.bounds,
                         self.data.terrain_resolution,
-                        (self.data.max_gb * 1e9) as u64,
+                        self.data.max_bytes,
                     )
                 });
             if self
@@ -1100,7 +1129,10 @@ impl Studio {
                     LightningFormat::Json,
                     "JSON",
                 );
-                ui.label("64 MiB maximum export; download uses the smaller selected size limit.");
+                ui.label(format!(
+                    "{} maximum export; download uses the smaller selected size limit.",
+                    size(requests::MAX_LIGHTNING_BYTES)
+                ));
             });
             if ui
                 .add_enabled(
@@ -1113,7 +1145,7 @@ impl Studio {
                 let url = self.data.url.trim().to_owned();
                 let format = self.data.lightning_format;
                 let notes = self.data.notes.clone();
-                let bytes = ((self.data.max_gb * 1e9) as u64).min(requests::MAX_LIGHTNING_BYTES);
+                let bytes = self.data.max_bytes.min(requests::MAX_LIGHTNING_BYTES);
                 self.download_cancel = Arc::new(AtomicBool::new(false));
                 let cancel = self.download_cancel.clone();
                 self.data.downloading = Some("https".into());
@@ -1262,7 +1294,7 @@ impl Studio {
         };
         self.spawn(
             ctx,
-            "Checking dataset bytes and loading the selected layer…",
+            "Checking dataset contents and loading the selected layer…",
             move || {
                 let files = data_catalog::verified_files(&manifest, &id)?;
                 let path = files

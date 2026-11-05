@@ -179,7 +179,10 @@ pub fn import_adsblol_indexed_with_limits(
     cancel: &AtomicBool,
 ) -> Result<CatalogEntry, String> {
     if !(64 * 1024 * 1024..=1024_u64.pow(4)).contains(&max_disk_bytes) {
-        return Err("Indexed import needs a declared disk budget from 64 MiB to 1 TiB".into());
+        return Err(
+            "Indexed import needs a declared storage allowance from 0.0625 GiB to 1024.000 GiB"
+                .into(),
+        );
     }
     crate::track_store::validate_index_memory_limit(max_index_memory_bytes)?;
     import_adsblol_archive_inner(

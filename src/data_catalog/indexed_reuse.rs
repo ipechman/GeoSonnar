@@ -51,7 +51,7 @@ fn reuse_index_header<T: serde::de::DeserializeOwned>(
     let file = File::open(path).map_err(|e| e.to_string())?;
     let length = file.metadata().map_err(|e| e.to_string())?.len();
     if length > 64 * 1024 * 1024 {
-        return Err("Native index metadata exceeds64MiB".into());
+        return Err("Native index metadata exceeds 0.0625 GiB".into());
     }
     // Stream ignored pass/page fields instead of allocating a second full index
     // image merely to extract its provenance. Check each bounded underlying read.
@@ -177,7 +177,7 @@ fn indexed_reuse_match(
         }
         registered_bytes = registered_bytes
             .checked_add(file.bytes)
-            .ok_or("Saved index byte count overflow")?;
+            .ok_or("Saved index size total overflow")?;
     }
     let primary = value
         .files
@@ -306,7 +306,7 @@ pub fn verify_indexed_reuse_with_checkpoint(
     checkpoint()?;
     if !(64 * 1024 * 1024..=1024_u64.pow(4)).contains(&max_disk_bytes) {
         return Err(
-            "Saved indexed-data size limit must be64MiB..1TiB; reuse creates no new copy".into(),
+            "Saved indexed-data storage allowance must be 0.0625 GiB..1024.000 GiB; reuse creates no new copy".into(),
         );
     }
     crate::track_store::validate_index_memory_limit(max_index_memory_bytes)?;

@@ -77,7 +77,10 @@ fn read_input<T: DeserializeOwned>(path: &Path) -> Result<(T, InputReceipt), Str
         .read_to_end(&mut bytes)
         .map_err(|e| e.to_string())?;
     if bytes.len() as u64 > MAX_JSON_BYTES {
-        return Err("Envelope configuration/observation exceeds 8 MiB".into());
+        return Err(format!(
+            "Envelope configuration/observation exceeds {}",
+            crate::data_size::format_gib(MAX_JSON_BYTES)
+        ));
     }
     let text = std::str::from_utf8(&bytes)
         .map_err(|_| "Input must be UTF-8 JSON")?

@@ -250,7 +250,8 @@ fn bounded_read(path: &Path, limit: u64) -> Result<(Vec<u8>, Dependency), String
     let metadata = file.metadata().map_err(|e| e.to_string())?;
     if !metadata.is_file() || metadata.len() > limit {
         return Err(format!(
-            "Review input is not a file or exceeds its {limit}-byte limit: {}",
+            "Review input is not a file or exceeds its {} limit: {}",
+            crate::data_size::format_gib(limit),
             path.display()
         ));
     }

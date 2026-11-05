@@ -189,7 +189,7 @@ pub fn trace_member_name(path: &Path) -> Result<Option<String>, String> {
 
 pub fn decode_member(bytes: &[u8]) -> Result<String, String> {
     if bytes.len() as u64 > MAX_COMPRESSED_MEMBER {
-        return Err("Trace member exceeds compressed byte limit".into());
+        return Err("Trace member exceeds its compressed-data allowance".into());
     }
     let mut output = Vec::new();
     if bytes.starts_with(&[0x1f, 0x8b]) {
@@ -206,7 +206,7 @@ pub fn decode_member(bytes: &[u8]) -> Result<String, String> {
         output.extend_from_slice(bytes);
     }
     if output.len() as u64 > MAX_DECODED_MEMBER {
-        return Err("Trace exceeds decoded byte limit".into());
+        return Err("Trace exceeds its decoded-data allowance".into());
     }
     String::from_utf8(output).map_err(|_| "Trace JSON is not UTF-8".into())
 }
@@ -420,7 +420,7 @@ fn import_archive_inner(
         .parts
         .iter()
         .try_fold(0u64, |sum, part| sum.checked_add(part.bytes))
-        .ok_or("Archive byte count overflow")?;
+        .ok_or("Archive size total overflow")?;
     if !total_bytes.is_multiple_of(512) {
         return Err("Archive is not a complete sequence of TAR blocks".into());
     }

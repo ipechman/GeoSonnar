@@ -887,9 +887,10 @@ struct BoundedBytes {
 impl Write for BoundedBytes {
     fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
         if (self.bytes.len() as u64).saturating_add(bytes.len() as u64) > self.limit {
-            return Err(std::io::Error::other(
-                "Replay snapshot exceeds 256 MiB; export results without replay data or reduce source layers",
-            ));
+            return Err(std::io::Error::other(format!(
+                "Replay snapshot exceeds {}; export results without replay data or reduce source layers",
+                crate::data_size::format_gib(self.limit)
+            )));
         }
         self.bytes.extend_from_slice(bytes);
         Ok(bytes.len())

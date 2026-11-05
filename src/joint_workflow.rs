@@ -75,7 +75,10 @@ fn read_request(path: &Path) -> Result<(JointRequest, InputReceipt), String> {
         .read_to_end(&mut bytes)
         .map_err(|e| e.to_string())?;
     if bytes.len() as u64 > joint_evidence::MAX_REQUEST_BYTES {
-        return Err("Joint request exceeds16MiB".into());
+        return Err(format!(
+            "Joint request exceeds {}",
+            crate::data_size::format_gib(16 * 1024 * 1024)
+        ));
     }
     let value = serde_json::from_str(
         std::str::from_utf8(&bytes)
@@ -164,7 +167,10 @@ fn unchanged(inputs: &[InputReceipt]) -> Result<(), String> {
 fn fresh_json(path: &Path, value: &impl Serialize) -> Result<(), String> {
     let mut bytes = serde_json::to_vec_pretty(value).map_err(|e| e.to_string())?;
     if bytes.len() as u64 > 64 * 1024 * 1024 {
-        return Err("Joint artifact exceeds64MiB".into());
+        return Err(format!(
+            "Joint artifact exceeds {}",
+            crate::data_size::format_gib(64 * 1024 * 1024)
+        ));
     }
     bytes.push(b'\n');
     let mut file = fs::OpenOptions::new()

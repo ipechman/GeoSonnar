@@ -1,6 +1,15 @@
 //! Search settings, source bindings and reply types.
 use super::*;
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub(super) enum PlanSection {
+    #[default]
+    Area,
+    Evidence,
+    Resources,
+    Estimate,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub(super) struct Settings {
     pub(super) event_ids: [String; 2],
@@ -82,8 +91,16 @@ pub(in crate::gui::studio) enum WideReply {
     ReusedSource(Box<ReusedIndexSource>),
     Source(IndexedSource, Box<ReviewWorkspace>),
     Estimated(Box<Prepared>),
-    Report(Box<WidePairReport>, Option<Box<ReviewWorkspace>>),
-    ReopenedReport(Box<WidePairReport>, Option<Box<ReviewWorkspace>>),
+    Report(
+        Box<WidePairReport>,
+        Option<Box<ReviewWorkspace>>,
+        Option<WideBudgets>,
+    ),
+    ReopenedReport(
+        Box<WidePairReport>,
+        Option<Box<ReviewWorkspace>>,
+        Option<WideBudgets>,
+    ),
 }
 pub(in crate::gui::studio) struct WideState {
     pub enabled: bool,
@@ -93,9 +110,12 @@ pub(in crate::gui::studio) struct WideState {
     pub progress: Option<WideProgress>,
     pub(super) source: Option<IndexedSource>,
     pub(super) settings: Settings,
+    pub(super) section: PlanSection,
     pub(super) prepared: Option<Box<Prepared>>,
     pub(super) report: Option<Arc<WidePairReport>>,
     pub(super) report_document: Option<ReviewWorkspace>,
+    // Display context from the hash-verified saved request, never active settings.
+    pub(super) report_budgets: Option<WideBudgets>,
     pub(super) report_source_missing: bool,
     pub(super) show_results: bool,
     pub(super) sort_column: usize,
@@ -118,9 +138,11 @@ impl Default for WideState {
             progress: None,
             source: None,
             settings: Settings::default(),
+            section: PlanSection::default(),
             prepared: None,
             report: None,
             report_document: None,
+            report_budgets: None,
             report_source_missing: false,
             show_results: false,
             sort_column: 0,

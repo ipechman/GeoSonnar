@@ -1,6 +1,7 @@
 //! Explicit disk-backed two-pass search; map previews never supply physics.
 use super::*;
 use geosonnar::{
+    data_size::{format_gib, format_gib_pair, gib_to_bytes},
     receiver_grid::GridLayout,
     track_store::{DEFAULT_INDEX_MEMORY_BYTES, TrackStore, TrackStoreBinding},
     wide_area_pair::{
@@ -18,27 +19,20 @@ mod tests;
 
 use preparation::*;
 use presentation::*;
-use state::Settings;
 pub(super) use state::{
     IndexReuseMatches, IndexReuseScope, IndexedSource, Prepared, ReusedIndexSource, WideReply,
     WideState,
 };
+use state::{PlanSection, Settings};
 
 impl Studio {
     pub(super) fn wide_index_memory_ui(&mut self, ui: &mut egui::Ui) {
-        const MIB: u64 = 1024 * 1024;
-        let mib = self.wide.settings.max_index_memory_bytes / MIB;
-        egui::CollapsingHeader::new(format!("Advanced memory limit · {mib} MiB"))
-            .id_salt("wide_index_memory")
-            .show(ui, |ui| {
-                ui.add_enabled_ui(!self.busy(), |ui| {
-                    let mut value = self.wide.settings.max_index_memory_bytes / MIB;
-                    if ui.add(egui::DragValue::new(&mut value).range(64..=4096).suffix(" MiB source/index memory")).changed() {
-                        self.wide.settings.max_index_memory_bytes = value * MIB;
-                    }
-                    muted(ui, "Shared by indexed import, source loading and wide-area search. The search track cache has a separate 256 MiB limit. This is not a total application memory cap; exceeding a budget stops the operation without reducing the data scope.");
-                });
-            });
+        ui.add_enabled_ui(!self.busy(), |ui| {
+            ui.label("Source/index memory allowance (GiB)");
+            data_size_input(ui, &mut self.wide.settings.max_index_memory_bytes,
+                64 * 1024 * 1024..=4 * 1024 * 1024 * 1024);
+            muted(ui, "Shared by indexed import, source loading and wide-area search. Separate track cache: 0.250 GiB. These are not a total application memory cap; an exhausted allowance stops the operation without reducing its scope.");
+        });
     }
 
     fn index_matches_ui(&mut self, ui: &mut egui::Ui, scope: &IndexReuseScope) {
@@ -83,9 +77,9 @@ impl Studio {
                             selected = Some(matched.clone());
                         }
                         let label = format!(
-                            "{} · {:.1} MiB · {}",
+                            "{} · {} · {}",
                             matched.label,
-                            matched.registered_bytes as f64 / 1024_f64.powi(2),
+                            format_gib(matched.registered_bytes),
                             matched.catalog_id
                         );
                         ui.add(egui::Label::new(&label).truncate())
@@ -120,7 +114,8 @@ impl Studio {
             accessible_text(ui, "wide_import_start", &mut self.wide.import_start, "YYYY-MM-DD HH:MM:SS", false, ui.available_width());
             accessible_text(ui, "wide_import_end", &mut self.wide.import_end, "YYYY-MM-DD HH:MM:SS", false, ui.available_width());
             ui.add(egui::DragValue::new(&mut self.wide.import_padding_km).range(0.0..=500.0).suffix(" km aircraft-area padding"));
-            ui.add(egui::DragValue::new(&mut self.wide.import_disk_gib).range(0.1..=1024.0).suffix(" GiB indexed-data size limit"));
+            ui.label("Indexed-data size allowance (GiB)");
+            ui.add(egui::DragValue::new(&mut self.wide.import_disk_gib).range(0.1..=1024.0).min_decimals(3).max_decimals(10).suffix(" GiB"));
             muted(ui, "This size limit applies to a new copy or the size of a saved index. Reusing an index needs no duplicate copy; source/index memory is checked separately.");
             muted(ui, "The UTC interval is explicit: allow propagation/interpolation look-back when narrowing it. Adjacent-day data require their own archive selection; this action never silently clips or expands time.");
             let scope = self.index_reuse_scope(entry);
@@ -138,7 +133,10 @@ impl Studio {
                     Err(error) => self.notice = Some((true, error)),
                     Ok(config) => {
                         let manifest = self.case.as_ref().unwrap().manifest.clone(); let id = entry.id.clone();
-                        let bytes = (self.wide.import_disk_gib * 1024_f64.powi(3)) as u64;
+                        let bytes = match gib_to_bytes(self.wide.import_disk_gib) {
+                            Ok(bytes) => bytes,
+                            Err(error) => { self.notice = Some((true, error)); return; }
+                        };
                         let memory = self.wide.settings.max_index_memory_bytes;
                         self.wide.cancel = Arc::new(AtomicBool::new(false));
                         self.download_cancel = self.wide.cancel.clone(); let cancel = self.wide.cancel.clone();
@@ -237,27 +235,39 @@ impl Studio {
             ui.colored_label(tone(ui, AMBER), "Data → select a complete day archive → Find matching index → Use existing index, or Build indexed flight data. A stored indexed dataset can also be selected directly.");
         }
         ui.add_enabled_ui(!self.busy(), |ui| {
-            let Some(doc) = &mut self.document else { return; };
-            ui.strong("1 · Area, grid and recording-start interval");
+            let _ = plan_section_tabs(ui, &mut self.wide.section);
+            ui.separator();
+            if self.document.is_none() {
+                muted(ui, "Open a case to prepare a wide-area plan.");
+                return;
+            }
+            match self.wide.section {
+                PlanSection::Area => {
+                    let doc = self.document.as_mut().unwrap();
+            ui.strong("Area/grid");
             for (label, value) in ["South", "West", "North", "East"].into_iter().zip(&mut doc.map.bounds) {
                 ui.horizontal(|ui| { ui.label(label); ui.add(egui::DragValue::new(value).speed(0.01)); });
             }
             egui::ComboBox::from_id_salt("wide_spacing").selected_text(format!("{} m", doc.map.grid_spacing_m)).show_ui(ui, |ui| {
-                for value in [100_000., 50_000., 25_000., 10_000., 2000., 500., 100., 25.] {
+                for value in [100_000., 50_000., 25_000., 10_000., 2000., 1000., 500., 100., 25.] {
                     ui.selectable_value(&mut doc.map.grid_spacing_m, value, format!("{value} m"));
                 }
             });
             ui.add(egui::DragValue::new(&mut doc.map.grid_spacing_m).range(10.0..=100_000.0).suffix(" m maximum spacing"));
             match GridLayout::new(&doc.map) {
-                Ok(grid) => { ui.label(format!("{} receivers · {} rows × {} columns · streamed, not a 10,000-point map layer", grid.count, grid.rows, grid.columns)); }
+                Ok(grid) => { ui.label(format!("{} search locations · {} rows × {} columns", grid.count, grid.rows, grid.columns)); }
                 Err(error) => { ui.colored_label(tone(ui, RED), error); }
             }
             accessible_text(ui, "wide_clock_start", &mut self.wide.settings.utc_start, "Earliest recording start UTC", false, ui.available_width());
             accessible_text(ui, "wide_clock_end", &mut self.wide.settings.utc_end, "Latest recording start UTC", false, ui.available_width());
             ui.add(egui::DragValue::new(&mut doc.map.receiver_height_m).suffix(" m receiver ellipsoid height"));
+            muted(ui, "A location is one candidate microphone position (receiver). Every declared location remains in the search; the map preview may show fewer points.");
+                }
+                PlanSection::Evidence => {
+                    let doc = self.document.as_mut().unwrap();
+            ui.strong("Evidence/assumptions");
             ui.add(egui::DragValue::new(&mut doc.sound_speed_mps).suffix(" m/s sound speed"));
-            muted(ui, "First wide-area pass uses this explicit constant receiver height and sound speed. Terrain/atmospheric refinement remains a separate reviewed comparison.");
-            ui.separator(); ui.strong("2 · Reviewed pair and explicit physical assumptions");
+            muted(ui, "This pass uses the explicit constant receiver height and sound speed. Terrain/atmospheric refinement remains a separate reviewed comparison.");
             if ui.button("Copy the two selected reviewed Doppler events").clicked()
                 && let Err(error) = copy_reviewed_pair(doc, &mut self.wide.settings) {
                 self.notice = Some((true, error));
@@ -274,27 +284,58 @@ impl Studio {
             }
             range_ui(ui, "Shared shift around CPA-derived clock", &mut self.wide.settings.shift, " s");
             ui.add(egui::DragValue::new(&mut self.wide.settings.separation_tolerance_s).range(0.0..=3600.0).suffix(" s pair-separation tolerance"));
-            ui.separator(); ui.strong("3 · Estimate, budgets and run");
-            runtime_and_work_ui(ui, &mut self.wide.settings);
-            ui.add(egui::DragValue::new(&mut self.wide.settings.max_output).suffix(" output bytes").speed(1_048_576.));
-            ui.add(egui::DragValue::new(&mut self.wide.settings.retain).range(1..=1000).suffix(" retained rows"));
-            self.wide_index_memory_ui(ui);
-            if ui.button("Estimate complete wide-area plan").clicked() { self.prepare_wide(ui.ctx(), false); }
-            if let Some(prepared) = &self.wide.prepared {
-                let e = &prepared.estimate;
-                ui.label(format!("{} receivers · {} source passes · {} source points", e.receiver_count, e.source_passes, e.source_points));
-                ui.label(format!("Unpruned ceiling: {} pass checks / {} point visits. Filtering determines actual pair work.", e.unpruned_pass_checks, e.worst_scan_point_visits));
-                ui.label(format!("Minimum output reservation: {} bytes", e.minimum_output_bytes));
-                ui.label(format!("Source/index memory reservation: {:.1} MiB total · {:.1} MiB source/verification · {:.1} MiB spatial index · {:.1} MiB local CPA reserve. Separate track cache: 256 MiB.", e.required_index_memory_bytes as f64 / 1_048_576., e.source_metadata_bytes as f64 / 1_048_576., e.spatial_index_memory_bytes as f64 / 1_048_576., e.local_cpa_memory_reserve_bytes as f64 / 1_048_576.));
-                if self.document.as_ref() == Some(&prepared.document) && prepared.settings == self.wide.settings {
-                    cost_preview_ui(ui, e);
-                } else {
-                    ui.colored_label(tone(ui, AMBER), "Search settings changed. Estimate again before using these previous cost figures or running.");
+                }
+                PlanSection::Resources => {
+                    ui.strong("Resource allowances");
+                    let locations = self.document.as_ref().and_then(|doc| GridLayout::new(&doc.map).ok()).map(|grid| grid.count);
+                    output_allowance_ui(ui, &mut self.wide.settings, locations);
+                    ui.separator();
+                    self.wide_index_memory_ui(ui);
+                    if run_disabled_reason(&self.wide, self.document.as_ref(), false).is_none()
+                        && let Some(prepared) = &self.wide.prepared {
+                        let (required, allowed) = format_gib_pair(prepared.estimate.required_index_memory_bytes, self.wide.settings.max_index_memory_bytes);
+                        ui.label(format!("Estimated source/index requirement: {required} · Allowed: {allowed}"));
+                    } else {
+                        muted(ui, "A current estimate is needed for the source/index memory requirement.");
+                    }
+                    ui.separator();
+                    runtime_and_work_ui(ui, &mut self.wide.settings);
+                    if self.wide.settings.work_limit_enabled && let Some(locations) = locations
+                        && locations > self.wide.settings.max_work {
+                        ui.colored_label(tone(ui, RED), format!("Work-unit allowance is too small: at least {locations} units for {locations} locations; allowed {}. Increase the work-unit allowance or explicitly turn that limit off, then estimate again.", self.wide.settings.max_work));
+                    }
+                    ui.label("Retained ranking rows");
+                    ui.add(egui::DragValue::new(&mut self.wide.settings.retain).range(1..=1000));
+                    muted(ui, "Retained ranking rows limits the compact shortlists. It does not reduce the locations searched or remove the need to save location summaries.");
+                }
+                PlanSection::Estimate => {
+                    ui.strong("Estimate/run");
+                    if let Some(prepared) = &self.wide.prepared {
+                        let current = run_disabled_reason(&self.wide, self.document.as_ref(), false).is_none();
+                        if !current { ui.colored_label(tone(ui, AMBER), "Previous estimate — settings changed. Estimate again before using these figures."); }
+                        let e = &prepared.estimate;
+                        ui.label(format!("{} locations · {} source passes · {} source points", e.receiver_count, e.source_passes, e.source_points));
+                        ui.label(format!("Unpruned ceiling: {} pass checks / {} point visits. Filtering determines actual pair work.", e.unpruned_pass_checks, e.worst_scan_point_visits));
+                        ui.label(format!("Preliminary minimum output reservation: {}", format_gib(e.minimum_output_bytes)));
+                        ui.label(format!("Source/index requirement: {} total · {} source/verification · {} spatial index · {} local CPA reserve. Separate track cache: 0.250 GiB.", format_gib(e.required_index_memory_bytes), format_gib(e.source_metadata_bytes), format_gib(e.spatial_index_memory_bytes), format_gib(e.local_cpa_memory_reserve_bytes)));
+                        if current { cost_preview_ui(ui, e); }
+                    } else {
+                        muted(ui, "No verified estimate yet. Review Area/grid, Evidence/assumptions and Resource allowances, then estimate the complete plan.");
+                    }
+                    muted(ui, "Preliminary minimum reservations are not forecasts of actual output or completion time. Passing the estimate does not guarantee the whole search will finish.");
+                    if ui.button("Review Resource allowances").clicked() { self.wide.section = PlanSection::Resources; }
                 }
             }
-            let ready = self.wide.prepared.as_ref().is_some_and(|p| self.document.as_ref() == Some(&p.document) && p.settings == self.wide.settings);
-            if ui.add_enabled(ready, egui::Button::new("Run reviewed wide-area plan")).clicked() { self.prepare_wide(ui.ctx(), true); }
-            muted(ui, "A budget stop or cancellation remains incomplete. Results keep every processed receiver and source identity on disk; there is no automatic retry or resume in this first wide-area engine. A separately bounded review snapshot (up to 8 MiB) is saved beside the run before computation.");
+            ui.separator();
+            ui.horizontal_wrapped(|ui| {
+                if ui.button("Estimate complete wide-area plan").clicked() { self.prepare_wide(ui.ctx(), false); }
+                let ready = run_disabled_reason(&self.wide, self.document.as_ref(), self.busy()).is_none();
+                if ui.add_enabled(ready, egui::Button::new("Run reviewed wide-area plan")).clicked() { self.prepare_wide(ui.ctx(), true); }
+            });
+            if let Some(reason) = run_disabled_reason(&self.wide, self.document.as_ref(), self.busy()) {
+                ui.colored_label(tone(ui, AMBER), reason);
+            }
+            muted(ui, "The runtime limit can stop the search before all locations finish. Output or memory limits and cancellation can also leave an incomplete run. Completed-location summaries are saved; there is no automatic retry or resume. A separate review snapshot (up to 0.0078125 GiB) is saved before computation.");
         });
     }
 
@@ -346,7 +387,12 @@ impl Studio {
         ui.label(format!("Saved: {}", display_path(&report.output_directory)));
         score_bound_progress_ui(ui, report.progress.score_bound_pruned_candidates);
         if let Some(error) = &report.error {
-            ui.colored_label(tone(ui, AMBER), error);
+            saved_diagnostic_ui(
+                ui,
+                error,
+                report.progress.total_receivers,
+                self.wide.report_budgets.as_ref(),
+            );
         }
         if let Some(guidance) = stop_guidance(&report) {
             if report.progress.completed_receivers == 0 {

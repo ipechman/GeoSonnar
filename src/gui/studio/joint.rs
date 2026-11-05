@@ -607,9 +607,9 @@ impl Studio {
                 e.receivers, e.clocks, e.cells, e.doppler_runs, e.envelope_runs
             ));
             ui.label(format!(
-                "Working memory bound {:.1} MiB · saved snapshot bound {:.1} MiB",
-                e.working_memory_bound_bytes as f64 / 1_048_576.0,
-                e.serialized_snapshot_bound_bytes as f64 / 1_048_576.0
+                "Working memory bound {} · saved snapshot bound {}",
+                geosonnar::data_size::format_gib(e.working_memory_bound_bytes),
+                geosonnar::data_size::format_gib(e.serialized_snapshot_bound_bytes)
             ));
             if self.detailed_controls {
                 ui.label(format!("{} Doppler evaluations · {} residual evaluations · {} envelope work units (including all retained/direct checks)",e.doppler_evaluations,e.doppler_residual_evaluations,e.envelope_work_units));

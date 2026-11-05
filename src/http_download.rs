@@ -39,7 +39,7 @@ fn copy_bounded<R: Read, W: Write>(
     let ceiling = limit.checked_add(1).ok_or_else(|| {
         io::Error::new(
             io::ErrorKind::InvalidInput,
-            "Response byte limit is too large",
+            "Response transfer allowance is too large",
         )
     })?;
     let mut copied = 0;
@@ -136,7 +136,7 @@ fn read_status(path: &Path) -> Result<Option<u16>, String> {
         .read_to_end(&mut bytes)
         .map_err(|e| e.to_string())?;
     if bytes.len() as u64 > STATUS_LIMIT_BYTES {
-        return Err("Downloader status exceeded its byte limit".into());
+        return Err("Downloader status exceeded its storage allowance".into());
     }
     let text = std::str::from_utf8(&bytes)
         .map_err(|_| "Downloader status is not UTF-8")?
@@ -169,7 +169,8 @@ fn copy_error(result: &Result<CopyOutcome, String>) -> Option<String> {
     match result {
         Ok(CopyOutcome::Complete(_)) => None,
         Ok(CopyOutcome::LimitExceeded(bytes)) => Some(format!(
-            "Download exceeded its byte limit; {bytes} received bytes retained, including one overrun byte"
+            "Download exceeded its transfer allowance; {} retained, including the first excess data",
+            crate::data_size::format_gib(*bytes)
         )),
         Err(error) => Some(error.clone()),
     }
@@ -177,7 +178,7 @@ fn copy_error(result: &Result<CopyOutcome, String>) -> Option<String> {
 
 fn join_reader(reader: JoinHandle<Result<CopyOutcome, String>>) -> Result<CopyOutcome, String> {
     reader.join().map_err(|_| {
-        "Download body reader stopped unexpectedly; partial bytes retained".to_string()
+        "Download body reader stopped unexpectedly; partial payload retained".to_string()
     })?
 }
 
@@ -203,7 +204,7 @@ pub(crate) fn download(
 ) -> Result<TransportResult, String> {
     limit
         .checked_add(1)
-        .ok_or("Response byte limit is too large")?;
+        .ok_or("Response transfer allowance is too large")?;
     let mut body_file = open_empty_body(body)?;
     if cancel.load(Ordering::Relaxed) {
         return Ok(TransportResult {
@@ -272,11 +273,12 @@ pub(crate) fn download(
     let reader = thread::Builder::new()
         .name("bounded-http-body".into())
         .spawn(move || {
-            let outcome = copy_bounded(&mut stdout, &mut body_file, limit)
-                .map_err(|e| format!("Cannot retain download body: {e}; partial bytes retained"))?;
+            let outcome = copy_bounded(&mut stdout, &mut body_file, limit).map_err(|e| {
+                format!("Cannot retain download body: {e}; partial payload retained")
+            })?;
             body_file
                 .sync_all()
-                .map_err(|e| format!("Cannot sync download body: {e}; partial bytes retained"))?;
+                .map_err(|e| format!("Cannot sync download body: {e}; partial payload retained"))?;
             Ok(outcome)
         });
     let mut reader = match reader {
@@ -292,11 +294,11 @@ pub(crate) fn download(
     let mut child_exited = false;
     let mut error = loop {
         if cancel.load(Ordering::Relaxed) {
-            break Some("Download cancelled; received bytes retained".into());
+            break Some("Download cancelled; received payload retained".into());
         }
         if started.elapsed() >= TRANSFER_TIMEOUT {
             break Some(
-                "Download exceeded its 45-second time limit; received bytes retained".into(),
+                "Download exceeded its 45-second time limit; received payload retained".into(),
             );
         }
         if reader.as_ref().is_some_and(|reader| reader.is_finished()) {
@@ -312,7 +314,7 @@ pub(crate) fn download(
                     None
                 } else {
                     Some(format!(
-                        "HTTPS download failed (exit {:?}); file may be absent, unavailable, or over its byte limit",
+                        "HTTPS download failed (exit {:?}); file may be absent, unavailable, or over its transfer allowance",
                         status.code()
                     ))
                 };

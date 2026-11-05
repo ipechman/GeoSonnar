@@ -44,7 +44,7 @@ pub fn plan_terrain(
 ) -> Result<TerrainPlan, String> {
     validate_bounds(Some(bounds))?;
     if max_bytes == 0 || max_bytes > 100_000_000_000 {
-        return Err("Choose a total terrain download limit between 1 byte and 100 GB".into());
+        return Err("Choose a total terrain download allowance between 0.0000000009 GiB and 93.1322574615 GiB".into());
     }
     let [south, west, north, east] = bounds;
     let spans = if west < east {
@@ -134,7 +134,7 @@ pub fn download_terrain_with_cancel(
             continue;
         }
         if remaining == 0 {
-            return Err("Terrain request exhausted its total byte limit; completed tiles remain in the library".into());
+            return Err("Terrain request exhausted its total transfer allowance; completed tiles remain in the library".into());
         }
         let request = ImportRequest {
             label: tile.name.clone(),
@@ -165,7 +165,7 @@ pub fn download_terrain_with_cancel(
         let bytes: u64 = entry.files.iter().map(|f| f.bytes).sum();
         remaining = remaining
             .checked_sub(bytes)
-            .ok_or("Terrain download exceeded its total byte budget")?;
+            .ok_or("Terrain download exceeded its total transfer allowance")?;
         entries.push(entry);
     }
     Ok(entries)
@@ -262,7 +262,7 @@ pub fn download_lightning_with_cancel(
 ) -> Result<CatalogEntry, String> {
     query.validate()?;
     if max_bytes == 0 || max_bytes > MAX_LIGHTNING_BYTES {
-        return Err("Lightning export import supports at most 64 MiB per request".into());
+        return Err("Lightning export import supports at most 0.0625 GiB per request".into());
     }
     let request = ImportRequest {
         label: format!("{} source export", query.provider),
@@ -348,7 +348,7 @@ pub fn filter_lightning_export(
         .len() as u64
         > MAX_LIGHTNING_BYTES
     {
-        return Err("Selected strikes exceed the 64 MiB normalized evidence limit. Narrow the interval or region; original export retained.".into());
+        return Err("Selected strikes exceed the 0.0625 GiB normalized evidence allowance. Narrow the interval or region; original export retained.".into());
     }
     let (directory, id, hash) = new_item(manifest)?;
     let _lock = lock(&directory)?;

@@ -549,10 +549,10 @@ fn run() -> Result<i32, String> {
                 .map_err(|e| e.to_string())?;
             serde_json::to_writer_pretty(&mut file, &plan).map_err(|e| e.to_string())?;
             println!(
-                "Historical plan: {} replay files; at most {} traces; cumulative budget {} bytes. No network requested; coverage_complete=false.",
+                "Historical plan: {} replay files; at most {} traces; cumulative budget {}. No network requested; coverage_complete=false.",
                 plan.replay_chunks.len(),
                 plan.request.max_traces,
-                plan.request.max_download_bytes
+                geosonnar::data_size::format_gib(plan.request.max_download_bytes)
             );
             Ok(0)
         }

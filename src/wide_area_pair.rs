@@ -245,7 +245,10 @@ pub struct ReceiverResult {
 pub fn request_sha256(request: &WidePairRequest) -> Result<String, String> {
     let bytes = serde_json::to_vec(request).map_err(|e| e.to_string())?;
     if bytes.len() > MAX_REQUEST_BYTES {
-        return Err("Wide-area request exceeds 4 MiB".into());
+        return Err(format!(
+            "Wide-area request exceeds {}",
+            crate::data_size::format_gib(MAX_REQUEST_BYTES as u64)
+        ));
     }
     Ok(format!("{:x}", Sha256::digest(bytes)))
 }
@@ -278,9 +281,9 @@ pub(crate) fn validate_request(request: &WidePairRequest) -> Result<(), String> 
         || !(64 * 1024 * 1024..=4 * 1024 * 1024 * 1024).contains(&b.max_index_memory_bytes)
     {
         return Err(if b.work_limit_enabled {
-            "Declare positive work, 16 MiB..8 GiB output, 1..86400 s wall and 64 MiB..4 GiB index-memory limits"
+            "Declare positive work, 0.015625 GiB..8.000 GiB output, 1..86400 s wall and 0.0625 GiB..4.000 GiB index-memory limits"
         } else {
-            "Declare 16 MiB..8 GiB output, 1..86400 s wall and 64 MiB..4 GiB index-memory limits; the work-unit limit is disabled"
+            "Declare 0.015625 GiB..8.000 GiB output, 1..86400 s wall and 0.0625 GiB..4.000 GiB index-memory limits; the work-unit limit is disabled"
         }.into());
     }
     let config = &request.pair_config;
@@ -334,6 +337,42 @@ pub(crate) fn validate_request(request: &WidePairRequest) -> Result<(), String> 
     }
     Ok(())
 }
+/// Preliminary output floor for the entire grid, not a final size forecast.
+pub fn preliminary_output_bytes(receiver_count: u64) -> Result<u64, String> {
+    receiver_count
+        .checked_mul(96)
+        .and_then(|bytes| bytes.checked_add(16 * 1024 * 1024))
+        .ok_or_else(|| "Output estimate overflow".into())
+}
+
+/// Check the existing preliminary floors without opening a source or changing a grid.
+/// This does not establish that the complete search fits any resource allowance.
+pub fn check_preliminary_budgets(
+    receiver_count: u64,
+    budgets: &WideBudgets,
+) -> Result<u64, String> {
+    let minimum = preliminary_output_bytes(receiver_count)?;
+    let mut failures = Vec::new();
+    if minimum > budgets.max_output_bytes {
+        let (required, allowed) =
+            crate::data_size::format_gib_pair(minimum, budgets.max_output_bytes);
+        failures.push(format!(
+            "Output allowance too small: this grid needs a preliminary minimum of {required}; the configured allowance is {allowed}. Increase the output allowance and estimate again, or explicitly choose a different grid. This minimum is not a final output-size forecast; no locations were removed."
+        ));
+    }
+    if budgets.work_limit_enabled && receiver_count > budgets.max_work_units {
+        failures.push(format!(
+            "Enabled work-unit limit too small: this grid alone needs at least {receiver_count} units; the configured limit is {}. Increase or disable the work-unit limit and estimate again, or explicitly choose a different grid. Source, timing and scoring work are additional; no locations were removed.",
+            budgets.max_work_units
+        ));
+    }
+    if failures.is_empty() {
+        Ok(minimum)
+    } else {
+        Err(failures.join("\n"))
+    }
+}
+
 fn estimate_store(request: &WidePairRequest, store: &TrackStore) -> Result<WideEstimate, Stop> {
     validate_request(request)?;
     if store.binding().manifest_sha256 != request.source.manifest_sha256
@@ -362,15 +401,7 @@ fn estimate_store(request: &WidePairRequest, store: &TrackStore) -> Result<WideE
     {
         return Err("Declared common recording-start bounds are outside UTC support".into());
     }
-    let minimum_output_bytes = mul(request.grid.count, 96)?
-        .checked_add(16 * 1024 * 1024)
-        .ok_or("Output estimate overflow")?;
-    if minimum_output_bytes > request.budgets.max_output_bytes
-        || (request.budgets.work_limit_enabled
-            && request.grid.count > request.budgets.max_work_units)
-    {
-        return Err("The full declared grid cannot fit the explicit minimum work/output budget; no receivers were removed".into());
-    }
+    let minimum_output_bytes = check_preliminary_budgets(request.grid.count, &request.budgets)?;
     let shortest_pass = store
         .passes()
         .iter()
@@ -391,7 +422,7 @@ fn estimate_store(request: &WidePairRequest, store: &TrackStore) -> Result<WideE
             "Unpruned scan counts are conservative upper bounds, not a completion-time promise. Actual pair work is counted after the local-CPA separation join and charged to the same global budget.".into(),
             "The affordable-pair ceiling spends the entire work budget on the shortest possible pair. Actual capacity is lower after index traversal, pass census and longer tracks. It is not an ETA, required-pair estimate or guarantee that this grid can finish.".into(),
             "The global equal-angle receiver lattice includes every boundary; displayed previews may be sparse. All physics uses full indexed continuous passes and fixed trace samples.".into(),
-            "Index memory is a conservative allocation budget for verified source metadata/verification scratch, spatial-index construction/query and the bounded local-CPA inventory/working arrays. It is separate from the 256 MiB track cache, other native pass/model preparation and report buffers, and is not an OS process-RAM hard limit. No source-count cutoff or silent pruning is used.".into(),
+            "Index memory is a conservative allocation budget for verified source metadata/verification scratch, spatial-index construction/query and the bounded local-CPA inventory/working arrays. It is separate from the 0.250 GiB track cache, other native pass/model preparation and report buffers, and is not an OS process-RAM hard limit. No source-count cutoff or silent pruning is used.".into(),
         ] };
     if !request.budgets.work_limit_enabled {
         estimate.limitations[0] = "Unpruned scan counts are conservative upper bounds, not a completion-time promise. Actual pair work is counted after the local-CPA separation join; the work-unit counter is diagnostic and has no configured stopping limit.".into();
@@ -864,11 +895,11 @@ impl IndexMemoryPlan {
     }
     fn require_budget(&self, budget: u64) -> Result<(), Stop> {
         if self.total_bytes > budget {
+            let (needed, allowed) = crate::data_size::format_gib_pair(self.total_bytes, budget);
             return Err(Stop {
                 status: WideStatus::BudgetExceeded,
                 reason: format!(
-                    "Combined source/spatial-index/local-CPA memory needs {} bytes, exceeding the declared {} bytes; no source pass or receiver was removed",
-                    self.total_bytes, budget
+                    "Combined source/spatial-index/local-CPA memory needs {needed}, exceeding the declared {allowed}; increase the source/index memory allowance and estimate again. No source pass or receiver was removed"
                 ),
             });
         }
@@ -1053,7 +1084,7 @@ impl TrackCache {
         const CACHE: u64 = 256 * 1024 * 1024;
         if bytes > CACHE {
             return Err(
-                "One continuous pass exceeds the 256 MiB track-cache bound; it was not truncated"
+                "One continuous pass exceeds the 0.250 GiB track-cache bound; it was not truncated"
                     .into(),
             );
         }
@@ -1477,7 +1508,7 @@ pub fn run<F: FnMut(WideProgress)>(
             "Cancellation and deadlines are checked throughout source verification, spatial-index construction, shared shifts, frequency-factor batches and emitted-tone fitting. Individual native pass preparation and each stable spatial-index sort remain bounded operations between checks. The first version writes fresh-only durable pages and terminal reports; interrupted runs cannot yet resume.".into(),
             "Work units charge index traversal, full track preparation, every trace/frequency/shared-shift evaluation and bounded ranking work. They are an operational cap, not CPU instructions or a calibrated runtime forecast.".into(),
             "The full bounded work of each pair is reserved before it starts; a cancelled pair may consume less CPU than its charged reservation. A cancellation is not a rejected acoustic match.".into(),
-            "The declared index-memory budget covers verified source metadata/verification scratch, conservative spatial-index construction/query buffers and local-CPA inventory/working arrays. The 256 MiB track cache, other native model preparation and report buffers are separate; this is not a process-RAM hard limit. There is no source-pass count cutoff. The separate 250000-entry local-CPA cap stops with a provisional budget-exceeded result instead of dropping sources.".into(),
+            "The declared index-memory budget covers verified source metadata/verification scratch, conservative spatial-index construction/query buffers and local-CPA inventory/working arrays. The 0.250 GiB track cache, other native model preparation and report buffers are separate; this is not a process-RAM hard limit. There is no source-pass count cutoff. The separate 250000-entry local-CPA cap stops with a provisional budget-exceeded result instead of dropping sources.".into(),
         ]};
     if !request.budgets.work_limit_enabled {
         report.limitations[7] = "The work-unit limit is disabled. Work counters still record index traversal, full track preparation, trace/frequency/shared-shift evaluations and bounded ranking reservations, but are diagnostic rather than a configured stopping cap. Time, memory, output and cancellation limits remain active; counter overflow still stops safely.".into();

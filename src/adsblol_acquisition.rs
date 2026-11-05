@@ -340,11 +340,12 @@ pub fn parse_release_plan(
         .iter()
         .try_fold(0u64, |sum, a| sum.checked_add(a.bytes))
         .ok_or("Archive size overflow")?;
+    let (required, allowance) =
+        crate::data_size::format_gib_pair(total, request.max_download_bytes);
     require(
         total <= request.max_download_bytes,
         format!(
-            "Archive requires {total} bytes, above the explicit {} byte download budget",
-            request.max_download_bytes
+            "Archive download requires {required}; the download allowance is {allowance}. Increase the download allowance and prepare the request again."
         ),
     )?;
     Ok(DownloadPlan { schema_version:1, provider:"ADSB.lol".into(), license:"ODbL-1.0".into(), request:request.clone(),
@@ -425,7 +426,7 @@ fn metadata_download(url: &str, body: &Path, headers: &Path) -> Result<(), Strin
     ])?;
     require(
         fs::metadata(body).map_err(|e| e.to_string())?.len() <= METADATA_LIMIT,
-        "Metadata exceeds the byte limit",
+        "Metadata exceeds its transfer allowance",
     )
 }
 
@@ -718,10 +719,8 @@ fn fetch_asset(asset: &ArchiveAsset, directory: &Path, cancel: &AtomicBool) -> R
         .map_err(|e| e.to_string())?;
         destination.sync_all().map_err(|e| e.to_string())?;
         offset = end + 1;
-        eprintln!(
-            "ADSB.lol {}: {} / {} bytes",
-            asset.name, offset, asset.bytes
-        );
+        let (received, total) = crate::data_size::format_gib_pair(offset, asset.bytes);
+        eprintln!("ADSB.lol {}: {received} / {total}", asset.name);
     }
     verify_asset(&partial, asset)?;
     require(

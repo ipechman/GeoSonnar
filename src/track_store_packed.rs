@@ -34,8 +34,9 @@ pub(super) struct PackedManifest {
 
 pub(super) fn memory_check(needed: u64, limit: u64) -> Result<(), String> {
     if needed > limit {
+        let (needed, limit) = crate::data_size::format_gib_pair(needed, limit);
         Err(format!(
-            "{INDEX_MEMORY_LIMIT_PREFIX}: need at least {needed} bytes; declared {limit}"
+            "{INDEX_MEMORY_LIMIT_PREFIX}: need at least {needed}; declared {limit}. Increase the source/index memory allowance and try again; no data was removed"
         ))
     } else {
         Ok(())
@@ -279,7 +280,10 @@ impl TrackStoreWriter {
         crate::adsblol::validate_config(config)?;
         validate_index_memory_limit(memory_limit)?;
         if !(1024 * 1024..=1024u64.pow(4)).contains(&limit) {
-            return Err("Declare a track-store disk budget between1MiB and1TiB".into());
+            return Err(
+                "Declare a track-store disk budget between 0.0009765625 GiB and 1024.000 GiB"
+                    .into(),
+            );
         }
         let base_memory =
             root.as_os_str().len() as u64 * 4 + config_memory(config) + json_memory(&source) + 4096;

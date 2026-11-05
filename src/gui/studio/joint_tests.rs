@@ -550,6 +550,39 @@ fn display_snapshot() -> JointSnapshot {
         },
     }
 }
+
+#[test]
+fn shared_cell_memory_estimate_uses_gib_without_changing_saved_bounds() {
+    let snapshot = display_snapshot();
+    let mut studio = selected_studio();
+    let estimate = snapshot.report.estimate.clone();
+    studio.joint.prepared = Some(PreparedJoint {
+        request: Arc::new(snapshot.request),
+        estimate: estimate.clone(),
+        options: studio.joint.options.clone(),
+        source_revision: studio.loaded_data_revision,
+    });
+    let before = studio.document.clone();
+    let ctx = egui::Context::default();
+    let mut output = None;
+    for _ in 0..2 {
+        output = Some(ctx.run_ui(egui::RawInput::default(), |ui| studio.joint_run_ui(ui)));
+    }
+    let text = labels(&output.unwrap())
+        .into_iter()
+        .map(|(text, _)| text)
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(text.contains(&format!(
+        "Working memory bound {} · saved snapshot bound {}",
+        geosonnar::data_size::format_gib(estimate.working_memory_bound_bytes),
+        geosonnar::data_size::format_gib(estimate.serialized_snapshot_bound_bytes),
+    )));
+    assert!(!text.contains("MiB"));
+    assert_eq!(studio.joint.prepared.as_ref().unwrap().estimate, estimate);
+    assert_eq!(studio.document, before);
+    assert!(studio.undo.is_empty() && !studio.busy());
+}
 #[test]
 fn unavailable_and_unfinished_cells_remain_in_every_sort() {
     let snapshot = display_snapshot();

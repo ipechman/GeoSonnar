@@ -176,7 +176,10 @@ pub fn load_profile(path: &Path) -> ModelResult<AtmosphereProfile> {
         .read_to_end(&mut data)
         .map_err(|e| e.to_string())?;
     if data.len() as u64 > MAX_PROFILE_BYTES {
-        return Err("Atmosphere profile exceeds 4 MiB".into());
+        return Err(format!(
+            "Atmosphere profile exceeds {}",
+            crate::data_size::format_gib(4 * 1024 * 1024)
+        ));
     }
     let profile: AtmosphereProfile = serde_json::from_slice(&data)
         .map_err(|e| format!("Invalid atmosphere profile JSON: {e}"))?;

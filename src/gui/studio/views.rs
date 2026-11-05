@@ -46,7 +46,7 @@ impl Studio {
                     self.save(ui.ctx());
                 }
                 if self.busy() {
-                    ui.spinner();
+                    crate::gui::activity::indicator(ui);
                     ui.label("Working…");
                 } else if dirty {
                     ui.colored_label(tone(ui, AMBER), "Unsaved changes");
@@ -101,7 +101,7 @@ impl Studio {
                 ui.colored_label(tone(ui, RED), "Result not saved — see Results");
             }
             if let Some(status) = &self.busy {
-                ui.spinner();
+                crate::gui::activity::indicator(ui);
                 ui.label(status);
             }
         });

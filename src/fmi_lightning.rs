@@ -165,7 +165,9 @@ pub fn plan(request: &FmiRequest) -> Result<FmiPlan, String> {
         return Err("FMI requests need a non-wrapping region at most 30 degrees latitude by 60 degrees longitude; these are application limits, not provider coverage".into());
     }
     if request.max_total_bytes == 0 || request.max_total_bytes > MAX_TOTAL_BYTES {
-        return Err("FMI total transfer budget must be 1 byte..64 MiB".into());
+        return Err(
+            "FMI total transfer allowance must be between 0.0000000009 GiB and 0.0625 GiB".into(),
+        );
     }
     let mut chunks = Vec::new();
     let mut from = start;
@@ -331,7 +333,7 @@ pub fn parse_chunk(value: &FmiPlan, index: usize, body: &[u8]) -> Result<FmiChun
         .get(index)
         .ok_or("FMI chunk index is outside the request")?;
     if body.is_empty() || body.len() as u64 > value.max_response_bytes {
-        return Err("FMI response is empty or exceeds its byte budget".into());
+        return Err("FMI response is empty or exceeds its transfer allowance".into());
     }
     let xml = std::str::from_utf8(body).map_err(|_| "FMI XML must use UTF-8")?;
     if xml.chars().any(|c| {
@@ -840,7 +842,7 @@ pub fn document(
         .len() as u64
         > MAX_TOTAL_BYTES
     {
-        return Err("FMI normalized document exceeds 64 MiB; narrow the request".into());
+        return Err("FMI normalized document exceeds 0.0625 GiB; narrow the request".into());
     }
     Ok(Some(result))
 }

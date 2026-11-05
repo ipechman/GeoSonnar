@@ -262,7 +262,7 @@ pub fn plan(request: &HistoryRequest) -> Result<HistoryPlan, String> {
     )?;
     require(
         request.max_download_bytes > 0 && request.max_download_bytes <= MAX_DOWNLOAD_BYTES,
-        "Use a positive cumulative payload budget of at most 250 MB",
+        "Use a positive cumulative payload allowance of at most 0.2328306437 GiB",
     )?;
     let midnight = detailed_data::utc_midnight(date)?;
     let first = ((start - midnight) / 1800.0) as u8;
@@ -308,7 +308,10 @@ pub fn validate_plan(value: &HistoryPlan) -> Result<(), String> {
 /// Strict single-member gzip decoding, bounded even for compressed bombs.
 pub fn decode_payload(bytes: &[u8], limit: usize) -> Result<Vec<u8>, String> {
     if !bytes.starts_with(&[0x1f, 0x8b]) {
-        require(bytes.len() <= limit, "Response exceeds decoded byte limit")?;
+        require(
+            bytes.len() <= limit,
+            "Response exceeds its decoded-data allowance",
+        )?;
         return Ok(bytes.to_vec());
     }
     let mut decoder = GzDecoder::new(Cursor::new(bytes));
@@ -318,7 +321,10 @@ pub fn decode_payload(bytes: &[u8], limit: usize) -> Result<Vec<u8>, String> {
         .take(limit as u64 + 1)
         .read_to_end(&mut output)
         .map_err(|e| format!("Invalid gzip response: {e}"))?;
-    require(output.len() <= limit, "Response exceeds decoded byte limit")?;
+    require(
+        output.len() <= limit,
+        "Response exceeds its decoded-data allowance",
+    )?;
     require(
         decoder.into_inner().position() == bytes.len() as u64,
         "Gzip response contains trailing data or multiple members",
@@ -359,7 +365,7 @@ pub fn decode_replay(
     )?;
     require(
         bytes.len() as u64 <= chunk.max_bytes,
-        "Replay HTTP body exceeds its byte limit",
+        "Replay HTTP body exceeds its transfer allowance",
     )?;
     let raw = decode_payload(bytes, MAX_DECODED_REPLAY)?;
     require(
@@ -760,7 +766,7 @@ impl<'a> Cache<'a> {
                 receipt.error.is_some()
                     || (receipt.http_status == Some(200)
                         && receipt.body.bytes <= request.byte_limit),
-                "Cached successful response lacks HTTP 200 status or exceeds its byte limit",
+                "Cached successful response lacks HTTP 200 status or exceeds its transfer allowance",
             )?;
             verified_artifact(
                 root,
@@ -769,7 +775,7 @@ impl<'a> Cache<'a> {
             )?;
             total = total
                 .checked_add(receipt.body.bytes)
-                .ok_or("History byte total overflow")?;
+                .ok_or("History transfer-size total overflow")?;
             attempts.push(receipt);
         }
         require(
@@ -859,10 +865,10 @@ impl<'a> Cache<'a> {
         self.total = self
             .total
             .checked_add(bytes_count)
-            .ok_or("History byte total overflow")?;
+            .ok_or("History transfer-size total overflow")?;
         let error = if bytes_count > limit {
             Some(
-                "Response exceeded its byte limit; overflow sentinel is retained and charged"
+                "Response exceeded its transfer allowance; excess data is retained and charged"
                     .into(),
             )
         } else {

@@ -244,7 +244,10 @@ pub fn import_lightning(
         .read_to_end(&mut bytes)
         .map_err(|e| format!("Read lightning input: {e}"))?;
     if bytes.len() as u64 > MAX_IMPORT_BYTES {
-        return Err("Lightning import exceeds 64 MiB".into());
+        return Err(format!(
+            "Lightning import exceeds {}",
+            crate::data_size::format_gib(64 * 1024 * 1024)
+        ));
     }
     let text = std::str::from_utf8(&bytes)
         .map_err(|_| "Lightning input must be UTF-8")?

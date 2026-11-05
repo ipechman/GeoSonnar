@@ -125,6 +125,58 @@ pub fn primary(ui: &mut egui::Ui, text: &str) -> egui::Response {
     ui.add(egui::Button::new(RichText::new(text).color(Color32::WHITE).strong()).fill(ACCENT))
 }
 
+/// Edit a byte-domain allowance in GiB without rounding an unchanged saved value.
+/// The range remains in exact bytes, including non-power-of-two legacy limits.
+pub fn data_size_input(
+    ui: &mut egui::Ui,
+    bytes: &mut u64,
+    range: std::ops::RangeInclusive<u64>,
+) -> egui::Response {
+    use geosonnar::data_size::{bytes_to_gib, format_gib, gib_to_bytes};
+    let original = *bytes;
+    let initial = bytes_to_gib(original);
+    let mut gib = initial;
+    let response = ui.add(
+        egui::DragValue::new(&mut gib)
+            .range(bytes_to_gib(*range.start())..=bytes_to_gib(*range.end()))
+            .clamp_existing_to_range(false)
+            .speed(0.001)
+            .min_decimals(3)
+            .max_decimals(10)
+            .custom_formatter(move |value, _| {
+                let value = if value.to_bits() == initial.to_bits() {
+                    Ok(original)
+                } else {
+                    gib_to_bytes(value)
+                };
+                value.map_or_else(
+                    |_| "Invalid".into(),
+                    |value| format_gib(value).trim_end_matches(" GiB").to_owned(),
+                )
+            })
+            .suffix(" GiB"),
+    );
+    if response.changed() {
+        match gib_to_bytes(gib) {
+            Ok(value) if range.contains(&value) => *bytes = value,
+            Ok(_) => {
+                ui.colored_label(
+                    tone(ui, RED),
+                    format!(
+                        "Enter {} to {}",
+                        format_gib(*range.start()),
+                        format_gib(*range.end())
+                    ),
+                );
+            }
+            Err(error) => {
+                ui.colored_label(tone(ui, RED), error);
+            }
+        }
+    }
+    response
+}
+
 const TEXT_CHARACTER_LIMIT: usize = 32_768;
 
 /// A normal egui text editor with the SetValue action promised to assistive
@@ -641,6 +693,98 @@ mod appearance_tests {
                     }
                 });
             });
+        }
+    }
+}
+
+#[cfg(test)]
+mod data_size_tests {
+    use super::*;
+    use geosonnar::data_size::{BYTES_PER_GIB, bytes_to_gib};
+
+    fn frame(
+        ctx: &egui::Context,
+        bytes: &mut u64,
+        range: std::ops::RangeInclusive<u64>,
+        events: Vec<egui::Event>,
+    ) -> egui::Response {
+        let mut response = None;
+        let _ = ctx.run_ui(
+            egui::RawInput {
+                events,
+                ..Default::default()
+            },
+            |ui| {
+                response = Some(data_size_input(ui, bytes, range.clone()));
+            },
+        );
+        response.unwrap()
+    }
+
+    fn value_event(id: egui::Id, value: f64) -> egui::Event {
+        use egui::accesskit::{Action, ActionData, ActionRequest, TreeId};
+        egui::Event::AccessKitActionRequest(ActionRequest {
+            action: Action::SetValue,
+            target_tree: TreeId::ROOT,
+            target_node: id.accesskit_id(),
+            data: Some(ActionData::NumericValue(value)),
+        })
+    }
+
+    #[test]
+    fn gib_input_idle_preserves_exact_bytes_and_legacy_out_of_range_values() {
+        for original in [0, 1, 1_000_000, 6_000_000_001, (1u64 << 53) + 1, u64::MAX] {
+            let ctx = egui::Context::default();
+            let mut bytes = original;
+            for _ in 0..3 {
+                let response = frame(&ctx, &mut bytes, 1_000_000..=100_000_000_000, vec![]);
+                assert!(!response.changed());
+                assert_eq!(bytes, original);
+            }
+        }
+    }
+
+    #[test]
+    fn gib_input_decimal_edits_commit_bytes_and_keep_original_domain_boundaries() {
+        let ctx = egui::Context::default();
+        ctx.enable_accesskit();
+        let mut bytes = 6_000_000_000;
+        let range = 1_000_000..=100_000_000_000;
+        let id = frame(&ctx, &mut bytes, range.clone(), vec![]).id;
+        for expected in [
+            BYTES_PER_GIB + BYTES_PER_GIB / 2,
+            1_000_000,
+            100_000_000_000,
+        ] {
+            let response = frame(
+                &ctx,
+                &mut bytes,
+                range.clone(),
+                vec![value_event(id, bytes_to_gib(expected))],
+            );
+            assert!(response.changed());
+            assert_eq!(bytes, expected);
+            assert!(!frame(&ctx, &mut bytes, range.clone(), vec![]).changed());
+            assert_eq!(bytes, expected);
+        }
+    }
+
+    #[test]
+    fn gib_input_rejects_invalid_accesskit_values_without_saturating_bytes() {
+        for invalid in [
+            f64::NAN,
+            f64::INFINITY,
+            -1.0,
+            bytes_to_gib(999_999),
+            bytes_to_gib(100_000_000_001),
+        ] {
+            let ctx = egui::Context::default();
+            ctx.enable_accesskit();
+            let mut bytes = 6_000_000_000;
+            let range = 1_000_000..=100_000_000_000;
+            let id = frame(&ctx, &mut bytes, range.clone(), vec![]).id;
+            frame(&ctx, &mut bytes, range, vec![value_event(id, invalid)]);
+            assert_eq!(bytes, 6_000_000_000, "invalid input {invalid}");
         }
     }
 }

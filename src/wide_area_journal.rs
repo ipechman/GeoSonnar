@@ -124,7 +124,10 @@ impl Journal {
         let mut bytes = serde_json::to_vec(row).map_err(|e| e.to_string())?;
         bytes.push(b'\n');
         if bytes.len() > 16 * 1024 {
-            return Err("Receiver summary exceeds 16 KiB".into());
+            return Err(format!(
+                "Receiver summary exceeds {}",
+                crate::data_size::format_gib(16 * 1024)
+            ));
         }
         if !self.can_write(bytes.len() as u64 + 4096) {
             return Err("Wide-area output budget exhausted".into());

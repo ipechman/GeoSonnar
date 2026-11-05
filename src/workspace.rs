@@ -892,7 +892,10 @@ pub fn save(manifest: &Path, document: &ReviewWorkspace) -> Result<PathBuf, Stri
     let portable = transformed_bindings(document, &case_base, true)?;
     let bytes = serde_json::to_vec_pretty(&portable).map_err(|e| e.to_string())?;
     if bytes.len() > MAX_DOCUMENT_BYTES {
-        return Err("Workspace exceeds 64 MiB".into());
+        return Err(format!(
+            "Workspace exceeds {}",
+            crate::data_size::format_gib(64 * 1024 * 1024)
+        ));
     }
     let base = case_base.join("workspace-reviews");
     match fs::create_dir(&base) {
@@ -974,7 +977,10 @@ pub fn load(manifest: &Path, path: &Path) -> Result<ReviewWorkspace, String> {
         .read_to_end(&mut bytes)
         .map_err(|e| e.to_string())?;
     if bytes.len() > MAX_DOCUMENT_BYTES {
-        return Err("Workspace file exceeds 64 MiB".into());
+        return Err(format!(
+            "Workspace file exceeds {}",
+            crate::data_size::format_gib(64 * 1024 * 1024)
+        ));
     }
     let doc: ReviewWorkspace = serde_json::from_slice(&bytes).map_err(|e| e.to_string())?;
     verify(manifest, &doc)?;

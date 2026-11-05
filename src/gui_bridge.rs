@@ -598,7 +598,10 @@ impl Companion {
         casework::read_case(&manifest, false)?;
         regular(plan_path)?;
         if fs::metadata(plan_path).map_err(|e| e.to_string())?.len() > MAX_PLAN_BYTES {
-            return Err("Imported plan exceeds the 4 MiB GUI plan limit".into());
+            return Err(format!(
+                "Imported plan exceeds the {} GUI plan limit",
+                crate::data_size::format_gib(4 * 1024 * 1024)
+            ));
         }
         let original = fs::read(plan_path).map_err(|e| e.to_string())?;
         let mut plan: JobPlan = serde_json::from_slice(&original).map_err(|e| e.to_string())?;

@@ -17,6 +17,29 @@ use std::{
 };
 
 static NEXT: AtomicU64 = AtomicU64::new(0);
+
+#[test]
+fn native_estimate_reports_output_allowance_without_work_limit_or_grid_mutation() {
+    let mut fixture = Fixture::new(64, false);
+    fixture.request.budgets.work_limit_enabled = false;
+    fixture.request.budgets.max_work_units = 0;
+    fixture.request.budgets.max_output_bytes = 16 * 1024 * 1024;
+    let before = serde_json::to_vec(&fixture.request).unwrap();
+    let error = wide_area_pair::estimate(&fixture.request).unwrap_err();
+    assert!(error.starts_with("Output allowance too small:"));
+    assert!(!error.contains("work"));
+    assert_eq!(serde_json::to_vec(&fixture.request).unwrap(), before);
+    fixture.request.budgets.max_output_bytes =
+        wide_area_pair::preliminary_output_bytes(fixture.request.grid.count).unwrap();
+    let estimate = wide_area_pair::estimate(&fixture.request).unwrap();
+    assert_eq!(estimate.receiver_count, fixture.request.grid.count);
+    assert_eq!(
+        estimate.minimum_output_bytes,
+        fixture.request.budgets.max_output_bytes
+    );
+    assert!(estimate.maximum_timing_pairs_before_scan.is_none());
+}
+
 fn sha(bytes: &[u8]) -> String {
     format!("{:x}", Sha256::digest(bytes))
 }

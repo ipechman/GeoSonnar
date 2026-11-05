@@ -318,7 +318,7 @@ fn scan(directory: &Path, plan: &FmiPlan) -> Result<Scan, String> {
                 body,
                 http_status: None,
                 error: Some(
-                    "Interrupted attempt has no final receipt; its bytes count toward the budget"
+                    "Interrupted attempt has no final receipt; its transferred data counts toward the allowance"
                         .into(),
                 ),
                 finished_unix_s: 0,
@@ -326,7 +326,7 @@ fn scan(directory: &Path, plan: &FmiPlan) -> Result<Scan, String> {
         };
         if receipt.error.is_none() {
             if receipt.body.bytes > receipt.request.byte_limit {
-                return Err("Successful FMI receipt exceeds its request byte limit".into());
+                return Err("Successful FMI receipt exceeds its request transfer allowance".into());
             }
             let bytes = fs::read(&body_path).map_err(|e| e.to_string())?;
             let parsed = provider::parse_chunk(plan, receipt.request.chunk_index, &bytes)?;
@@ -334,7 +334,7 @@ fn scan(directory: &Path, plan: &FmiPlan) -> Result<Scan, String> {
         }
         charged_bytes = charged_bytes
             .checked_add(receipt.body.bytes)
-            .ok_or("FMI byte inventory overflow")?;
+            .ok_or("FMI transfer-size inventory overflow")?;
         result.receipts.push(receipt);
     }
     Ok(result)
@@ -350,7 +350,7 @@ fn report(
     let transferred_bytes = scan.receipts.iter().try_fold(0u64, |total, r| {
         total
             .checked_add(r.body.bytes)
-            .ok_or("FMI byte counter overflow")
+            .ok_or("FMI transfer-size counter overflow")
     })?;
     let mut errors = scan
         .receipts
@@ -508,12 +508,12 @@ fn publish(
         .to_path_buf();
     item.entry.source = json!({"provider":"FMI/NORDLIS","license":"CC BY 4.0","license_url":"https://en.ilmatieteenlaitos.fi/open-data-licence","request":item.plan.request,"plan_sha256":report.plan_sha256,"status":report.status,"source_coverage_complete":false,"location_verified":false});
     item.entry.notes = format!(
-        "FMI {:?}: {}/{} query chunks, {} strikes, {} cumulative response bytes. Query completion does not prove complete lightning coverage. Import and explicit source interpretation remain separate; heights are unknown.",
+        "FMI {:?}: {}/{} query chunks, {} strikes, {} cumulative response data. Query completion does not prove complete lightning coverage. Import and explicit source interpretation remain separate; heights are unknown.",
         report.status,
         report.chunks_complete,
         report.chunks_total,
         report.owned_rows,
-        report.transferred_bytes
+        crate::data_size::format_gib(report.transferred_bytes)
     );
     unchanged_case(manifest, &item.entry.case_manifest_sha256)?;
     write_new(
@@ -606,7 +606,7 @@ where
             .saturating_sub(current.transferred_bytes);
         if remaining == 0 {
             extra.push(
-                "Cumulative response-byte budget exhausted, including failed attempts".into(),
+                "Cumulative response-data allowance exhausted, including failed attempts".into(),
             );
             break;
         }
@@ -660,7 +660,7 @@ where
             ));
         }
         if byte_count > limit {
-            error = Some("Response exceeded its declared byte budget".into());
+            error = Some("Response exceeded its declared transfer allowance".into());
         }
         if error.is_none() {
             let bytes = fs::read(&body).map_err(|e| e.to_string())?;
@@ -743,7 +743,7 @@ pub fn import(manifest: &Path, id: &str, cancel: &AtomicBool) -> Result<CatalogE
         .len()
         > 64 * 1024 * 1024
     {
-        return Err("Normalized FMI strikes exceed 64 MiB; narrow the request".into());
+        return Err("Normalized FMI strikes exceed 0.0625 GiB; narrow the request".into());
     }
     if cancel.load(Ordering::Relaxed) {
         return Err("FMI import cancelled; original responses retained".into());

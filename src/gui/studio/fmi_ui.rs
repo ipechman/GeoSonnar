@@ -277,11 +277,11 @@ impl Studio {
             if self.data.downloading.as_deref() == Some("fmi") {
                 if let Some(progress) = &self.data.fmi.progress {
                     ui.label(format!(
-                        "{} · {} / {} chunks · {:.2} MiB received",
+                        "{} · {} / {} chunks · {} received",
                         progress.message,
                         progress.chunks_complete,
                         progress.chunks_total,
-                        progress.transferred_bytes as f64 / 1_048_576.0
+                        geosonnar::data_size::format_gib(progress.transferred_bytes)
                     ));
                     ui.add(
                         egui::ProgressBar::new(
@@ -314,12 +314,9 @@ impl Studio {
                     ui.label(label); ui.add(egui::DragValue::new(value).speed(0.01).max_decimals(5));
                 }
             });
-            let mut mib = self.data.fmi.request.max_total_bytes as f64 / 1_048_576.0;
             ui.horizontal_wrapped(|ui| {
-                ui.label("Cumulative response limit");
-                if ui.add(egui::DragValue::new(&mut mib).range(1.0..=64.0).suffix(" MiB")).changed() {
-                    self.data.fmi.request.max_total_bytes = (mib * 1_048_576.0).round() as u64;
-                }
+                ui.label("Cumulative response allowance (GiB)");
+                data_size_input(ui, &mut self.data.fmi.request.max_total_bytes, 1_048_576..=64 * 1_048_576);
             });
             egui::CollapsingHeader::new("Copy a padded window from Search").show(ui, |ui| {
                 ui.horizontal_wrapped(|ui| {
@@ -366,10 +363,10 @@ impl Studio {
             plan.request.bounds[3]
         ));
         ui.label(format!(
-            "{} chunks · {:.1} MiB cumulative cap · {:.1} MiB per response",
+            "{} chunks · {} cumulative allowance · {} per response",
             plan.chunks.len(),
-            plan.request.max_total_bytes as f64 / 1_048_576.0,
-            plan.max_response_bytes as f64 / 1_048_576.0
+            geosonnar::data_size::format_gib(plan.request.max_total_bytes),
+            geosonnar::data_size::format_gib(plan.max_response_bytes)
         ));
         muted(
             ui,
@@ -407,12 +404,12 @@ impl Studio {
             FmiStatus::Cancelled => "Cancelled request; import is unavailable",
         });
         ui.label(format!(
-            "{} / {} chunks complete · {} source rows · {} retained rows · {:.2} MiB transferred",
+            "{} / {} chunks complete · {} source rows · {} retained rows · {} transferred",
             report.chunks_complete,
             report.chunks_total,
             report.raw_rows,
             report.owned_rows,
-            report.transferred_bytes as f64 / 1_048_576.0
+            geosonnar::data_size::format_gib(report.transferred_bytes)
         ));
         muted(
             ui,

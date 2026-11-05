@@ -154,7 +154,13 @@ impl Studio {
             return;
         };
         let manifest = case.manifest.clone();
-        let bytes = (self.wide.import_disk_gib * 1024_f64.powi(3)) as u64;
+        let bytes = match gib_to_bytes(self.wide.import_disk_gib) {
+            Ok(bytes) => bytes,
+            Err(error) => {
+                self.notice = Some((true, error));
+                return;
+            }
+        };
         let memory = self.wide.settings.max_index_memory_bytes;
         self.wide.cancel = Arc::new(AtomicBool::new(false));
         let cancel = self.wide.cancel.clone();
@@ -344,7 +350,8 @@ impl Studio {
                     ));
                 }
             }
-            WideReply::Report(report, document) | WideReply::ReopenedReport(report, document) => {
+            WideReply::Report(report, document, budgets)
+            | WideReply::ReopenedReport(report, document, budgets) => {
                 self.wide.row_order = (0..report.best_hypotheses.len()).collect();
                 self.wide.sort_column = 0;
                 self.wide.sort_reverse = false;
@@ -353,6 +360,7 @@ impl Studio {
                     .is_some_and(|doc| !self.deleted_sources_ready(doc));
                 self.wide.report = Some(Arc::new(*report));
                 self.wide.report_document = document.map(|d| *d);
+                self.wide.report_budgets = budgets;
                 self.wide.show_results = true;
                 self.pending_action = Some(Action::ReviewResults);
                 self.notice = Some((false, "Wide-area result saved. Review its completion status and alternatives; nothing was applied to the evidence.".into()));
@@ -390,6 +398,13 @@ impl Studio {
                 return;
             }
         };
+        if let Err(error) =
+            wide_area_pair::check_preliminary_budgets(request.grid.count, &request.budgets)
+        {
+            self.wide.section = PlanSection::Resources;
+            self.notice = Some((true, error));
+            return;
+        }
         self.wide.cancel = Arc::new(AtomicBool::new(false));
         if !run {
             let cancel = self.wide.cancel.clone();
@@ -486,6 +501,7 @@ impl Studio {
                 Ok(ResultValue::WideReady(Box::new(WideReply::Report(
                     Box::new(report),
                     Some(Box::new(doc)),
+                    Some(request.budgets.clone()),
                 ))))
             },
         );

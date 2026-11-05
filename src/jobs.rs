@@ -354,7 +354,10 @@ fn copy_frozen(
 
 fn checked_json(path: &Path, kind: &str) -> Result<(), String> {
     if fs::metadata(path).map_err(|e| e.to_string())?.len() > 512 * 1024 * 1024 {
-        return Err("Job JSON exceeds 512 MiB limit".into());
+        return Err(format!(
+            "Job JSON exceeds the {} limit",
+            crate::data_size::format_gib(512 * 1024 * 1024)
+        ));
     }
     match kind {
         "rank" => {

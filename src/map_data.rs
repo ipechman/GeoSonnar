@@ -494,7 +494,10 @@ pub fn load_with_time_origin(path: &Path, explicit_origin: Option<f64>) -> Resul
     if !["tif", "tiff", "csv"].contains(&extension.as_str())
         && fs::metadata(&path).map_err(|e| e.to_string())?.len() > MAX_JSON_BYTES
     {
-        return Err("Map JSON exceeds 256 MiB; import a bounded region first".into());
+        return Err(format!(
+            "Map JSON exceeds {}; import a bounded region first",
+            crate::data_size::format_gib(256 * 1024 * 1024)
+        ));
     }
     let before = sha256(&path)?;
     let mut result = if ["tif", "tiff"].contains(&extension.as_str()) {
@@ -521,7 +524,10 @@ pub fn load_with_time_origin(path: &Path, explicit_origin: Option<f64>) -> Resul
         parse_value(&serde_json::json!({"schema_version":1,"strikes":catalog.strikes}))?
     } else {
         if fs::metadata(&path).map_err(|e| e.to_string())?.len() > MAX_JSON_BYTES {
-            return Err("Map JSON exceeds 256 MiB; import a bounded region first".into());
+            return Err(format!(
+                "Map JSON exceeds {}; import a bounded region first",
+                crate::data_size::format_gib(256 * 1024 * 1024)
+            ));
         }
         let mut bytes = Vec::new();
         File::open(&path)

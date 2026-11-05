@@ -444,6 +444,10 @@ fn legacy_shared_and_new_independent_bounds_reopen_without_rewriting_request() {
             wide_area_pair::request_sha256(&plan).unwrap()
         );
         assert_eq!(studio.wide.report_document.as_ref(), Some(&document));
+        assert_eq!(
+            serde_json::to_value(studio.wide.report_budgets.as_ref().unwrap()).unwrap(),
+            serde_json::to_value(&plan.budgets).unwrap()
+        );
         assert_eq!(studio.document.as_ref(), Some(&document));
         assert_eq!(
             studio.wide.settings, draft,
@@ -488,6 +492,398 @@ fn painted_text(mut paint: impl FnMut(&mut egui::Ui)) -> String {
         collect(&shape.shape, &mut text);
     }
     text.join("\n")
+}
+
+#[test]
+fn issue_one_output_reservation_is_actionable_with_work_limit_disabled() {
+    let mut settings = Settings {
+        work_limit_enabled: false,
+        max_work: 0,
+        max_output: gib_to_bytes(1.598).unwrap(),
+        ..Settings::default()
+    };
+    let before = settings.clone();
+    let locations = 18_387_820;
+    let required = wide_area_pair::preliminary_output_bytes(locations).unwrap();
+    let text = painted_text(|ui| output_allowance_ui(ui, &mut settings, Some(locations)));
+    for expected in [
+        "Output allowance (GiB)",
+        "Output allowance is too small",
+        "1.660 GiB",
+        "1.598 GiB",
+        "Increase Output allowance",
+        "grid are unchanged",
+        "not a forecast",
+        "Actual saved results may need more space",
+    ] {
+        assert!(text.contains(expected), "Missing {expected}: {text}");
+    }
+    assert!(!text.contains("work/output") && !text.contains("work-unit allowance is too small"));
+    assert!(required > settings.max_output);
+    assert_eq!(settings, before);
+    settings.max_output = 8 * 1024 * 1024 * 1024;
+    let changed = settings.clone();
+    let text = painted_text(|ui| output_allowance_ui(ui, &mut settings, Some(locations)));
+    assert!(!text.contains("is too small"));
+    assert!(text.contains("8.000 GiB") && text.contains("does not guarantee completion"));
+    assert_eq!(settings, changed);
+}
+
+#[test]
+fn byte_close_gib_comparison_and_idle_controls_preserve_exact_budget_fields() {
+    let locations = 18_387_820;
+    let required = wide_area_pair::preliminary_output_bytes(locations).unwrap();
+    let mut settings = Settings {
+        max_output: required - 1,
+        ..Settings::default()
+    };
+    let (required_text, allowed_text) = format_gib_pair(required, settings.max_output);
+    assert_ne!(required_text, allowed_text);
+    let before = settings.clone();
+    let text = painted_text(|ui| output_allowance_ui(ui, &mut settings, Some(locations)));
+    assert!(
+        text.contains(&required_text)
+            && text.contains(&allowed_text)
+            && text.contains("is too small")
+    );
+    assert_eq!(settings, before);
+
+    let mut studio = studio();
+    studio.wide.settings = reviewed(&mut studio);
+    studio.wide.settings.max_output += 1;
+    studio.wide.settings.max_index_memory_bytes += 1;
+    studio.wide.source = Some(source());
+    studio.wide.section = PlanSection::Resources;
+    let document = studio.document.clone();
+    let settings = studio.wide.settings.clone();
+    let text = painted_text(|ui| studio.wide_controls_ui(ui));
+    for expected in [
+        "Output allowance (GiB)",
+        "Source/index memory allowance (GiB)",
+        "0.250 GiB",
+        "Retained ranking rows",
+        "does not reduce the locations",
+        "runtime limit can stop",
+        "no automatic retry or resume",
+    ] {
+        assert!(text.contains(expected), "Missing {expected}: {text}");
+    }
+    assert!(!text.contains("MiB") && !text.contains("output bytes"));
+    assert_eq!(studio.wide.settings, settings);
+    assert_eq!(studio.document, document);
+    assert!(studio.undo.is_empty() && !studio.busy() && studio.receiver.try_recv().is_err());
+}
+
+#[test]
+fn section_navigation_wraps_when_narrow_and_never_changes_search_inputs() {
+    for (width, scale) in [(240., 1.), (320., 1.5)] {
+        let mut studio = studio();
+        studio.wide.settings = reviewed(&mut studio);
+        let settings = studio.wide.settings.clone();
+        let document = studio.document.clone();
+        let ctx = egui::Context::default();
+        ctx.all_styles_mut(|style| {
+            for font in style.text_styles.values_mut() {
+                font.size *= scale;
+            }
+        });
+        let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(width, 500.));
+        let mut bounds = Vec::new();
+        let _ = ctx.run_ui(
+            egui::RawInput {
+                screen_rect: Some(screen),
+                ..Default::default()
+            },
+            |ui| {
+                bounds = plan_section_tabs(ui, &mut studio.wide.section)
+                    .into_iter()
+                    .map(|r| r.rect)
+                    .collect();
+            },
+        );
+        assert_eq!(bounds.len(), 4);
+        assert!(
+            bounds
+                .iter()
+                .all(|rect| rect.left() >= screen.left() && rect.right() <= screen.right() + 0.5)
+        );
+        assert!(bounds[3].top() > bounds[0].top());
+        for (index, section) in [
+            PlanSection::Area,
+            PlanSection::Evidence,
+            PlanSection::Resources,
+            PlanSection::Estimate,
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let position = bounds[index].center();
+            for pressed in [true, false] {
+                let _ = ctx.run_ui(
+                    egui::RawInput {
+                        screen_rect: Some(screen),
+                        events: vec![
+                            egui::Event::PointerMoved(position),
+                            egui::Event::PointerButton {
+                                pos: position,
+                                button: egui::PointerButton::Primary,
+                                pressed,
+                                modifiers: egui::Modifiers::NONE,
+                            },
+                        ],
+                        ..Default::default()
+                    },
+                    |ui| {
+                        plan_section_tabs(ui, &mut studio.wide.section);
+                    },
+                );
+            }
+            assert_eq!(studio.wide.section, section);
+            assert_eq!(studio.wide.settings, settings);
+            assert_eq!(studio.document, document);
+        }
+        assert!(studio.undo.is_empty() && !studio.busy());
+    }
+}
+
+#[test]
+fn disabled_run_explains_changed_settings_and_keeps_old_estimate_separate() {
+    let mut studio = studio();
+    studio.wide.settings = reviewed(&mut studio);
+    let source = source();
+    let document = studio.document.clone().unwrap();
+    let request = request(&document, &source, &studio.wide.settings).unwrap();
+    let estimate = estimate_fixture(&request, &source);
+    studio.wide.source = Some(source);
+    studio.wide.prepared = Some(Box::new(Prepared {
+        request,
+        estimate,
+        document: document.clone(),
+        settings: studio.wide.settings.clone(),
+    }));
+    assert!(run_disabled_reason(&studio.wide, Some(&document), false).is_none());
+    studio.wide.settings.max_output += 1;
+    studio.wide.section = PlanSection::Estimate;
+    let settings = studio.wide.settings.clone();
+    assert_eq!(
+        run_disabled_reason(&studio.wide, Some(&document), false),
+        Some("Settings changed — estimate again.")
+    );
+    let text = painted_text(|ui| studio.wide_controls_ui(ui));
+    for expected in [
+        "Area/grid",
+        "Evidence/assumptions",
+        "Resource allowances",
+        "Estimate/run",
+        "Previous estimate",
+        "Settings changed — estimate again",
+        "Run reviewed wide-area plan",
+        "Review Resource allowances",
+    ] {
+        assert!(text.contains(expected), "Missing {expected}: {text}");
+    }
+    assert_eq!(studio.wide.settings, settings);
+    assert_eq!(studio.document.as_ref(), Some(&document));
+    assert!(studio.wide.prepared.is_some() && studio.undo.is_empty() && !studio.busy());
+}
+
+#[test]
+fn preliminary_output_refusal_opens_allowances_without_loading_data_or_changing_grid() {
+    let mut studio = studio();
+    studio.wide.settings = reviewed(&mut studio);
+    studio.wide.settings.work_limit_enabled = false;
+    studio.wide.settings.max_work = 0;
+    studio.wide.settings.max_output = 16 * 1024 * 1024;
+    studio.wide.source = Some(source());
+    studio.document.as_mut().unwrap().map.grid_spacing_m = 1000.;
+    let document = studio.document.clone();
+    let settings = studio.wide.settings.clone();
+    studio.prepare_wide(&egui::Context::default(), false);
+    assert_eq!(studio.wide.section, PlanSection::Resources);
+    let (error, message) = studio.notice.as_ref().unwrap();
+    assert!(*error && message.contains("Output allowance") && message.contains("GiB"));
+    assert!(!message.contains("work/output") && !message.contains("work-unit allowance"));
+    assert_eq!(studio.document, document);
+    assert_eq!(studio.wide.settings, settings);
+    assert!(studio.wide.prepared.is_none() && !studio.busy() && !studio.wide.running);
+    assert!(studio.receiver.try_recv().is_err() && studio.undo.is_empty());
+}
+
+#[test]
+fn saved_combined_limit_uses_verified_saved_allowances_without_rewriting_report() {
+    let fixture = SavedRunFixture::new();
+    let mut studio = studio();
+    studio.wide.settings = reviewed(&mut studio);
+    let document = studio.document.clone().unwrap();
+    let plan = request(&document, &source(), &studio.wide.settings).unwrap();
+    let mut report = wide_area_pair::run(
+        &plan,
+        &fixture.0.join("legacy-diagnostic"),
+        &AtomicBool::new(true),
+        |_| {},
+    )
+    .unwrap();
+    report.status = wide_area_pair::WideStatus::BudgetExceeded;
+    report.progress.total_receivers = 18_387_820;
+    report.error = Some("The full declared grid cannot fit the explicit minimum work/output budget; no receivers were removed".into());
+    let saved_report = serde_json::to_value(&report).unwrap();
+    let mut saved_budgets = plan.budgets.clone();
+    saved_budgets.work_limit_enabled = false;
+    saved_budgets.max_work_units = 0;
+    saved_budgets.max_output_bytes = gib_to_bytes(1.598).unwrap();
+    studio.wide.settings.max_output = 8 * 1024 * 1024 * 1024;
+    let active = studio.wide.settings.clone();
+    studio.accept_wide_reply(WideReply::ReopenedReport(
+        Box::new(report),
+        None,
+        Some(saved_budgets.clone()),
+    ));
+    let text = painted_text(|ui| {
+        studio.wide_results_ui(ui);
+    });
+    assert!(
+        text.contains("Output allowance")
+            && text.contains("1.660 GiB")
+            && text.contains("1.598 GiB"),
+        "{text}"
+    );
+    assert!(text.contains("Copy original diagnostic"));
+    assert!(
+        !text.contains("minimum work/output budget") && !text.contains("Enabled work-unit limit")
+    );
+    assert_eq!(
+        serde_json::to_value(studio.wide.report.as_ref().unwrap().as_ref()).unwrap(),
+        saved_report
+    );
+    assert_eq!(studio.wide.settings, active);
+    assert_eq!(studio.document, Some(document));
+    assert!(studio.undo.is_empty());
+    saved_budgets.work_limit_enabled = true;
+    let separate = saved_diagnostic(
+        saved_report["error"].as_str().unwrap(),
+        18_387_820,
+        Some(&saved_budgets),
+    );
+    assert!(
+        separate.contains("Output allowance") && separate.contains("Enabled work-unit limit"),
+        "{separate}"
+    );
+}
+
+#[test]
+fn saved_memory_diagnostic_shows_gib_and_copies_exact_original_only_on_click() {
+    let errors = [
+        "Combined source/spatial-index/local-CPA memory needs 1024 bytes, exceeding the declared 512 bytes; no source pass or receiver was removed",
+        "Track-store index memory budget exceeded: need at least 1024 bytes; declared 512",
+        "One continuous pass exceeds the 256 MiB track-cache bound; it was not truncated",
+    ];
+    for error in errors {
+        let original = error.to_owned();
+        let text = painted_text(|ui| {
+            saved_diagnostic_ui(ui, error, 50, None);
+        });
+        assert!(text.contains("GiB") && text.contains("Copy original diagnostic"));
+        assert!(
+            !text.contains("MiB") && !text.contains("1024 bytes") && !text.contains("512 bytes")
+        );
+        let ctx = egui::Context::default();
+        let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(760., 400.));
+        let mut rect = egui::Rect::NOTHING;
+        let initial = ctx.run_ui(
+            egui::RawInput {
+                screen_rect: Some(screen),
+                ..Default::default()
+            },
+            |ui| {
+                rect = saved_diagnostic_ui(ui, error, 50, None).rect;
+            },
+        );
+        assert!(
+            !initial
+                .platform_output
+                .commands
+                .iter()
+                .any(|command| matches!(command, egui::OutputCommand::CopyText(_)))
+        );
+        for pressed in [true, false] {
+            let output = ctx.run_ui(
+                egui::RawInput {
+                    screen_rect: Some(screen),
+                    events: vec![
+                        egui::Event::PointerMoved(rect.center()),
+                        egui::Event::PointerButton {
+                            pos: rect.center(),
+                            button: egui::PointerButton::Primary,
+                            pressed,
+                            modifiers: egui::Modifiers::NONE,
+                        },
+                    ],
+                    ..Default::default()
+                },
+                |ui| {
+                    saved_diagnostic_ui(ui, error, 50, None);
+                },
+            );
+            if !pressed {
+                assert!(output.platform_output.commands.iter().any(|command| matches!(command, egui::OutputCommand::CopyText(value) if value == &original)));
+            }
+        }
+        assert_eq!(error, original);
+    }
+    let current = "Combined source/spatial-index/local-CPA memory needs 0.600 GiB, exceeding the declared 0.500 GiB; increase the source/index memory allowance and estimate again. No source pass or receiver was removed";
+    assert_eq!(saved_diagnostic(current, 50, None), current);
+    let path_error = "Source missing: C:/case/1024 bytes/example-MiB.raw";
+    assert_eq!(saved_diagnostic(path_error, 50, None), path_error);
+}
+
+#[test]
+fn busy_wide_page_stays_quiet_without_input_or_worker_updates() {
+    let mut studio = studio();
+    studio.wide.settings = reviewed(&mut studio);
+    studio.busy = Some("Checking indexed flight data".into());
+    studio.wide.running = true;
+    studio.wide.started = Some(Instant::now());
+    studio.wide.progress = Some(WideProgress {
+        stage: "verifying_source".into(),
+        total_receivers: 50,
+        ..Default::default()
+    });
+    let document = studio.document.clone();
+    let settings = studio.wide.settings.clone();
+    let progress = serde_json::to_value(&studio.wide.progress).unwrap();
+    let ctx = egui::Context::default();
+    for frame in 0..16 {
+        let output = ctx.run_ui(
+            egui::RawInput {
+                screen_rect: Some(egui::Rect::from_min_size(
+                    egui::Pos2::ZERO,
+                    egui::vec2(1000., 1600.),
+                )),
+                time: Some(frame as f64 * 0.25),
+                ..Default::default()
+            },
+            |ui| {
+                studio.toolbar(ui);
+                studio.wide_controls_ui(ui);
+                studio.wide_progress_ui(ui);
+            },
+        );
+        if frame >= 8 {
+            assert!(
+                output.viewport_output[&egui::ViewportId::ROOT].repaint_delay
+                    >= Duration::from_millis(100),
+                "unexpected busy repaint at frame {frame}"
+            );
+        }
+    }
+    assert_eq!(studio.document, document);
+    assert_eq!(studio.wide.settings, settings);
+    assert_eq!(
+        serde_json::to_value(&studio.wide.progress).unwrap(),
+        progress
+    );
+    assert!(!studio.wide.cancel.load(Ordering::Relaxed));
+    assert!(studio.undo.is_empty() && studio.wide.source.is_none());
 }
 #[test]
 fn wide_progress_distinguishes_pair_work_from_finished_locations() {
@@ -784,6 +1180,7 @@ fn zero_receiver_work_stop_shows_guidance_without_changing_evidence_or_budgets()
     studio.accept_wide_reply(WideReply::Report(
         Box::new(report.clone()),
         Some(Box::new(document.clone())),
+        Some(plan.budgets.clone()),
     ));
     let text = painted_text(|ui| {
         studio.wide_results_ui(ui);
@@ -805,11 +1202,11 @@ fn zero_receiver_work_stop_shows_guidance_without_changing_evidence_or_budgets()
         ("Global wide-area wall budget exhausted", "runtime budget"),
         (
             "Global wide-area output budget exhausted",
-            "output-byte budget",
+            "Output allowance (GiB)",
         ),
         (
             "Combined source/spatial-index/local-CPA memory needs 1024 bytes, exceeding the declared 512 bytes; no source pass or receiver was removed",
-            "Advanced memory limit",
+            "Source/index memory allowance (GiB)",
         ),
         ("Synthetic unknown limit", "reported limit"),
     ] {
@@ -1398,7 +1795,11 @@ fn cancelled_reopen_keeps_current_report_but_live_cancelled_run_is_retained() {
     incoming.request_sha256 = "d".repeat(64);
     studio.wide.running = true;
     studio.wide.cancel.store(true, Ordering::Relaxed);
-    studio.accept_wide_reply(WideReply::ReopenedReport(Box::new(incoming.clone()), None));
+    studio.accept_wide_reply(WideReply::ReopenedReport(
+        Box::new(incoming.clone()),
+        None,
+        None,
+    ));
     assert_eq!(
         studio.wide.report.as_ref().unwrap().request_sha256,
         "c".repeat(64)
@@ -1406,7 +1807,7 @@ fn cancelled_reopen_keeps_current_report_but_live_cancelled_run_is_retained() {
     assert!(studio.pending_action.is_none());
     assert_eq!(studio.document, before);
     assert!(studio.notice.as_ref().unwrap().1.contains("cancelled"));
-    studio.accept_wide_reply(WideReply::Report(Box::new(incoming), None));
+    studio.accept_wide_reply(WideReply::Report(Box::new(incoming), None, None));
     assert_eq!(
         studio.wide.report.as_ref().unwrap().request_sha256,
         "d".repeat(64)

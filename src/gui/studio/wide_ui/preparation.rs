@@ -202,7 +202,7 @@ pub(super) fn save_review_snapshot(
     };
     let bytes = serde_json::to_vec(&snapshot).map_err(|e| e.to_string())?;
     if bytes.len() > 8 * 1024 * 1024 {
-        return Err("Wide-area review snapshot exceeds 8 MiB; nothing was scored".into());
+        return Err("Wide-area review snapshot exceeds 0.0078125 GiB; nothing was scored".into());
     }
     ordinary_result_parents(output.parent().ok_or("Missing output parent")?)?;
     let mut file = std::fs::OpenOptions::new()
@@ -217,6 +217,20 @@ pub(super) fn save_review_snapshot(
 pub(super) fn load_saved_wide(path: &std::path::Path) -> Result<WideReply, String> {
     use std::io::Read;
     let report = wide_area_pair::load_report(path)?;
+    let mut request_bytes = Vec::new();
+    std::fs::File::open(path.join("request.json"))
+        .map_err(|e| e.to_string())?
+        .take(wide_area_pair::MAX_REQUEST_BYTES as u64 + 1)
+        .read_to_end(&mut request_bytes)
+        .map_err(|e| e.to_string())?;
+    if request_bytes.len() > wide_area_pair::MAX_REQUEST_BYTES {
+        return Err("Saved request exceeds its bound".into());
+    }
+    let request: WidePairRequest =
+        serde_json::from_slice(&request_bytes).map_err(|e| e.to_string())?;
+    if wide_area_pair::request_sha256(&request)? != report.request_sha256 {
+        return Err("Saved request/report identity differs".into());
+    }
     let sidecar = path.with_extension("review.json");
     let document = if sidecar.try_exists().map_err(|e| e.to_string())? {
         let metadata = std::fs::symlink_metadata(&sidecar).map_err(|e| e.to_string())?;
@@ -240,21 +254,9 @@ pub(super) fn load_saved_wide(path: &std::path::Path) -> Result<WideReply, Strin
             return Err("Saved review snapshot exceeds its bound".into());
         }
         let snapshot: ReviewSnapshot = serde_json::from_slice(&bytes).map_err(|e| e.to_string())?;
-        let mut request_bytes = Vec::new();
-        std::fs::File::open(path.join("request.json"))
-            .map_err(|e| e.to_string())?
-            .take(wide_area_pair::MAX_REQUEST_BYTES as u64 + 1)
-            .read_to_end(&mut request_bytes)
-            .map_err(|e| e.to_string())?;
-        if request_bytes.len() > wide_area_pair::MAX_REQUEST_BYTES {
-            return Err("Saved request exceeds its bound".into());
-        }
-        let request: WidePairRequest =
-            serde_json::from_slice(&request_bytes).map_err(|e| e.to_string())?;
         snapshot.document.validate()?;
         if snapshot.schema_version != 1
             || snapshot.request_sha256 != report.request_sha256
-            || wide_area_pair::request_sha256(&request)? != report.request_sha256
             || geosonnar::regional_search::document_sha256(&snapshot.document)?
                 != request.document_sha256
         {
@@ -264,5 +266,9 @@ pub(super) fn load_saved_wide(path: &std::path::Path) -> Result<WideReply, Strin
     } else {
         None
     };
-    Ok(WideReply::ReopenedReport(Box::new(report), document))
+    Ok(WideReply::ReopenedReport(
+        Box::new(report),
+        document,
+        Some(request.budgets),
+    ))
 }

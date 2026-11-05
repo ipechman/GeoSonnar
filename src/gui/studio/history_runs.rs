@@ -463,7 +463,7 @@ impl Studio {
             .id_salt("regional_run_history").show(ui, |ui| {
                 refresh = !self.run_history.listed && !self.busy();
                 if ui.add_enabled(!self.busy(), egui::Button::new("Refresh history")).clicked() { refresh = true; }
-                muted(ui, "Local limit: 256 runs / 1 GiB. Saving copies and deleting history never changes source datasets. History is not a complete portable case.");
+                muted(ui, "Local limit: 256 runs / 1.000 GiB. Saving copies and deleting history never changes source datasets. History is not a complete portable case.");
                 if self.run_history.rows.is_empty() { ui.label("No saved runs listed."); }
                 egui::ScrollArea::vertical().id_salt("run_history_rows").max_height(200.0).show(ui, |ui| {
                     for row in &self.run_history.rows {

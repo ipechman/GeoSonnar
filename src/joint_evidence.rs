@@ -677,8 +677,16 @@ fn prepare(request: &JointRequest) -> Result<Prepared, String> {
         || working_memory > request.limits.max_working_memory_bytes
         || envelope_memory > plan.limits.max_memory_bytes
     {
+        let (report_required, report_allowed) = crate::data_size::format_gib_pair(
+            report_bytes,
+            request.limits.max_serialized_report_bytes,
+        );
+        let (memory_required, memory_allowed) = crate::data_size::format_gib_pair(
+            working_memory,
+            request.limits.max_working_memory_bytes,
+        );
         return Err(format!(
-            "Joint aggregate limits exceeded: Doppler {} evaluations/{} residuals/{} track visits, envelope {envelope_work} units, report bound {report_bytes} bytes, working-memory bound {working_memory} bytes; explicitly narrow data or increase declared limits within hard caps",
+            "Joint aggregate limits exceeded: Doppler {} evaluations/{} residuals/{} track visits, envelope {envelope_work} units, report bound {report_required} / {report_allowed} allowed, working-memory bound {memory_required} / {memory_allowed} allowed; explicitly narrow data or increase declared limits within hard caps",
             regional.evaluations, regional.residual_evaluations, regional.trajectory_point_visits
         ));
     }

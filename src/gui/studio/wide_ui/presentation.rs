@@ -1,6 +1,162 @@
 //! Wide-area search presentation.
 use super::*;
 
+pub(super) fn plan_section_tabs(
+    ui: &mut egui::Ui,
+    section: &mut PlanSection,
+) -> Vec<egui::Response> {
+    let mut responses = Vec::new();
+    ui.horizontal_wrapped(|ui| {
+        for (value, label) in [
+            (PlanSection::Area, "Area/grid"),
+            (PlanSection::Evidence, "Evidence/assumptions"),
+            (PlanSection::Resources, "Resource allowances"),
+            (PlanSection::Estimate, "Estimate/run"),
+        ] {
+            let response = ui.add(egui::Button::selectable(*section == value, label).wrap());
+            if response.clicked() {
+                *section = value;
+            }
+            responses.push(response);
+        }
+    });
+    responses
+}
+
+pub(super) fn output_allowance_ui(
+    ui: &mut egui::Ui,
+    settings: &mut Settings,
+    locations: Option<u64>,
+) {
+    ui.label("Output allowance (GiB)");
+    data_size_input(
+        ui,
+        &mut settings.max_output,
+        16 * 1024 * 1024..=8 * 1024 * 1024 * 1024,
+    );
+    if let Some(locations) = locations {
+        match wide_area_pair::preliminary_output_bytes(locations) {
+            Ok(required) => {
+                let (required_text, allowed_text) = format_gib_pair(required, settings.max_output);
+                let comparison = format!(
+                    "Preliminary minimum reservation: {required_text} · Allowed: {allowed_text}"
+                );
+                if required > settings.max_output {
+                    ui.colored_label(tone(ui, RED), "Output allowance is too small.");
+                    ui.colored_label(tone(ui, RED), comparison);
+                    muted(
+                        ui,
+                        "Increase Output allowance here, then estimate again. The search area and grid are unchanged.",
+                    );
+                } else {
+                    ui.label(comparison);
+                }
+            }
+            Err(error) => {
+                ui.colored_label(tone(ui, RED), error);
+            }
+        }
+    } else {
+        muted(
+            ui,
+            "Choose a valid Area/grid to calculate the preliminary output reservation.",
+        );
+    }
+    muted(
+        ui,
+        "This is a preliminary minimum reservation, not a forecast of full-grid output. Actual saved results may need more space. Passing this check does not guarantee completion within output, time or memory allowances.",
+    );
+}
+
+pub(super) fn run_disabled_reason(
+    wide: &WideState,
+    document: Option<&ReviewWorkspace>,
+    busy: bool,
+) -> Option<&'static str> {
+    if busy {
+        return Some("Wait for the current operation to finish.");
+    }
+    if document.is_none() {
+        return Some("Open a case before estimating a search.");
+    }
+    let Some(source) = &wide.source else {
+        return Some("Select indexed flight data, then estimate the plan.");
+    };
+    let Some(prepared) = &wide.prepared else {
+        return Some("Estimate the complete plan before running.");
+    };
+    if document != Some(&prepared.document)
+        || wide.settings != prepared.settings
+        || source.binding != prepared.request.source
+    {
+        Some("Settings changed — estimate again.")
+    } else {
+        None
+    }
+}
+
+// Adapt only known historical diagnostics. The saved message and request remain
+// untouched; arbitrary source paths/provenance are never searched and replaced.
+pub(super) fn saved_diagnostic(
+    error: &str,
+    locations: u64,
+    budgets: Option<&WideBudgets>,
+) -> String {
+    if error
+        == "The full declared grid cannot fit the explicit minimum work/output budget; no receivers were removed"
+    {
+        return match budgets {
+            Some(budgets) => match wide_area_pair::check_preliminary_budgets(locations, budgets) {
+                Err(diagnostic) => diagnostic,
+                Ok(required) => {
+                    let (required, allowed) = format_gib_pair(required, budgets.max_output_bytes);
+                    format!("This saved run stopped at its preliminary resource check. Current checks for its saved request do not reproduce that refusal: minimum output reservation {required}; allowed {allowed}. Re-estimate before starting a new run; the original diagnostic remains available to copy.")
+                }
+            },
+            None => "This older run stopped at a preliminary resource check. Its verified saved allowances are unavailable here; re-estimate the saved plan to obtain separate output (GiB) and work guidance. The original diagnostic remains available to copy.".into(),
+        };
+    }
+    let memory_pair = error
+        .strip_prefix("Combined source/spatial-index/local-CPA memory needs ")
+        .and_then(|value| value.strip_suffix(" bytes; no source pass or receiver was removed"))
+        .and_then(|value| value.split_once(" bytes, exceeding the declared "))
+        .or_else(|| {
+            error
+                .strip_prefix("Track-store index memory budget exceeded: need at least ")
+                .and_then(|value| value.split_once(" bytes; declared "))
+        })
+        .and_then(|(required, allowed)| {
+            Some((required.parse::<u64>().ok()?, allowed.parse::<u64>().ok()?))
+        });
+    if let Some((required, allowed)) = memory_pair {
+        let (required, allowed) = format_gib_pair(required, allowed);
+        return format!(
+            "Saved source/index memory refusal: required at least {required}; allowed {allowed}. Review Source/index memory allowance (GiB), then estimate again. No source pass or location was removed."
+        );
+    }
+    match error {
+        "One continuous pass exceeds the 256 MiB track-cache bound; it was not truncated" =>
+            "One continuous pass exceeds the 0.250 GiB track-cache bound; it was not truncated".into(),
+        "Track-store index memory budget exceeded: declare64MiB..4GiB" =>
+            "Source/index memory allowance must be between 0.0625 GiB and 4.000 GiB; estimate again after changing it.".into(),
+        _ => error.into(),
+    }
+}
+
+pub(super) fn saved_diagnostic_ui(
+    ui: &mut egui::Ui,
+    error: &str,
+    locations: u64,
+    budgets: Option<&WideBudgets>,
+) -> egui::Response {
+    ui.colored_label(tone(ui, AMBER), saved_diagnostic(error, locations, budgets));
+    let response = ui.button("Copy original diagnostic");
+    if response.clicked() {
+        ui.ctx().copy_text(error.to_owned());
+    }
+    response
+}
+
 pub(super) fn physical_range_ui(
     ui: &mut egui::Ui,
     label: &str,
@@ -60,14 +216,14 @@ pub(super) fn stop_guidance(report: &WidePairReport) -> Option<&'static str> {
                 | "Wide-area checkpoint budget exhausted"
                 | "Wide-area final report exceeds its reserved output budget",
             ) => {
-                "The output limit stopped this run. Review the output-byte budget and available disk space, then re-estimate before starting a new run."
+                "The output allowance stopped this run. Review Output allowance (GiB) in Resource allowances and available disk space, then re-estimate before starting a new run."
             }
             Some(error)
                 if geosonnar::track_store::is_memory_limit_error(error)
                     || error
                         .starts_with("Combined source/spatial-index/local-CPA memory needs ") =>
             {
-                "The source/index memory limit stopped this run. Review Advanced memory limit and available system memory, then re-estimate. This allowance is separate from the track cache and total application memory."
+                "The source/index memory allowance stopped this run. Review Source/index memory allowance (GiB) in Resource allowances and available system memory, then re-estimate. This allowance is separate from the track cache and total application memory."
             }
             _ => {
                 "Review the reported limit and the applicable search setting, then re-estimate before starting a new run. The saved result remains incomplete; increasing an unrelated budget may not resolve the stop."

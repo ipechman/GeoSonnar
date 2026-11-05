@@ -24,6 +24,7 @@ pub mod adsblol;
 pub mod adsblol_acquisition;
 pub mod adsblol_history;
 pub mod data_catalog;
+pub mod data_size;
 pub mod detailed_data;
 pub mod fmi_lightning;
 pub mod lightning_source;

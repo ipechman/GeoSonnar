@@ -249,13 +249,17 @@ impl Studio {
             }
             if self.data.downloading.as_deref() == Some("history") {
                 if let Some(progress) = &self.data.history.progress {
+                    let (received, allowed) = geosonnar::data_size::format_gib_pair(
+                        progress.http_payload_bytes,
+                        progress.max_download_bytes,
+                    );
                     ui.label(format!(
-                        "{}: {} / {} files · {:.1} / {:.1} MB received",
+                        "{}: {} / {} files · {} / {} received",
                         progress.stage,
                         progress.completed_files,
                         progress.selected_files,
-                        progress.http_payload_bytes as f64 / 1e6,
-                        progress.max_download_bytes as f64 / 1e6
+                        received,
+                        allowed
                     ));
                     ui.add(
                         egui::ProgressBar::new(
@@ -300,9 +304,8 @@ impl Studio {
             });
             ui.horizontal_wrapped(|ui| {
                 ui.label("Full-trace cap"); ui.add(egui::DragValue::new(&mut self.data.history.request.max_traces).range(1..=adsblol_history::MAX_TRACES));
-                let mut mb=self.data.history.request.max_download_bytes as f64/1e6;
-                ui.label("Cumulative payload cap");
-                if ui.add(egui::DragValue::new(&mut mb).range(1.0..=adsblol_history::MAX_DOWNLOAD_BYTES as f64/1e6).suffix(" MB")).changed() {self.data.history.request.max_download_bytes=(mb*1e6).round() as u64;}
+                ui.label("Cumulative payload allowance (GiB)");
+                data_size_input(ui, &mut self.data.history.request.max_download_bytes, 1_000_000..=adsblol_history::MAX_DOWNLOAD_BYTES);
             });
             if ui.button("Prepare bounded history request").clicked() {
                 match adsblol_history::plan(&self.data.history.request) {
@@ -335,10 +338,10 @@ impl Studio {
             plan.request.bounds[3]
         ));
         ui.label(format!(
-            "{} replay files · up to {} full traces · {:.1} MB cumulative payload cap",
+            "{} replay files · up to {} full traces · {} cumulative payload allowance",
             plan.replay_chunks.len(),
             plan.request.max_traces,
-            plan.request.max_download_bytes as f64 / 1e6
+            geosonnar::data_size::format_gib(plan.request.max_download_bytes)
         ));
         muted(
             ui,
@@ -401,8 +404,8 @@ impl Studio {
         ));
         ui.label(format!("Replay files complete: {} · replay timing gaps: {} · selected trace files complete: {}",report.replay_files_complete,report.replay_timing_gaps,report.selected_traces_complete));
         ui.label(format!(
-            "{:.1} MB cumulative payload · {} reused files",
-            report.http_payload_bytes as f64 / 1e6,
+            "{} cumulative payload · {} reused files",
+            geosonnar::data_size::format_gib(report.http_payload_bytes),
             report.reused_files
         ));
         muted(

@@ -1,3 +1,4 @@
+mod activity;
 mod media_setup;
 mod prediction_plot;
 pub mod renderer;
@@ -1139,7 +1140,7 @@ impl Workbench {
                     )),
             );
             if status.phase == "running" {
-                ui.horizontal(|ui| { ui.spinner(); muted(ui,"Working. A stage may take several minutes; this bar counts completed stages."); });
+                ui.horizontal(|ui| { activity::indicator(ui); muted(ui,"Working. A stage may take several minutes; this bar counts completed stages."); });
             }
             for step in &status.steps {
                 ui.horizontal(|ui| {
@@ -1307,7 +1308,7 @@ impl Workbench {
                 egui::Modal::new(egui::Id::new("close_guard")).show(ctx, |ui| {
                     ui.set_max_width(450.0);
                     ui.heading("Stopping work and closing");
-                    ui.spinner();
+                    activity::indicator(ui);
                     muted(ui, "Downloads, searches and playback have been asked to stop. GeoSonnar will close within two seconds and stop its remaining helper processes.");
                     muted(ui, "Unsaved review edits and results will be discarded. Existing files and partial downloads stay on disk.");
                 });
@@ -1489,10 +1490,10 @@ impl eframe::App for Workbench {
             .show(ui, |ui| {
                 ui.horizontal(|ui| {
                     if let Some(label) = &self.busy {
-                        ui.spinner();
+                        activity::indicator(ui);
                         ui.label(label);
                     } else if self.running.is_some() {
-                        ui.spinner();
+                        activity::indicator(ui);
                         ui.label("Job running · progress in Jobs");
                     } else {
                         muted(ui, "Ready");

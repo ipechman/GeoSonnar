@@ -456,8 +456,12 @@ pub fn preflight(
         || work > plan.limits.max_work_units
         || memory > plan.limits.max_memory_bytes
     {
+        let (required, allowed) =
+            crate::data_size::format_gib_pair(memory, plan.limits.max_memory_bytes);
         return Err(format!(
-            "Envelope preflight needs {work} bounded work units and {memory} estimated bytes; declared/hard caps must cover both (hard500000000 units/268435456 bytes)"
+            "Envelope preflight needs {work} bounded work units ({} allowed) and {required} estimated memory ({allowed} allowed); declared limits must cover both within hard caps of {MAX_WORK_UNITS} units and {}",
+            plan.limits.max_work_units,
+            crate::data_size::format_gib(MAX_MEMORY_BYTES)
         ));
     }
     Ok(EnvelopeEstimate {
