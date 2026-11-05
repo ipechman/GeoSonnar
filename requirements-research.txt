@@ -1,0 +1,6 @@
+# Used by the optional Python research tools and their validation controls.
+# The Rust application and the public validation runner use no Python packages.
+numpy
+scipy
+soundfile
+matplotlib

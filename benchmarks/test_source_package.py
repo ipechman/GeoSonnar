@@ -81,6 +81,27 @@ class SourcePackageControls(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "src/lib.rs"):
             packager.verify_export(self.output, manifest)
 
+    def test_public_tools_and_optional_contributor_guide_are_exported_without_private_tool_state(self):
+        public = {
+            "tools/validate.py": b"# Public validation entry point\r\n",
+            "tools/README.md": b"Public validation tiers\n",
+            "tools/nested/check.py": b"# Recursive public helper\n",
+            "CONTRIBUTING.md": b"How to contribute\n",
+        }
+        private = ("tools/output/run.json", "tools/private/config.json", "tools/__pycache__/check.pyc")
+        for name, data in public.items():
+            self.write(name, data)
+        for name in private:
+            self.write(name)
+        manifest = packager.package(self.output, self.archive, root=self.root)
+        names = {entry["path"] for entry in manifest["files"]}
+        self.assertTrue(set(public) <= names)
+        self.assertTrue(names.isdisjoint(private))
+        with zipfile.ZipFile(self.archive) as archive:
+            for name, data in public.items():
+                self.assertEqual((self.output / name).read_bytes(), data)
+                self.assertEqual(archive.read("GeoSonnar/" + name), data)
+
     def test_existing_directory_and_archive_are_never_overwritten(self):
         self.output.mkdir()
         marker = self.output / "keep.txt"

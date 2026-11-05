@@ -24,8 +24,8 @@ TOP_FILES = (
     ".gitignore", ".gitattributes", "Cargo.toml", "Cargo.lock", "LICENSE",
     "README.md", "THIRD_PARTY_NOTICES.md",
 )
-OPTIONAL_TOP_FILES = ("requirements-research.txt",)
-SOURCE_DIRS = ("src", "tests", "analysis", "benchmarks", "cases", "docs", "examples")
+OPTIONAL_TOP_FILES = ("requirements-research.txt", "CONTRIBUTING.md")
+SOURCE_DIRS = ("src", "tests", "analysis", "benchmarks", "cases", "docs", "examples", "tools")
 MANIFEST = "SOURCE_MANIFEST.json"
 MAX_FILE_BYTES = 10 * 1024 * 1024
 EXCLUDED_RECEIPT = "benchmarks/native_search_sensitivity_contract.json"
