@@ -1,4 +1,26 @@
-GeoSonnar 0.11.4 - Windows review workspace
+GeoSonnar 0.11.5 - Windows review workspace
+
+VERSION 0.11.5 - REUSE COMPLETED INDEXED IMPORTS
+In Data > Stored datasets, select the original archive and import settings.
+Find matching index lists saved copies with the exact source and settings.
+Use existing index verifies the archive and saved index before selecting it.
+Rebuild a new index is a separate explicit action. Verification reads the files;
+reuse avoids extraction and another stored copy. The 0.11.5 checks passed 928 native
+tests (232 headless GUI/launcher checks included), the separate 2.1-million-point
+storage control, nine media/cached-data integrations, 132 Python controls with
+one unsupported fixture skipped, and 15 release fixtures. Formatting, Clippy
+and the portable static-C-runtime build passed.
+
+The wide-area search reuses completed first-event calculations for unchanged
+inputs. The isolated candidate preserved all 2,048 fixed comparison outputs and
+the complete historical 50-location results. The broad 540-second test scored
+174,186 candidates versus 77,377 previously, but still finished 0/50 locations.
+It remains an incomplete search, with final source verification unfinished.
+Country-scale completion and independent field accuracy are not established.
+The isolated historical candidate took 25.560 seconds versus 25.127 previously.
+Separately, the final 0.11.5 CLI replay finished 50/50 historical locations in
+50.351 seconds with exact report, row and saved-page parity. This verifies
+numerical regression behavior, not an end-to-end speedup or field accuracy.
 
 VERSION 0.11.4 - OPTIONAL WORK LIMIT
 New Search > Wide-area two-pass Doppler plans show Stop after (1800 seconds /
@@ -80,13 +102,18 @@ For complete-day ADS-B data and a USA-size grid, use the indexed wide-area path:
    Choose Use complete archive UTC day, or enter the separate full-date UTC source
    interval; blank source fields mean the complete day. The earlier From UTC / To
    UTC fields belong to Import bounded tracks into library, the smaller map path.
-   Review altitude/gap settings, disk budget and Advanced memory limit (512 MiB by
-   default), then Build indexed flight data. Select the new indexed copy and choose
-   Use indexed flight data. Its exact points remain on disk, not in the map buffer.
-   In later sessions, select the completed Indexed tracks entry and choose Use
-   indexed flight data to reuse it. Build indexed flight data always creates a new
-   copy and currently repeats the import even with identical source/settings.
-   Import again when you explicitly need different source coverage or normalization.
+   Review altitude/gap settings, indexed-data size limit and Advanced memory limit
+   (512 MiB by default). Choose Find matching index to list saved copies for this
+   exact archive and selection, then Use existing index to verify and load one.
+   Finding a match alone does not verify or load it. Reuse checks the current
+   archive and saved data without extracting again or making a duplicate copy.
+   Rebuild a new index remains explicit; with no match, Build indexed flight data,
+   select the new indexed copy, then Use indexed flight data. Its exact points stay
+   on disk, not in the map buffer. The size limit also applies to an existing copy;
+   memory is checked separately. Verification still reads data; reuse is not timed.
+   In later sessions, you can also select a completed Indexed tracks entry directly
+   and choose Use indexed flight data, even if its raw archive is no longer kept.
+   Changed coverage or normalization needs a matching index or a new build.
 2. In Audio review, confirm and source-assess exactly two selected Doppler events
    with nonoverlapping intervals and at least three measured points each.
    Search > Wide-area two-pass Doppler > Copy the two selected reviewed Doppler

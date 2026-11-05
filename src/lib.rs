@@ -6,6 +6,7 @@ pub mod adsblol_history;
 pub mod atmosphere;
 pub mod audio;
 pub mod audio_priors;
+mod cached_pair;
 pub mod casework;
 pub mod data_catalog;
 pub mod decision;

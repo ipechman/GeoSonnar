@@ -892,6 +892,18 @@ struct LocalResult {
     local_cpas: u64,
     boundary: u64,
 }
+fn cache_scoring_error(error: String, stopped: Option<Stop>) -> Result<(), Stop> {
+    if let Some(stop) = stopped {
+        return Err(stop);
+    }
+    if crate::cached_pair::is_resource_error(&error) {
+        return Err(Stop {
+            status: WideStatus::BudgetExceeded,
+            reason: error,
+        });
+    }
+    Ok(())
+}
 fn push_cpa(entries: &mut Vec<CpaEntry>, entry: CpaEntry) -> Result<(), Stop> {
     if entries.len() == entries.capacity() {
         let additional = 256.min(MAX_CPA_ENTRIES - entries.len());
@@ -997,31 +1009,53 @@ fn receiver<F: FnMut(WideProgress)>(
         let first = event2.partition_point(|(_, _, c)| {
             c.arrival_time_s < target - request.separation_tolerance_s
         });
-        for &(j, cpa2_index, cpa2) in &event2[first..] {
-            if cpa2.arrival_time_s > target + request.separation_tolerance_s {
-                break;
+        let mut partners = event2[first..]
+            .iter()
+            .copied()
+            .take_while(|(_, _, cpa2)| {
+                cpa2.arrival_time_s
+                    .partial_cmp(&(target + request.separation_tolerance_s))
+                    != Some(std::cmp::Ordering::Greater)
+            })
+            .filter(|(j, cpa2_index, cpa2)| {
+                !(cpa2.arrival_time_s <= cpa1.arrival_time_s
+                    || (i == *j && cpa1_index == *cpa2_index))
+            })
+            .peekable();
+        let Some(&(first_partner, _, _)) = partners.peek() else {
+            continue;
+        };
+        // Reserve the first pair before loading or preparing its first track,
+        // exactly where the original inner loop does so. The owner outlives
+        // this context; no self-reference or global/unbounded model cache exists.
+        let first_points =
+            store.passes()[i].point_count as u64 + store.passes()[first_partner].point_count as u64;
+        guard.charge(pair_work(request, first_points, trace_work)?, progress)?;
+        let first_track = cache.load(i, store, request.pair_config.model)?;
+        let mut first_event = crate::cached_pair::FirstEventCache::new(
+            &first_track,
+            xyz,
+            [&request.events[0], &request.events[1]],
+            &request.pair_config,
+            cpa1_index,
+        );
+        for (partner_number, (j, cpa2_index, _cpa2)) in partners.enumerate() {
+            if partner_number != 0 {
+                let points =
+                    store.passes()[i].point_count as u64 + store.passes()[j].point_count as u64;
+                guard.charge(pair_work(request, points, trace_work)?, progress)?;
+                // Preserve raw-track LRU/source verification behavior and error
+                // ordering even though the context retains its immutable owner.
+                let _ = cache.load(i, store, request.pair_config.model)?;
             }
-            if cpa2.arrival_time_s <= cpa1.arrival_time_s || (i == j && cpa1_index == cpa2_index) {
-                continue;
-            }
-            let points =
-                store.passes()[i].point_count as u64 + store.passes()[j].point_count as u64;
-            let work = pair_work(request, points, trace_work)?;
-            guard.charge(work, progress)?;
-            let first_track = cache.load(i, store, request.pair_config.model)?;
             let second_track = cache.load(j, store, request.pair_config.model)?;
             let encounter = progress.timing_candidates;
             progress.timing_candidates += 1;
             local.row.timing_candidates += 1;
             let mut stopped = None;
-            match physics::score_pair_at_cpa_with_checkpoint(
-                [&first_track, &second_track],
-                xyz,
-                [&request.events[0], &request.events[1]],
-                &request.pair_config,
-                [cpa1_index, cpa2_index],
-                || source_checkpoint(guard, progress, callback, &mut stopped),
-            ) {
+            match first_event.score(&second_track, cpa2_index, || {
+                source_checkpoint(guard, progress, callback, &mut stopped)
+            }) {
                 Ok(score) => {
                     let candidate = WideCandidate {
                         receiver_index,
@@ -1040,10 +1074,8 @@ fn receiver<F: FnMut(WideProgress)>(
                     local.row.scored_candidates += 1;
                     progress.scored_candidates += 1;
                 }
-                Err(_) => {
-                    if let Some(stop) = stopped {
-                        return Err(stop);
-                    }
+                Err(error) => {
+                    cache_scoring_error(error, stopped)?;
                     local.row.scoring_rejections += 1;
                 }
             }
@@ -1218,6 +1250,28 @@ pub fn run<F: FnMut(WideProgress)>(
 }
 pub fn load_report(directory: &Path) -> Result<WidePairReport, String> {
     crate::wide_area_journal::load_report(directory)
+}
+
+#[cfg(test)]
+mod cache_resource_tests {
+    use super::*;
+    #[test]
+    fn cache_allocation_refusal_is_a_resource_stop_not_a_scoring_rejection() {
+        // Capacity overflow is a real TryReserveError and performs no allocation.
+        let allocation = Vec::<u8>::new().try_reserve_exact(usize::MAX).unwrap_err();
+        let message = crate::cached_pair::allocation_error(allocation);
+        let stop = cache_scoring_error(message.clone(), None).unwrap_err();
+        assert_eq!(stop.status, WideStatus::BudgetExceeded);
+        assert_eq!(stop.reason, message);
+        assert!(cache_scoring_error("No shared clock shift provides complete track coverage for both fixed trace windows".into(), None).is_ok());
+        let cancelled = Stop {
+            status: WideStatus::Cancelled,
+            reason: "operator callback stop".into(),
+        };
+        let stop = cache_scoring_error(message, Some(cancelled)).unwrap_err();
+        assert_eq!(stop.status, WideStatus::Cancelled);
+        assert_eq!(stop.reason, "operator callback stop");
+    }
 }
 
 #[cfg(test)]

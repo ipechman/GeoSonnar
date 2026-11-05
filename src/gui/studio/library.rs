@@ -309,11 +309,26 @@ impl Default for LibraryState {
     }
 }
 impl LibraryState {
-    fn selected_item(&self) -> Option<Arc<data_catalog::CatalogItem>> {
+    pub(super) fn selected_item(&self) -> Option<Arc<data_catalog::CatalogItem>> {
         self.selected
             .as_ref()
             .and_then(|id| self.items.iter().find(|item| &item.entry.id == id))
             .cloned()
+    }
+    #[cfg(test)]
+    pub(super) fn set_import_gap_for_test(&mut self, value: f64) {
+        self.max_gap = value;
+    }
+    #[cfg(test)]
+    pub(super) fn set_import_speed_for_test(&mut self, value: f64) {
+        self.max_speed = value;
+    }
+    #[cfg(test)]
+    pub(super) fn set_baro_import_for_test(&mut self, offset_m: f64) {
+        self.allow_baro = true;
+        self.baro_offset = offset_m;
+        self.baro_uncertainty = 100.;
+        self.baro_rationale = "Explicit synthetic approximation".into();
     }
     pub(super) fn owns_deletion(&self, run_id: u64) -> bool {
         self.deleting

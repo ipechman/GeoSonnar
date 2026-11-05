@@ -295,6 +295,364 @@ fn managed_indexed_archive_registers_all_lossless_blocks_and_deletes_only_its_co
     assert_eq!(sha256(&original).unwrap(), before);
 }
 
+struct ReuseFixture {
+    fixture: Fixture,
+    archive: data_catalog::CatalogEntry,
+    config: geosonnar::adsblol::TraceImportConfig,
+    indexed: data_catalog::CatalogEntry,
+}
+impl ReuseFixture {
+    fn new() -> Self {
+        let fixture = Fixture::new();
+        let (mut archive, config, _) = fabricated_archive(&fixture, false);
+        // Mirror the real downloader: manifest and ordered parts are nested in
+        // cache/, and part names are relative to that manifest, not the item root.
+        let root = fixture.root.join("managed-data").join(&archive.id);
+        fs::create_dir(root.join("cache")).unwrap();
+        for file in &mut archive.files {
+            let nested = PathBuf::from("cache").join(&file.relative_path);
+            fs::rename(root.join(&file.relative_path), root.join(&nested)).unwrap();
+            file.relative_path = nested;
+        }
+        archive.primary_file = PathBuf::from("cache").join(&archive.primary_file);
+        fs::write(
+            root.join("entry.json"),
+            serde_json::to_vec(&archive).unwrap(),
+        )
+        .unwrap();
+        let indexed = data_catalog::import_adsblol_indexed_with_limits(
+            &fixture.case,
+            &archive.id,
+            &config,
+            64 * 1024 * 1024,
+            128 * 1024 * 1024,
+            &AtomicBool::new(false),
+        )
+        .unwrap();
+        Self {
+            fixture,
+            archive,
+            config,
+            indexed,
+        }
+    }
+    fn find(&self) -> Vec<data_catalog::IndexedReuseMatch> {
+        data_catalog::find_completed_indexed_with_cancel(
+            &self.fixture.case,
+            &self.archive.id,
+            &self.config,
+            &AtomicBool::new(false),
+        )
+        .unwrap()
+    }
+    fn verify(
+        &self,
+        matched: &data_catalog::IndexedReuseMatch,
+    ) -> Result<data_catalog::VerifiedIndexedReuse, String> {
+        data_catalog::verify_indexed_reuse_with_limits(
+            &self.fixture.case,
+            &self.archive.id,
+            matched,
+            &self.config,
+            64 * 1024 * 1024,
+            128 * 1024 * 1024,
+            &AtomicBool::new(false),
+        )
+    }
+    fn directory(&self, item: &data_catalog::CatalogEntry) -> PathBuf {
+        self.fixture.root.join("managed-data").join(&item.id)
+    }
+    fn save(&self, item: &data_catalog::CatalogEntry) {
+        fs::write(
+            self.directory(item).join("entry.json"),
+            serde_json::to_vec(item).unwrap(),
+        )
+        .unwrap();
+    }
+    fn rewrite_registered(
+        &self,
+        item: &mut data_catalog::CatalogEntry,
+        relative: &str,
+        value: &Value,
+    ) {
+        let path = self.directory(item).join(relative);
+        fs::write(&path, serde_json::to_vec(value).unwrap()).unwrap();
+        let file = item
+            .files
+            .iter_mut()
+            .find(|file| file.relative_path == std::path::Path::new(relative))
+            .unwrap();
+        file.bytes = fs::metadata(&path).unwrap().len();
+        file.sha256 = sha256(&path).unwrap();
+        self.save(item);
+    }
+}
+impl Drop for ReuseFixture {
+    fn drop(&mut self) {
+        for _ in 0..10 {
+            match fs::remove_dir_all(&self.fixture.root) {
+                Ok(()) => return,
+                Err(error) if matches!(error.raw_os_error(), Some(32 | 33)) => {
+                    std::thread::sleep(std::time::Duration::from_millis(20))
+                }
+                Err(error) => panic!("reuse fixture cleanup: {error}"),
+            }
+        }
+        panic!("reuse fixture remained locked");
+    }
+}
+
+#[test]
+fn completed_index_reuse_matches_exact_selection_and_verifies_without_creating_copy() {
+    let f = ReuseFixture::new();
+    let before = data_catalog::list(&f.fixture.case).unwrap().len();
+    let matches = f.find();
+    assert_eq!(matches.len(), 1);
+    assert_eq!(matches[0].catalog_id, f.indexed.id);
+    assert_eq!(matches[0].source_catalog_id, f.archive.id);
+    let reused = f.verify(&matches[0]).unwrap();
+    assert_eq!(reused.binding, matches[0].index);
+    assert_eq!(reused.source_passes, 1);
+    assert_eq!(reused.source_points, 4);
+    assert_eq!(reused.config, f.config);
+    assert_eq!(reused.time_origin_utc_s, f.config.time_origin_utc_s);
+    assert!(reused.index_memory_bytes > 0);
+    assert_eq!(data_catalog::list(&f.fixture.case).unwrap().len(), before);
+    for change in 0..6 {
+        let mut config = f.config.clone();
+        match change {
+            0 => config.time_window_utc_s[1] += 1.,
+            1 => config.bounds = Some([-2., -1., 1., 1.]),
+            2 => config.max_gap_s += 1.,
+            3 => config.accepted_sources.reverse(),
+            4 => config.source_label.push_str(" changed"),
+            5 => config.max_speed_mps += 1.,
+            _ => unreachable!(),
+        }
+        assert!(
+            data_catalog::find_completed_indexed_with_cancel(
+                &f.fixture.case,
+                &f.archive.id,
+                &config,
+                &AtomicBool::new(false)
+            )
+            .unwrap()
+            .is_empty(),
+            "change {change}"
+        );
+    }
+    // Operational import budgets/version labels are not scientific identity.
+    let mut historical = f.indexed.clone();
+    historical
+        .source
+        .as_object_mut()
+        .unwrap()
+        .remove("index_memory_budget_bytes");
+    historical
+        .source
+        .as_object_mut()
+        .unwrap()
+        .remove("indexed_disk_budget_bytes");
+    f.save(&historical);
+    assert!(f.verify(&f.find()[0]).is_ok());
+    assert!(
+        f.verify(&matches[0])
+            .unwrap_err()
+            .contains("identity changed")
+    );
+}
+
+#[test]
+fn index_reuse_rejects_changed_archive_identity_even_at_same_path() {
+    let f = ReuseFixture::new();
+    let found = f.find().remove(0);
+    let mut archive = f.archive.clone();
+    let relative = archive.primary_file.to_string_lossy().into_owned();
+    let mut metadata: Value =
+        serde_json::from_slice(&fs::read(f.directory(&archive).join(&relative)).unwrap()).unwrap();
+    metadata["license"] = json!("changed synthetic metadata");
+    f.rewrite_registered(&mut archive, &relative, &metadata);
+    assert!(f.find().is_empty());
+    assert!(f.verify(&found).unwrap_err().contains("no longer matches"));
+}
+
+#[test]
+fn index_reuse_find_is_unverified_and_use_detects_same_size_archive_or_block_corruption() {
+    for corrupt_archive in [true, false] {
+        let f = ReuseFixture::new();
+        let found = f.find().remove(0);
+        let (entry, relative) = if corrupt_archive {
+            (
+                &f.archive,
+                f.archive
+                    .files
+                    .iter()
+                    .find(|file| file.relative_path.extension().is_some_and(|x| x == "tar"))
+                    .unwrap()
+                    .relative_path
+                    .clone(),
+            )
+        } else {
+            (
+                &f.indexed,
+                f.indexed
+                    .files
+                    .iter()
+                    .find(|file| file.relative_path.extension().is_some_and(|x| x == "bin"))
+                    .unwrap()
+                    .relative_path
+                    .clone(),
+            )
+        };
+        let path = f.directory(entry).join(relative);
+        let mut bytes = fs::read(&path).unwrap();
+        bytes[0] ^= 1;
+        fs::write(&path, bytes).unwrap();
+        // Metadata discovery deliberately makes no current-byte integrity claim.
+        assert_eq!(f.find(), vec![found.clone()]);
+        assert!(
+            f.verify(&found)
+                .unwrap_err()
+                .contains("Managed copy changed")
+        );
+    }
+}
+
+#[test]
+fn index_reuse_excludes_incomplete_deleted_and_missing_saved_data() {
+    let f = ReuseFixture::new();
+    let found = f.find().remove(0);
+    let mut incomplete = f.indexed.clone();
+    incomplete.format = "incomplete_import".into();
+    f.save(&incomplete);
+    assert!(f.find().is_empty());
+    assert!(f.verify(&found).is_err());
+    f.save(&f.indexed);
+    let index = f.directory(&f.indexed).join(&f.indexed.primary_file);
+    let held = index.with_extension("held");
+    fs::rename(&index, &held).unwrap();
+    assert!(f.find().is_empty());
+    assert!(f.verify(&found).is_err());
+    fs::rename(held, index).unwrap();
+    data_catalog::delete_owned(&f.fixture.case, &f.indexed.id).unwrap();
+    assert!(f.find().is_empty());
+    assert!(f.verify(&found).is_err());
+    data_catalog::verified_files(&f.fixture.case, &f.archive.id).unwrap();
+}
+
+#[test]
+fn index_reuse_checks_native_provenance_and_complete_receipt_after_catalog_rehash() {
+    let f = ReuseFixture::new();
+    let mut indexed = f.indexed.clone();
+    let path = f.directory(&indexed).join("native/receipt.json");
+    let mut receipt: Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+    receipt["pass_count"] = json!(2);
+    f.rewrite_registered(&mut indexed, "native/receipt.json", &receipt);
+    assert!(
+        f.verify(&f.find()[0])
+            .unwrap_err()
+            .contains("completion receipt")
+    );
+    receipt["pass_count"] = json!(1);
+    f.rewrite_registered(&mut indexed, "native/receipt.json", &receipt);
+    let path = f.directory(&indexed).join("native/plan.json");
+    let mut plan: Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+    plan["acquisition_manifest"]["sha256"] = json!("c".repeat(64));
+    f.rewrite_registered(&mut indexed, "native/plan.json", &plan);
+    assert!(
+        f.verify(&f.find()[0])
+            .unwrap_err()
+            .contains("provenance differs")
+    );
+}
+
+#[test]
+fn index_reuse_honors_cancellation_memory_and_existing_size_limits_without_fallback() {
+    let f = ReuseFixture::new();
+    let found = f.find().remove(0);
+    let before = data_catalog::list(&f.fixture.case).unwrap().len();
+    assert!(
+        data_catalog::find_completed_indexed_with_cancel(
+            &f.fixture.case,
+            &f.archive.id,
+            &f.config,
+            &AtomicBool::new(true)
+        )
+        .unwrap_err()
+        .contains("cancelled")
+    );
+    let mut checks = 0;
+    data_catalog::verify_indexed_reuse_with_checkpoint(
+        &f.fixture.case,
+        &f.archive.id,
+        &found,
+        &f.config,
+        64 * 1024 * 1024,
+        128 * 1024 * 1024,
+        || {
+            checks += 1;
+            Ok(())
+        },
+    )
+    .unwrap();
+    assert!(checks > 20);
+    for stop in [1, checks / 2, checks] {
+        let mut calls = 0;
+        let error = data_catalog::verify_indexed_reuse_with_checkpoint(
+            &f.fixture.case,
+            &f.archive.id,
+            &found,
+            &f.config,
+            64 * 1024 * 1024,
+            128 * 1024 * 1024,
+            || {
+                calls += 1;
+                if calls == stop {
+                    Err("requested reuse stop".into())
+                } else {
+                    Ok(())
+                }
+            },
+        )
+        .unwrap_err();
+        assert_eq!(error, "requested reuse stop");
+        assert_eq!(calls, stop);
+    }
+    assert!(
+        data_catalog::verify_indexed_reuse_with_limits(
+            &f.fixture.case,
+            &f.archive.id,
+            &found,
+            &f.config,
+            64 * 1024 * 1024,
+            1,
+            &AtomicBool::new(false)
+        )
+        .is_err()
+    );
+    // A sparse registered extra file tests the retained-size gate without
+    // allocating or reading65MiB, and before its intentionally invalid hash.
+    let mut indexed = f.indexed.clone();
+    let relative = PathBuf::from("native/oversize-control.bin");
+    fs::File::create(f.directory(&indexed).join(&relative))
+        .unwrap()
+        .set_len(65 * 1024 * 1024)
+        .unwrap();
+    indexed.files.push(data_catalog::CatalogFile {
+        relative_path: relative,
+        bytes: 65 * 1024 * 1024,
+        sha256: "0".repeat(64),
+    });
+    f.save(&indexed);
+    let large = f.find().remove(0);
+    assert!(
+        f.verify(&large)
+            .unwrap_err()
+            .contains("retained-data size limit")
+    );
+    assert_eq!(data_catalog::list(&f.fixture.case).unwrap().len(), before);
+}
+
 #[test]
 fn archive_import_requires_day_region_and_registered_source_parts() {
     let f = Fixture::new();

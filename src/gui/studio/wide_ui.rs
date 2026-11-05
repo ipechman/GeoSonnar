@@ -964,6 +964,278 @@ mod tests {
         assert!(!notice.0 && notice.1.contains("cancelled"));
     }
 
+    fn reuse_fixture(studio: &mut Studio) -> (IndexReuseScope, data_catalog::IndexedReuseMatch) {
+        let entry = data_catalog::CatalogEntry {
+            schema_version: 1,
+            id: "synthetic-archive".into(),
+            case_manifest_sha256: "d".repeat(64),
+            label: "Synthetic day archive".into(),
+            kind: data_catalog::DataKind::Adsb,
+            format: "adsblol_archive".into(),
+            primary_file: "archive.json".into(),
+            created_unix_s: 0,
+            source: serde_json::Value::Null,
+            files: vec![data_catalog::CatalogFile {
+                relative_path: "archive.json".into(),
+                bytes: 1,
+                sha256: "e".repeat(64),
+            }],
+            date_utc: Some("2026-09-08".into()),
+            bounds: None,
+            notes: String::new(),
+        };
+        studio.data.select_entry(entry.id.clone());
+        studio.data.items = vec![Arc::new(data_catalog::CatalogItem {
+            entry,
+            status: "available".into(),
+            available_bytes: 1,
+            problem: None,
+            integrity_verified: false,
+        })];
+        let scope = studio
+            .index_reuse_scope(&studio.data.items[0].entry)
+            .unwrap();
+        let matched = data_catalog::IndexedReuseMatch {
+            catalog_id: "synthetic-index".into(),
+            label: "Synthetic saved index".into(),
+            index: source().binding,
+            source_catalog_id: scope.source_catalog_id.clone(),
+            acquisition_manifest_sha256: scope.acquisition_manifest_sha256.clone(),
+            config_sha256: "f".repeat(64),
+            catalog_entry_sha256: "a".repeat(64),
+            registered_bytes: 1024,
+        };
+        (scope, matched)
+    }
+
+    #[test]
+    fn matching_index_lookup_is_tentative_and_idle_paint_never_loads_or_builds() {
+        let mut studio = studio();
+        let (scope, matched) = reuse_fixture(&mut studio);
+        let before = studio.document.clone();
+        studio.accept_wide_reply(WideReply::IndexMatches(Box::new(IndexReuseMatches {
+            scope: scope.clone(),
+            matches: vec![matched],
+        })));
+        let ctx = egui::Context::default();
+        let output = ctx.run_ui(egui::RawInput::default(), |ui| {
+            studio.index_matches_ui(ui, &scope)
+        });
+        fn labels(shape: &egui::epaint::Shape, out: &mut String) {
+            match shape {
+                egui::epaint::Shape::Text(text) => out.push_str(&text.galley.job.text),
+                egui::epaint::Shape::Vec(shapes) => {
+                    for shape in shapes {
+                        labels(shape, out);
+                    }
+                }
+                _ => {}
+            }
+        }
+        let mut text = String::new();
+        for shape in output.shapes {
+            labels(&shape.shape, &mut text);
+        }
+        assert!(text.contains("not yet verified") && text.contains("Use existing index"));
+        assert_eq!(studio.document, before);
+        assert!(studio.wide.source.is_none() && studio.wide.prepared.is_none());
+        assert!(studio.undo.is_empty() && !studio.busy() && !studio.wide.running);
+        assert!(studio.receiver.try_recv().is_err());
+    }
+
+    #[test]
+    fn matching_index_scope_rejects_changed_import_settings_and_source_identity() {
+        let mutations: [fn(&mut Studio); 10] = [
+            |s| s.data.set_import_gap_for_test(31.),
+            |s| s.data.set_import_speed_for_test(331.),
+            |s| s.data.set_baro_import_for_test(0.),
+            |s| s.document.as_mut().unwrap().map.bounds[0] += 0.1,
+            |s| s.wide.import_start = "2026-09-08 12:00:00".into(),
+            |s| s.wide.import_padding_km += 1.,
+            |s| Arc::make_mut(&mut s.data.items[0]).entry.files[0].sha256 = "c".repeat(64),
+            |s| Arc::make_mut(&mut s.data.items[0]).entry.date_utc = Some("2026-09-09".into()),
+            |s| Arc::make_mut(&mut s.data.items[0]).status = "deleted".into(),
+            |s| s.data.select_entry("another-archive".into()),
+        ];
+        for mutate in mutations {
+            let mut studio = studio();
+            let (scope, matched) = reuse_fixture(&mut studio);
+            assert!(studio.index_reuse_scope_current(&scope));
+            mutate(&mut studio);
+            assert!(!studio.index_reuse_scope_current(&scope));
+            studio.accept_wide_reply(WideReply::IndexMatches(Box::new(IndexReuseMatches {
+                scope,
+                matches: vec![matched],
+            })));
+            assert!(studio.wide.index_matches.is_none() && studio.wide.source.is_none());
+        }
+        let mut studio = studio();
+        let (scope, _) = reuse_fixture(&mut studio);
+        studio.wide.import_disk_gib *= 2.;
+        studio.wide.settings.max_index_memory_bytes *= 2;
+        assert!(
+            studio.index_reuse_scope_current(&scope),
+            "operational limits do not change exact import identity"
+        );
+        let (_, mut changed_source) = reuse_fixture(&mut studio);
+        changed_source.acquisition_manifest_sha256 = "0".repeat(64);
+        studio.accept_wide_reply(WideReply::IndexMatches(Box::new(IndexReuseMatches {
+            scope,
+            matches: vec![changed_source],
+        })));
+        assert!(
+            studio.wide.index_matches.is_none(),
+            "a disk catalog change during Find is not accepted under an old source identity"
+        );
+        studio.data.set_baro_import_for_test(-0.);
+        let negative_zero = studio
+            .index_reuse_scope(&studio.data.items[0].entry)
+            .unwrap();
+        studio.data.set_baro_import_for_test(0.);
+        let positive_zero = studio
+            .index_reuse_scope(&studio.data.items[0].entry)
+            .unwrap();
+        assert_eq!(negative_zero.config, positive_zero.config);
+        assert_ne!(negative_zero, positive_zero);
+        assert!(!studio.index_reuse_scope_current(&negative_zero));
+        assert!(studio.index_reuse_scope_current(&positive_zero));
+    }
+
+    #[test]
+    fn verified_index_reuse_applies_only_to_unchanged_scope_and_review() {
+        let fixture = SavedRunFixture::new();
+        let index_path = fixture.0.join("synthetic-index.json");
+        // This test starts at the verified worker reply. Registration still
+        // requires an actual ordinary file, unlike metadata-only UI fixtures.
+        std::fs::write(
+            &index_path,
+            b"{\"synthetic\":\"verified-reply registration fixture\"}\n",
+        )
+        .unwrap();
+        let mut verified_source = source();
+        verified_source.binding = TrackStoreBinding {
+            manifest_path: index_path.canonicalize().unwrap(),
+            manifest_sha256: geosonnar::detailed_data::sha256(&index_path).unwrap(),
+        };
+        for stale in [0, 1, 2] {
+            let mut studio = studio();
+            let (scope, _) = reuse_fixture(&mut studio);
+            let previous = studio.document.clone().unwrap();
+            if stale == 1 {
+                studio.data.set_import_gap_for_test(31.);
+            }
+            if stale == 2 {
+                studio.document.as_mut().unwrap().channel = 1;
+            }
+            let before = studio.document.clone().unwrap();
+            studio.accept_wide_reply(WideReply::ReusedSource(Box::new(ReusedIndexSource {
+                scope,
+                source: verified_source.clone(),
+                document: Box::new(previous),
+            })));
+            if stale == 0 {
+                assert!(studio.wide.source.is_some(), "{:?}", studio.notice);
+                assert!(
+                    studio
+                        .document
+                        .as_ref()
+                        .unwrap()
+                        .datasets
+                        .iter()
+                        .any(|binding| binding
+                            == &SourceBinding {
+                                path: verified_source.binding.manifest_path.clone(),
+                                sha256: verified_source.binding.manifest_sha256.clone(),
+                            })
+                );
+                assert_eq!(studio.document.as_ref().unwrap().events, before.events);
+                assert_eq!(studio.undo.len(), 1);
+            } else {
+                assert_eq!(studio.document, Some(before));
+                assert!(studio.wide.source.is_none() && studio.undo.is_empty());
+            }
+        }
+    }
+
+    #[test]
+    fn cancelled_and_stale_index_reuse_replies_preserve_current_source() {
+        for reused in [false, true] {
+            for stale in [0, 1, 2] {
+                let mut studio = studio();
+                let (scope, matched) = reuse_fixture(&mut studio);
+                let before = studio.document.clone().unwrap();
+                let existing = source();
+                studio.wide.source = Some(existing.clone());
+                studio.wide.run_id = 5;
+                studio.wide.running = true;
+                studio.busy = Some("Checking saved index".into());
+                if stale == 0 {
+                    studio.wide.cancel.store(true, Ordering::Relaxed);
+                }
+                let reply = if reused {
+                    WideReply::ReusedSource(Box::new(ReusedIndexSource {
+                        scope,
+                        source: source(),
+                        document: Box::new(before.clone()),
+                    }))
+                } else {
+                    WideReply::IndexMatches(Box::new(IndexReuseMatches {
+                        scope,
+                        matches: vec![matched],
+                    }))
+                };
+                studio
+                    .sender
+                    .send(Reply {
+                        generation: if stale == 2 {
+                            studio.generation.wrapping_sub(1)
+                        } else {
+                            studio.generation
+                        },
+                        lane: WorkerLane::WideTask(if stale == 1 { 4 } else { 5 }),
+                        result: Ok(ResultValue::WideReady(Box::new(reply))),
+                    })
+                    .unwrap();
+                studio.tick(&egui::Context::default());
+                assert_eq!(studio.document, Some(before));
+                assert_eq!(
+                    studio.wide.source.as_ref().unwrap().binding,
+                    existing.binding
+                );
+                assert!(studio.wide.index_matches.is_none() && studio.undo.is_empty());
+                assert_eq!(
+                    studio.busy(),
+                    stale != 0,
+                    "stale reply must not clear newer activity"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn deleting_one_saved_index_removes_only_its_tentative_match() {
+        let mut studio = studio();
+        let (scope, first) = reuse_fixture(&mut studio);
+        let mut second = first.clone();
+        second.catalog_id = "other-index".into();
+        second.index.manifest_path = second
+            .index
+            .manifest_path
+            .with_file_name("other-index.json");
+        let before = studio.document.clone();
+        studio.wide.index_matches = Some(Box::new(IndexReuseMatches {
+            scope,
+            matches: vec![first.clone(), second.clone()],
+        }));
+        studio.invalidate_wide_source(|path| path == first.index.manifest_path);
+        assert_eq!(
+            studio.wide.index_matches.as_ref().unwrap().matches,
+            vec![second]
+        );
+        assert_eq!(studio.document, before);
+        assert!(studio.undo.is_empty());
+    }
+
     #[test]
     fn cancelled_estimate_reply_preserves_review_and_never_enables_run() {
         let mut studio = studio();
@@ -1161,8 +1433,28 @@ pub(super) struct Prepared {
     document: ReviewWorkspace,
     settings: Settings,
 }
+#[derive(Clone, Debug, PartialEq)]
+pub(super) struct IndexReuseScope {
+    source_catalog_id: String,
+    acquisition_manifest_sha256: String,
+    config: geosonnar::adsblol::TraceImportConfig,
+    // Exact serialized settings also distinguish signed-zero values, matching
+    // the native reuse key rather than f64 PartialEq alone.
+    canonical_config: String,
+}
+pub(super) struct IndexReuseMatches {
+    scope: IndexReuseScope,
+    matches: Vec<data_catalog::IndexedReuseMatch>,
+}
+pub(super) struct ReusedIndexSource {
+    scope: IndexReuseScope,
+    source: IndexedSource,
+    document: Box<ReviewWorkspace>,
+}
 pub(super) enum WideReply {
     Imported(Box<data_catalog::CatalogEntry>),
+    IndexMatches(Box<IndexReuseMatches>),
+    ReusedSource(Box<ReusedIndexSource>),
     Source(IndexedSource, Box<ReviewWorkspace>),
     Estimated(Box<Prepared>),
     Report(Box<WidePairReport>, Option<Box<ReviewWorkspace>>),
@@ -1189,6 +1481,7 @@ pub(super) struct WideState {
     import_end: String,
     import_padding_km: f64,
     import_disk_gib: f64,
+    index_matches: Option<Box<IndexReuseMatches>>,
 }
 impl Default for WideState {
     fn default() -> Self {
@@ -1213,6 +1506,7 @@ impl Default for WideState {
             import_end: String::new(),
             import_padding_km: 100.,
             import_disk_gib: 8.,
+            index_matches: None,
         }
     }
 }
@@ -1703,6 +1997,11 @@ impl Studio {
         self.wide.report_document.as_ref()
     }
     pub(super) fn invalidate_wide_source(&mut self, affected: impl Fn(&std::path::Path) -> bool) {
+        if let Some(matches) = &mut self.wide.index_matches {
+            matches
+                .matches
+                .retain(|item| !affected(&item.index.manifest_path));
+        }
         if self
             .wide
             .source
@@ -1734,6 +2033,186 @@ impl Studio {
         self.spawn_lane(ctx, WorkerLane::WideTask(self.wide.run_id), task);
     }
 
+    fn index_reuse_scope(
+        &self,
+        entry: &data_catalog::CatalogEntry,
+    ) -> Result<IndexReuseScope, String> {
+        if entry.format != "adsblol_archive" {
+            return Err("Select a complete downloaded day archive".into());
+        }
+        let acquisition_manifest_sha256 = entry
+            .files
+            .iter()
+            .find(|file| file.relative_path == entry.primary_file)
+            .ok_or("The archive has no registered manifest identity")?
+            .sha256
+            .clone();
+        let config = self.indexed_import_config(
+            entry,
+            &self.wide.import_start,
+            &self.wide.import_end,
+            self.wide.import_padding_km,
+        )?;
+        let canonical_config = serde_json::to_string(&config).map_err(|error| error.to_string())?;
+        Ok(IndexReuseScope {
+            source_catalog_id: entry.id.clone(),
+            acquisition_manifest_sha256,
+            config,
+            canonical_config,
+        })
+    }
+
+    fn index_reuse_scope_current(&self, scope: &IndexReuseScope) -> bool {
+        self.data
+            .selected_item()
+            .filter(|item| {
+                item.entry.id == scope.source_catalog_id
+                    && item.status == "available"
+                    && item.problem.is_none()
+            })
+            .and_then(|item| self.index_reuse_scope(&item.entry).ok())
+            .as_ref()
+            == Some(scope)
+    }
+
+    fn find_index_matches(&mut self, ctx: &egui::Context, scope: IndexReuseScope) {
+        if self.busy() {
+            return;
+        }
+        let Some(case) = &self.case else {
+            return;
+        };
+        let manifest = case.manifest.clone();
+        self.wide.index_matches = None;
+        self.wide.cancel = Arc::new(AtomicBool::new(false));
+        let cancel = self.wide.cancel.clone();
+        self.start_wide_task(
+            ctx,
+            "Finding saved indexes for these archive settings…",
+            move || {
+                let matches = data_catalog::find_completed_indexed_with_cancel(
+                    &manifest,
+                    &scope.source_catalog_id,
+                    &scope.config,
+                    &cancel,
+                )?;
+                wide_checkpoint(&cancel)?;
+                Ok(ResultValue::WideReady(Box::new(WideReply::IndexMatches(
+                    Box::new(IndexReuseMatches { scope, matches }),
+                ))))
+            },
+        );
+    }
+
+    fn use_index_match(
+        &mut self,
+        ctx: &egui::Context,
+        scope: IndexReuseScope,
+        matched: data_catalog::IndexedReuseMatch,
+    ) {
+        if self.busy() || !self.index_reuse_scope_current(&scope) {
+            return;
+        }
+        let (Some(case), Some(document)) = (&self.case, self.document.clone()) else {
+            return;
+        };
+        let manifest = case.manifest.clone();
+        let bytes = (self.wide.import_disk_gib * 1024_f64.powi(3)) as u64;
+        let memory = self.wide.settings.max_index_memory_bytes;
+        self.wide.cancel = Arc::new(AtomicBool::new(false));
+        let cancel = self.wide.cancel.clone();
+        self.start_wide_task(
+            ctx,
+            "Verifying the archive and saved index; no new copy is being built…",
+            move || {
+                let verified = data_catalog::verify_indexed_reuse_with_limits(
+                    &manifest,
+                    &scope.source_catalog_id,
+                    &matched,
+                    &scope.config,
+                    bytes,
+                    memory,
+                    &cancel,
+                )?;
+                let source = IndexedSource {
+                    binding: verified.binding,
+                    label: verified.matched.label,
+                    passes: usize::try_from(verified.source_passes)
+                        .map_err(|_| "Indexed pass count exceeds this platform")?,
+                    points: verified.source_points,
+                    origin: verified.time_origin_utc_s,
+                    utc_window: verified.config.time_window_utc_s,
+                    max_gap_s: verified.config.max_gap_s,
+                };
+                wide_checkpoint(&cancel)?;
+                Ok(ResultValue::WideReady(Box::new(WideReply::ReusedSource(
+                    Box::new(ReusedIndexSource {
+                        scope,
+                        source,
+                        document: Box::new(document),
+                    }),
+                ))))
+            },
+        );
+    }
+
+    fn index_matches_ui(&mut self, ui: &mut egui::Ui, scope: &IndexReuseScope) {
+        let Some(found) = self
+            .wide
+            .index_matches
+            .as_ref()
+            .filter(|found| &found.scope == scope)
+        else {
+            return;
+        };
+        if found.matches.is_empty() {
+            muted(
+                ui,
+                "No matching complete index is listed for these settings. Build a new index below.",
+            );
+            return;
+        }
+        muted(
+            ui,
+            "Matching saved indexes — not yet verified. Use existing index checks the current archive and saved data without rebuilding; Rebuild creates a separate copy.",
+        );
+        let mut selected = None;
+        let enabled = !self.busy();
+        let row_height = ui.spacing().interact_size.y.max(
+            ui.text_style_height(&egui::TextStyle::Button) + 2. * ui.spacing().button_padding.y,
+        );
+        egui::ScrollArea::vertical()
+            .id_salt("indexed_reuse_matches")
+            .max_height(row_height * 4.)
+            .show_rows(ui, row_height, found.matches.len(), |ui, rows| {
+                for index in rows {
+                    let matched = &found.matches[index];
+                    ui.horizontal(|ui| {
+                        if ui
+                            .add_enabled(
+                                enabled,
+                                egui::Button::new("Use existing index").truncate(),
+                            )
+                            .clicked()
+                        {
+                            selected = Some(matched.clone());
+                        }
+                        let label = format!(
+                            "{} · {:.1} MiB · {}",
+                            matched.label,
+                            matched.registered_bytes as f64 / 1024_f64.powi(2),
+                            matched.catalog_id
+                        );
+                        ui.add(egui::Label::new(&label).truncate())
+                            .on_hover_text(label);
+                    });
+                }
+            });
+        if let Some(selected) = selected {
+            self.use_index_match(ui.ctx(), scope.clone(), selected);
+        }
+    }
+
     pub(super) fn indexed_archive_ui(
         &mut self,
         ui: &mut egui::Ui,
@@ -1756,9 +2235,19 @@ impl Studio {
             accessible_text(ui, "wide_import_start", &mut self.wide.import_start, "YYYY-MM-DD HH:MM:SS", false, ui.available_width());
             accessible_text(ui, "wide_import_end", &mut self.wide.import_end, "YYYY-MM-DD HH:MM:SS", false, ui.available_width());
             ui.add(egui::DragValue::new(&mut self.wide.import_padding_km).range(0.0..=500.0).suffix(" km aircraft-area padding"));
-            ui.add(egui::DragValue::new(&mut self.wide.import_disk_gib).range(0.1..=1024.0).suffix(" GiB disk budget"));
+            ui.add(egui::DragValue::new(&mut self.wide.import_disk_gib).range(0.1..=1024.0).suffix(" GiB indexed-data size limit"));
+            muted(ui, "This size limit applies to a new copy or the size of a saved index. Reusing an index needs no duplicate copy; source/index memory is checked separately.");
             muted(ui, "The UTC interval is explicit: allow propagation/interpolation look-back when narrowing it. Adjacent-day data require their own archive selection; this action never silently clips or expands time.");
-            if ui.button("Build indexed flight data").clicked() {
+            let scope = self.index_reuse_scope(entry);
+            if ui.add_enabled(scope.is_ok(), egui::Button::new("Find matching index")).clicked()
+                && let Ok(scope) = &scope {
+                self.find_index_matches(ui.ctx(), scope.clone());
+            }
+            if let Ok(scope) = &scope { self.index_matches_ui(ui, scope); }
+            let has_match = scope.as_ref().ok().is_some_and(|scope| self.wide.index_matches.as_ref()
+                .is_some_and(|found| &found.scope == scope && !found.matches.is_empty()));
+            let build_label = if has_match { "Rebuild a new index" } else { "Build indexed flight data" };
+            if ui.add_enabled(!self.busy(), egui::Button::new(build_label)).clicked() {
                 let prepared = self.indexed_import_config(entry, &self.wide.import_start, &self.wide.import_end, self.wide.import_padding_km);
                 match prepared {
                     Err(error) => self.notice = Some((true, error)),
@@ -1830,14 +2319,46 @@ impl Studio {
         if self.wide.cancel.load(Ordering::Relaxed)
             && matches!(
                 &reply,
-                WideReply::Source(..) | WideReply::Estimated(..) | WideReply::ReopenedReport(..)
+                WideReply::Source(..)
+                    | WideReply::Estimated(..)
+                    | WideReply::ReopenedReport(..)
+                    | WideReply::IndexMatches(..)
+                    | WideReply::ReusedSource(..)
             )
         {
             self.notice = Some((false, "Wide-area verification cancelled; no source selection, new estimate or reopened report was applied.".into()));
             return;
         }
         match reply {
+            WideReply::IndexMatches(found) => {
+                if !self.index_reuse_scope_current(&found.scope)
+                    || found.matches.iter().any(|matched| {
+                        matched.source_catalog_id != found.scope.source_catalog_id
+                            || matched.acquisition_manifest_sha256
+                                != found.scope.acquisition_manifest_sha256
+                    })
+                {
+                    self.notice = Some((true, "Archive or import settings changed while finding indexes; check again for the current settings.".into()));
+                    return;
+                }
+                self.notice = Some((
+                    false,
+                    format!(
+                        "{} matching saved index(es) listed. Use existing index verifies the source and data; nothing has been loaded or built.",
+                        found.matches.len()
+                    ),
+                ));
+                self.wide.index_matches = Some(found);
+            }
+            WideReply::ReusedSource(reused) => {
+                if !self.index_reuse_scope_current(&reused.scope) {
+                    self.notice = Some((true, "Archive or import settings changed during verification; the saved index was not selected. Check again for the current settings.".into()));
+                    return;
+                }
+                self.accept_wide_reply(WideReply::Source(reused.source, reused.document));
+            }
             WideReply::Imported(entry) => {
+                self.wide.index_matches = None;
                 self.data.select_entry(entry.id.clone());
                 self.data.refresh_requested = true;
                 self.notice = Some((
@@ -1953,7 +2474,7 @@ impl Studio {
                 source.max_gap_s
             ));
         } else {
-            ui.colored_label(tone(ui, AMBER), "Data → select a complete day archive → Build indexed flight data → Use indexed flight data.");
+            ui.colored_label(tone(ui, AMBER), "Data → select a complete day archive → Find matching index → Use existing index, or Build indexed flight data. A stored indexed dataset can also be selected directly.");
         }
         ui.add_enabled_ui(!self.busy(), |ui| {
             let Some(doc) = &mut self.document else { return; };

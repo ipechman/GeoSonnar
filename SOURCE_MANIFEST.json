@@ -16,12 +16,12 @@
     {
       "path": "Cargo.lock",
       "bytes": 103346,
-      "sha256": "be40a8b8f88104d78cae33b3c3817176f34937bbe3d6639b224165cc497600a3"
+      "sha256": "06acf038af08398d9c0f6f48b85e5760d202c0922f2002f4d09f639ab4c34c06"
     },
     {
       "path": "Cargo.toml",
       "bytes": 1229,
-      "sha256": "023a4e2705780e26278392f53d4b03c142e5a3c02fc06138fc633a5cefb811fc"
+      "sha256": "0c7ab37e8ed310b6c3dca54b31a4216dc9163714f51b403611f376292d49697d"
     },
     {
       "path": "LICENSE",
@@ -30,8 +30,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 75617,
-      "sha256": "75179538dddfcf55759c117fa981a93a1ded91046a3739b1cb224ab917156754"
+      "bytes": 77932,
+      "sha256": "4515a8f909d27d178d4b7b79b5ef9a9aaa6a47fd3393e25556aa8bebd45400b6"
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -905,13 +905,13 @@
     },
     {
       "path": "docs/UPSTREAM_COMPARISON.md",
-      "bytes": 9078,
-      "sha256": "fed2d68289bff8b8076d99f35a02460f301d52a63e22cd0d382df4fe736a43fe"
+      "bytes": 14032,
+      "sha256": "904b540efd46175df90f745d2e3229de16bb6301da1836eb7d1861910092158a"
     },
     {
       "path": "docs/WINDOWS_GUI.txt",
-      "bytes": 63583,
-      "sha256": "d4aa3b1c6a2d2b0f932914f7c87aebf8b9e937e4e0d80cd67870311d3d3ce5fc"
+      "bytes": 65522,
+      "sha256": "7a3f95ee284c0e7edc27f24d388e74fc920c5bd70b993d9c5c3cd070d8c2fb24"
     },
     {
       "path": "examples/fetch_public.rs",
@@ -999,14 +999,24 @@
       "sha256": "a6fdfcc6bb102d0595f859878a22707cc587dc26a3ddaebebc26a3f30fec5e21"
     },
     {
+      "path": "src/cached_pair.rs",
+      "bytes": 11059,
+      "sha256": "ed4bb424fe4e9f3fbb42c5213f5abb8543368cc9a20f52e89e2f21d46ed15efb"
+    },
+    {
+      "path": "src/cached_pair_tests.rs",
+      "bytes": 19487,
+      "sha256": "9e754043face6de1e991aa05dafd0a3ad7f2ecc49b7891a23c9da4bd45dae767"
+    },
+    {
       "path": "src/casework.rs",
       "bytes": 13502,
       "sha256": "80f59a7e0c177ab02c36ea3a22d23d72cb6ad1fea40b6f5b0336f5e6656d63ea"
     },
     {
       "path": "src/data_catalog.rs",
-      "bytes": 65954,
-      "sha256": "986684a95b6b76eecd7974c0e017f6fdfcb9bb520a96a37c33e424ef24f2f69b"
+      "bytes": 84287,
+      "sha256": "667538fb0508498a2f8cc6b9cfe8c3c77e6c4e4ca075f32447a51dfc99f512bc"
     },
     {
       "path": "src/dataset_requests.rs",
@@ -1170,8 +1180,8 @@
     },
     {
       "path": "src/gui/studio/library.rs",
-      "bytes": 62325,
-      "sha256": "bef3cc09f365da5f36f31f91d39e7dd45be4c336ee0ca9cf77aa7349bceb9638"
+      "bytes": 62854,
+      "sha256": "b34c2254a4a9605f9d959dab47808ee300a191b24e85684710d0001dceea405d"
     },
     {
       "path": "src/gui/studio/library_deletion_tests.rs",
@@ -1220,8 +1230,8 @@
     },
     {
       "path": "src/gui/studio/wide_ui.rs",
-      "bytes": 103838,
-      "sha256": "4dc9f176ab863e9c50f78bf06c7a5ed7eff4e749981c28eb2570467c6245475f"
+      "bytes": 125859,
+      "sha256": "7847188e3b8791316a9435c6dfd8f89777c975ef091ec8c0bc4d4721f1b892f0"
     },
     {
       "path": "src/gui/tests.rs",
@@ -1275,8 +1285,8 @@
     },
     {
       "path": "src/lib.rs",
-      "bytes": 1160,
-      "sha256": "c935dc56c5135c2fc612730ed10fbc2f83edf2b6e40808f1d888d7ae5d633477"
+      "bytes": 1177,
+      "sha256": "258c42cc08020f5884eb3ca8d6c1c74ba343aa67b4e21887617de5053951b030"
     },
     {
       "path": "src/lightning_source.rs",
@@ -1415,8 +1425,8 @@
     },
     {
       "path": "src/wide_area_pair.rs",
-      "bytes": 59529,
-      "sha256": "4a7f5d267a33bf1d7351682d05d3052262eb7e46f4574c81eecfb3ab0e51aab0"
+      "bytes": 62003,
+      "sha256": "fdc0aa425557d209e8fab7443cf0a1a2a2c4d2ebe18ce12ffaafc10a85cb8c47"
     },
     {
       "path": "src/workspace.rs",
@@ -1470,8 +1480,8 @@
     },
     {
       "path": "tests/data_catalog_validation.rs",
-      "bytes": 19137,
-      "sha256": "69a6d599c96144df6e322076711caefd7df855d6cf5d34c0ae5d3f0daa6b677a"
+      "bytes": 31355,
+      "sha256": "b868267cd0168d2217e6d013b7598ca02170448bb9cf13191853d8b09dcb3cff"
     },
     {
       "path": "tests/dataset_request_validation.rs",

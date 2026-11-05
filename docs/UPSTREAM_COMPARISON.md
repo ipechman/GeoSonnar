@@ -1,5 +1,30 @@
 # Upstream comparison
 
+## Performance follow-up — November 5, 2026 UTC
+
+This follow-up inspects source at the two pinned revisions below. It runs no upstream code or benchmarks. The November 3 capability comparison remains a historical snapshot farther down this document.
+
+| Project | Revision inspected |
+| --- | --- |
+| DOPPLERGEIST | [`d71905faf1f22bc79bf9f38daba7a91754a8e0be`](https://github.com/1337isnot1337/DOPPLERGEIST/tree/d71905faf1f22bc79bf9f38daba7a91754a8e0be), November 4, 23:06:44 UTC |
+| franken_doppler_finder | [`a827820d68532f094afc2aa3910af3520f459bed`](https://github.com/Dicklesworthstone/franken_doppler_finder/tree/a827820d68532f094afc2aa3910af3520f459bed), November 4, 22:03:33 UTC |
+
+GeoSonnar's executed full-source cache regression still completed **0 of 50 locations in 540.23 seconds**, under the 20% aggregate CPU allowance. It attempted 324,680 timing-compatible pairs and scored 174,186. Spatial bounds had already excluded 444,861 of 461,344 passes at the unfinished first location. The separate historical 50-location case completed with exact retained-output parity. These results show that first-event reuse helps pair processing but has not made the broad case practical; they establish neither field accuracy nor comparative upstream performance.
+
+Three implemented upstream mechanisms are relevant:
+
+- **Conservative score pruning:** DOPPLERGEIST bounds the possible contribution of unperformed event fits, tightens that bound only with validated evidence, and uses strict comparisons and outward rounding against retained-score thresholds. Missing support remains unknown. Its objective differs from GeoSonnar's discrete-tone RMSE, so its thresholds cannot be transplanted. [Bounded scoring](https://github.com/1337isnot1337/DOPPLERGEIST/blob/d71905faf1f22bc79bf9f38daba7a91754a8e0be/src/dopplergeist/search.py#L537-L647).
+- **Partition checkpoints:** DOPPLERGEIST assigns hypotheses to deterministic spatial/clock partitions, queries whole trajectory segments conservatively, and binds reusable stages to source, measurement, configuration and implementation identities. This preserves completed work; partitioning alone does not reduce total scoring work. [Clock partitions](https://github.com/1337isnot1337/DOPPLERGEIST/blob/d71905faf1f22bc79bf9f38daba7a91754a8e0be/src/dopplergeist/tiled_search.py#L348-L515), [checkpoint identity](https://github.com/1337isnot1337/DOPPLERGEIST/blob/d71905faf1f22bc79bf9f38daba7a91754a8e0be/src/dopplergeist/tiled_search.py#L944-L1005).
+- **Flight-first joins:** Franken generates possible locations and recording clocks along flight paths, then joins them in spatial/time hash buckets. Sampling, float32 hypotheses, cell deduplication and subsequent scoring gates change the examined domain. This is a candidate-generation approach, not demonstrated equivalence to every declared GeoSonnar receiver. [Generation](https://github.com/Dicklesworthstone/franken_doppler_finder/blob/a827820d68532f094afc2aa3910af3520f459bed/crates/fdop-core/src/search.rs#L414-L558), [join](https://github.com/Dicklesworthstone/franken_doppler_finder/blob/a827820d68532f094afc2aa3910af3520f459bed/crates/fdop-core/src/search.rs#L581-L655).
+
+**Proposed next priorities, not implemented features:** first derive and test conservative RMSE pruning that preserves receiver winners, ordinary rankings, distinct flight-pair rankings and ties, with separate accounting for pruned work. Then add resumable blocks inside a receiver so timeouts retain progress without marking an incomplete location complete. A flight-first exploratory mode would need separate coverage validation. GeoSonnar already has spatial indexing, sorted arrival-time joins and first-event fit reuse; replacing those with superficially similar upstream components is not evidence of a speedup.
+
+The upstream timing evidence is not directly comparable: DOPPLERGEIST qualifies its dense timings as instrumented diagnostics on a smaller, incomplete regional workload; Franken reports historical runs on different hardware with different event selection. Neither establishes throughput for this GeoSonnar request. [DOPPLERGEIST measurement limits](https://github.com/1337isnot1337/DOPPLERGEIST/blob/d71905faf1f22bc79bf9f38daba7a91754a8e0be/docs/PERFORMANCE_PREPARED_SEARCH.md#L3-L77), [Franken performance scope](https://github.com/Dicklesworthstone/franken_doppler_finder/blob/a827820d68532f094afc2aa3910af3520f459bed/README.md#L702-L735).
+
+The licensing caveats remain unchanged: current DOPPLERGEIST is [PolyForm Noncommercial](https://github.com/1337isnot1337/DOPPLERGEIST/blob/d71905faf1f22bc79bf9f38daba7a91754a8e0be/LICENSE); Franken is [MIT with an OpenAI/Anthropic rider](https://github.com/Dicklesworthstone/franken_doppler_finder/blob/a827820d68532f094afc2aa3910af3520f459bed/LICENSE). This follow-up copies no implementation and does not extend historical license grants.
+
+## Historical snapshot — November 3, 2026
+
 Reviewed November 3, 2026. This compares implemented capabilities, source tests and published results. Upstream code was inspected, not executed; upstream benchmark and field-test numbers below are their reported results, not independent reproductions or measurements against GeoSonnar.
 
 This comparison table preserves the GeoSonnar 0.2 snapshot. Later version 0.3.0 added optional atmospheric profiles and modality diagnostics; the active [regional workflow](REGIONAL_WORKFLOW_PLAN.md) is adding uncertain-time association searches and terrain-derived receiver heights. See the main README and current validation receipts for their status. The upstream snapshots below are unchanged.
