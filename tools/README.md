@@ -9,12 +9,23 @@ Windows for the capped command runner. Rust dependencies must already be cached:
 run `cargo fetch --locked` separately when you want to permit network access.
 Validation commands use `--offline --locked`; they do not download data or tools.
 
-The runner creates a hidden, below-normal-priority Windows JobObject with a
-verified 20% aggregate CPU cap. Commands run serially, with two Cargo/test worker
-threads. Child ownership is established before execution; timeouts and Ctrl+C
+The runner creates one hidden, below-normal-priority worker in a named Windows
+JobObject with a queried 20% aggregate CPU ceiling. Each serial command uses a
+separate kill-on-close ownership job with **CPU rate control disabled**: it
+inherits the aggregate ceiling instead of multiplying it by another 20% quota.
+Both job memberships and the child's priority are checked before it resumes.
+Commands use two Cargo/test worker threads. Timeouts and Ctrl+C
 close only the owned process tree. Non-Windows systems receive an explicit
 unsupported result rather than an uncapped fallback. Pure Python controls can
 still be invoked directly with `unittest` on other systems.
+
+An uncapped host ownership job (for example, a CI host) is allowed and recorded.
+A known CPU-controlled immediate host job is refused rather than silently
+stacking quotas. More distant external host restrictions cannot be enumerated
+reliably and may reduce available CPU further. The 20% value is a ceiling, not
+promised CPU availability or a runtime prediction. The tools never break away
+from host policy. Aggregate handles opened by the worker for verification are
+closed immediately so launcher exit can still terminate its owned tree.
 
 ## Choose a tier
 
@@ -81,6 +92,10 @@ ignored/skipped/unavailable states, command receipts, resource limits and exact
 source snapshot. `logs/` contains bounded output and per-command receipts.
 The sibling `<output>.launcher/` keeps the outer ownership/timeout result even
 if a worker terminates before it can finish its own report.
+Resource proof schema 2 records the aggregate's queried 2000/10000 ceiling
+separately from each command job's queried disabled rate (flags/rate 0), plus
+membership and priority checks. Older receipts with nested rate caps are kept
+as historical observations; they do not satisfy this corrected policy.
 
 The release tier builds once into its own `scratch/target`. Its child-only Rust
 flags request static CRT and remap the current workspace, home and Cargo paths.
@@ -115,3 +130,15 @@ python -B -m unittest discover -s benchmarks -p "test_source_package.py" -v
 These fabricated controls cover result counting, unavailable prerequisites,
 bounded logs, exact ZIP identities, evidence retention, ownership and cleanup.
 The public Python/release tiers run them inside the capped worker automatically.
+
+For a small Windows process-policy probe, without building or opening the GUI:
+
+```powershell
+python tools/probe_process.py --output output/validation/job-policy-001
+```
+
+It queries the aggregate and command-job policies, terminates its exact launcher,
+and checks that its worker and descendant exit while an unrelated idle sibling
+survives. The tested worker/command tree has the same aggregate ceiling as normal
+validation. The observer and unrelated sibling only wait; this is not a CPU
+throughput measurement. The fresh folder retains the actual result and logs.

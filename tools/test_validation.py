@@ -13,6 +13,20 @@ import zipfile
 from tools import evidence as e, process, release, validate
 
 
+def aggregate_fixture():
+    return {"schema_version": 2, "policy": "aggregate_20_percent",
+            "job_name": "Local\\GeoSonnarValidation-fixture", "cpu_percent": 20,
+            "job_flags": 5, "job_rate": 2000, "queried": True, "kill_on_close": True}
+
+
+def command_job_fixture():
+    return {"schema_version": 2, "policy": "inherited_aggregate_no_additional_cpu_cap",
+            "aggregate": aggregate_fixture(),
+            "owned_job": {"job_flags": 0, "job_rate": 0, "queried": True, "kill_on_close": True},
+            "aggregate_membership_queried": True, "owned_membership_queried": True,
+            "below_normal_priority_queried": True}
+
+
 class PublicValidationControls(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
@@ -75,6 +89,51 @@ class PublicValidationControls(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "fixture ownership refusal"):
                     process.run(["never-launched"], cwd=self.root, log_prefix=self.root / str(timeout), timeout_s=timeout)
             self.assertEqual(e.read(self.root / (str(timeout) + ".command.json"))["timeout_s"], timeout)
+
+    def test_command_cpu_policy_inherits_one_cap_and_rejects_nested_or_unverified_rates(self):
+        proof = command_job_fixture()
+        process.verify_command_proof(proof, aggregate_fixture())
+        for key, value in [("job_flags", 5), ("job_rate", 2000), ("job_rate", 10000),
+                           ("queried", False), ("kill_on_close", False)]:
+            changed = copy.deepcopy(proof); changed["owned_job"][key] = value
+            with self.subTest(key=key, value=value), self.assertRaises(ValueError):
+                process.verify_command_proof(changed)
+        for key in ("aggregate_membership_queried", "owned_membership_queried", "below_normal_priority_queried"):
+            changed = copy.deepcopy(proof); changed[key] = False
+            with self.subTest(key=key), self.assertRaises(ValueError): process.verify_command_proof(changed)
+        changed = copy.deepcopy(proof); changed["aggregate"]["job_name"] += "-other"
+        with self.assertRaises(ValueError): process.verify_command_proof(changed, aggregate_fixture())
+        with self.assertRaises(ValueError): process.verify_command_proof({"queried": True, "job_flags": 5, "job_rate": 2000})
+
+    def test_host_ownership_job_allowed_but_known_cpu_control_refused(self):
+        host = {"present": True, "queried": True, "immediate_job_flags": 0, "immediate_job_rate": 0,
+                "ancestor_policies_unknown": True, "external_limits_may_reduce_availability": True}
+        process.verify_launcher_host(host)
+        process.verify_launcher_host({**host, "present": False})
+        for flags in (1, 5, 9, 17):
+            with self.subTest(flags=flags), self.assertRaises(ValueError):
+                process.verify_launcher_host({**host, "immediate_job_flags": flags})
+
+    def test_named_aggregate_requires_actual_membership_and_closes_transient_handle(self):
+        for member in (False, True):
+            calls = []
+            class Kernel:
+                def GetCurrentProcess(self): return 7
+                def CloseHandle(self, handle): calls.append(("closed", handle))
+            class Api:
+                kernel = Kernel()
+                def open_aggregate(self, name):
+                    calls.append(("opened", name)); return 11
+                def query(self, handle):
+                    return {key: aggregate_fixture()[key] for key in ("job_flags", "job_rate", "queried", "kill_on_close")}
+                def contains(self, handle, job):
+                    calls.append(("membership", handle, job)); return member
+            with patch.object(process, "_Windows", Api), patch.dict(os.environ, {process.AGGREGATE_JOB_ENV: aggregate_fixture()["job_name"]}):
+                if member: self.assertEqual(process.current_job(), aggregate_fixture())
+                else:
+                    with self.assertRaisesRegex(ValueError, "not in the named"): process.current_job()
+            self.assertEqual(calls[-1], ("closed", 11))
+            self.assertIn(("membership", 7, 11), calls)
 
     def test_explicit_missing_helper_does_not_fall_back_but_bare_name_uses_path(self):
         session = object.__new__(validate.Session)
@@ -154,10 +213,10 @@ class PublicValidationControls(unittest.TestCase):
         out = self.file("logs/python_tools.stdout", b"")
         err = self.file("logs/python_tools.stderr", b"test_a (suite.Control.test_a) ... ok\n\nRan 1 test in 0.01s\n\nOK\n")
         command = {"status": "passed", "returncode": 0, "expected_returncode": 0, "cwd": "checkout",
-            "job": {"queried": True, "job_flags": 5, "job_rate": 2000, "kill_on_close": True, "below_normal_priority": True},
+            "job": command_job_fixture(),
             "logs": [e.receipt(out), e.receipt(err)], "log_limit_bytes_per_stream": 1024}
         path = directory / "logs/python_tools.command.json"; e.write(path, command)
-        checks = {"commands": [e.receipt(path, directory)], "checkout_root": "checkout", "stages": [
+        checks = {"job": aggregate_fixture(), "commands": [e.receipt(path, directory)], "checkout_root": "checkout", "stages": [
             {"id": "python_tools", "status": "passed", "details": e.python_tests(err.read_text())}]}
         release.verify_checks(checks, directory)
         err.write_bytes(err.read_bytes() + b"changed")

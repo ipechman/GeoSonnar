@@ -9,15 +9,46 @@ from pathlib import Path
 import subprocess
 import threading
 import time
+import uuid
 from tools.evidence import receipt, require, write
 
 
-class WindowsJob:
+AGGREGATE_JOB_ENV = "GEOSONNAR_VALIDATION_AGGREGATE_JOB"
+
+
+def verify_launcher_host(proof):
+    require(proof.get("queried") is True and proof.get("immediate_job_flags") == 0 and
+            proof.get("ancestor_policies_unknown") is True and proof.get("external_limits_may_reduce_availability") is True,
+            "Immediate host job has CPU rate control; do not stack a validation cap inside it")
+
+
+def verify_aggregate_proof(proof):
+    require(proof.get("schema_version") == 2 and proof.get("policy") == "aggregate_20_percent" and
+            proof.get("job_flags") == 5 and proof.get("job_rate") == 2000 and proof.get("cpu_percent") == 20 and
+            proof.get("queried") is True and proof.get("kill_on_close") is True and
+            isinstance(proof.get("job_name"), str) and proof["job_name"].startswith("Local\\GeoSonnarValidation-"),
+            "Missing queried aggregate 20% CPU policy")
+
+
+def verify_command_proof(proof, aggregate=None):
+    require(proof.get("schema_version") == 2 and proof.get("policy") == "inherited_aggregate_no_additional_cpu_cap",
+            "Command must inherit the aggregate cap without adding another CPU quota")
+    verify_aggregate_proof(proof.get("aggregate", {}))
+    if aggregate is not None:
+        verify_aggregate_proof(aggregate)
+        require(proof["aggregate"] == aggregate, "Command belongs to a different aggregate job")
+    require(proof.get("owned_job") == {"job_flags": 0, "job_rate": 0, "queried": True, "kill_on_close": True} and
+            proof.get("aggregate_membership_queried") is True and proof.get("owned_membership_queried") is True and
+            proof.get("below_normal_priority_queried") is True,
+            "Owned command job/membership/priority proof differs")
+
+
+class _Windows:
     def __init__(self):
         require(os.name == "nt", "Capped execution currently requires Windows; no uncapped fallback")
         import ctypes as c
         from ctypes import wintypes as w
-        self.c, self.kernel, self.handle = c, c.WinDLL("kernel32", use_last_error=True), None
+        self.c, self.kernel = c, c.WinDLL("kernel32", use_last_error=True)
         class Basic(c.Structure):
             _fields_ = [("process_time", c.c_int64), ("job_time", c.c_int64), ("flags", w.DWORD),
                         ("min_ws", c.c_size_t), ("max_ws", c.c_size_t), ("process_limit", w.DWORD),
@@ -32,9 +63,13 @@ class WindowsJob:
         class Thread(c.Structure):
             _fields_ = [("size", w.DWORD), ("usage", w.DWORD), ("thread_id", w.DWORD),
                         ("process_id", w.DWORD), ("priority", w.LONG), ("delta", w.LONG), ("flags", w.DWORD)]
-        self.Thread = Thread
+        self.Thread, self.Rate, self.Limits = Thread, Rate, Limits
         signatures = {
             "CreateJobObjectW": ([c.c_void_p, w.LPCWSTR], w.HANDLE),
+            "OpenJobObjectW": ([w.DWORD, w.BOOL, w.LPCWSTR], w.HANDLE),
+            "GetCurrentProcess": ([], w.HANDLE),
+            "IsProcessInJob": ([w.HANDLE, w.HANDLE, c.POINTER(w.BOOL)], w.BOOL),
+            "GetPriorityClass": ([w.HANDLE], w.DWORD),
             "SetInformationJobObject": ([w.HANDLE, c.c_int, c.c_void_p, w.DWORD], w.BOOL),
             "QueryInformationJobObject": ([w.HANDLE, c.c_int, c.c_void_p, w.DWORD, c.c_void_p], w.BOOL),
             "AssignProcessToJobObject": ([w.HANDLE, w.HANDLE], w.BOOL),
@@ -45,20 +80,84 @@ class WindowsJob:
             "OpenThread": ([w.DWORD, w.BOOL, w.DWORD], w.HANDLE), "ResumeThread": ([w.HANDLE], w.DWORD)}
         for name, (arguments, result) in signatures.items():
             function = getattr(self.kernel, name); function.argtypes = arguments; function.restype = result
+
+    def query(self, handle):
+        c = self.c
+        rate, limits = self.Rate(), self.Limits()
+        for kind, value in ((15, rate), (9, limits)):
+            if not self.kernel.QueryInformationJobObject(handle, kind, c.byref(value), c.sizeof(value), None):
+                raise c.WinError(c.get_last_error())
+        return {"job_flags": rate.flags, "job_rate": rate.rate, "queried": True,
+                "kill_on_close": bool(limits.basic.flags & 0x2000)}
+
+    def contains(self, process, job):
+        from ctypes import wintypes as w
+        answer = w.BOOL()
+        if not self.kernel.IsProcessInJob(process, job, self.c.byref(answer)):
+            raise self.c.WinError(self.c.get_last_error())
+        return bool(answer.value)
+
+    def open_aggregate(self, name):
+        require(isinstance(name, str) and name.startswith("Local\\GeoSonnarValidation-"), "Missing owned aggregate job name")
+        handle = self.kernel.OpenJobObjectW(0x0004, False, name)  # JOB_OBJECT_QUERY, never inherited.
+        if not handle: raise self.c.WinError(self.c.get_last_error())
+        return handle
+
+
+def current_job():
+    api = _Windows()
+    name = os.environ.get(AGGREGATE_JOB_ENV)
+    handle = api.open_aggregate(name)
+    try:
+        proof = {"schema_version": 2, "policy": "aggregate_20_percent", "job_name": name,
+                 "cpu_percent": 20, **api.query(handle)}
+        verify_aggregate_proof(proof)
+        require(api.contains(api.kernel.GetCurrentProcess(), handle), "Worker is not in the named aggregate job")
+        return proof
+    finally:
+        # A persistent handle in the worker would defeat launcher kill-on-close.
+        api.kernel.CloseHandle(handle)
+
+
+class WindowsJob(_Windows):
+    def __init__(self, aggregate=False):
+        super().__init__()
+        self.handle, self.is_aggregate = None, aggregate
+        c = self.c
+        host = None
+        if aggregate:
+            present = self.contains(self.kernel.GetCurrentProcess(), None)
+            observed_host = self.query(None) if present else {"job_flags": 0, "job_rate": 0}
+            host = {"present": present, "queried": True, "immediate_job_flags": observed_host["job_flags"],
+                    "immediate_job_rate": observed_host["job_rate"], "ancestor_policies_unknown": True,
+                    "external_limits_may_reduce_availability": True}
+            verify_launcher_host(host)
+            self.name = "Local\\GeoSonnarValidation-" + uuid.uuid4().hex
+            parent = None
+        else:
+            self.name, parent = None, current_job()
         try:
-            self.handle = self.kernel.CreateJobObjectW(None, None)
+            c.set_last_error(0)
+            self.handle = self.kernel.CreateJobObjectW(None, self.name)
             if not self.handle: raise c.WinError(c.get_last_error())
-            limits = Limits(); limits.basic.flags = 0x2000
-            rate = Rate(5, 2000)
-            for kind, value in ((9, limits), (15, rate)):
+            require(not aggregate or c.get_last_error() != 183, "Aggregate job name already exists")
+            limits = self.Limits(); limits.basic.flags = 0x2000
+            settings = [(9, limits)]
+            if aggregate: settings.append((15, self.Rate(5, 2000)))
+            for kind, value in settings:
                 if not self.kernel.SetInformationJobObject(self.handle, kind, c.byref(value), c.sizeof(value)):
                     raise c.WinError(c.get_last_error())
-            observed = Rate()
-            if not self.kernel.QueryInformationJobObject(self.handle, 15, c.byref(observed), c.sizeof(observed), None):
-                raise c.WinError(c.get_last_error())
-            require((observed.flags, observed.rate) == (5, 2000), "Windows CPU cap was not applied")
-            self.proof = {"cpu_percent": 20, "job_flags": observed.flags, "job_rate": observed.rate,
-                          "queried": True, "kill_on_close": True, "below_normal_priority": True}
+            observed = self.query(self.handle)
+            require((observed["job_flags"], observed["job_rate"]) == ((5, 2000) if aggregate else (0, 0)) and
+                    observed["kill_on_close"], "Windows job policy was not applied")
+            if aggregate:
+                parent = {"schema_version": 2, "policy": "aggregate_20_percent", "job_name": self.name,
+                          "cpu_percent": 20, **observed}
+            self.proof = {"schema_version": 2, "policy": "aggregate_owner" if aggregate else "inherited_aggregate_no_additional_cpu_cap",
+                          "aggregate": parent, "owned_job": observed,
+                          "aggregate_membership_queried": False, "owned_membership_queried": False,
+                          "below_normal_priority_queried": False}
+            if host is not None: self.proof["launcher_host"] = host
         except BaseException:
             self.close(); raise
 
@@ -66,6 +165,22 @@ class WindowsJob:
         c, k = self.c, self.kernel
         if not k.SetPriorityClass(int(child._handle), 0x4000) or not k.AssignProcessToJobObject(self.handle, int(child._handle)):
             raise c.WinError(c.get_last_error())
+        require(k.GetPriorityClass(int(child._handle)) == 0x4000, "Child priority differs")
+        self.proof["below_normal_priority_queried"] = True
+        require(self.contains(int(child._handle), self.handle), "Child escaped its owned job")
+        self.proof["owned_membership_queried"] = True
+        if self.is_aggregate:
+            self.proof["aggregate_membership_queried"] = True
+        else:
+            handle = self.open_aggregate(self.proof["aggregate"]["job_name"])
+            try:
+                require(self.query(handle) == {key: self.proof["aggregate"][key] for key in
+                        ("job_flags", "job_rate", "queried", "kill_on_close")}, "Aggregate policy changed")
+                require(self.contains(int(child._handle), handle), "Child did not inherit aggregate membership")
+                self.proof["aggregate_membership_queried"] = True
+            finally:
+                k.CloseHandle(handle)  # Close before resume; launcher remains the only long-lived owner.
+            verify_command_proof(self.proof)
         snapshot = k.CreateToolhelp32Snapshot(0x4, 0)
         if snapshot == c.c_void_p(-1).value: raise c.WinError(c.get_last_error())
         resumed = 0
@@ -103,22 +218,7 @@ def capture(pipe, path, limit, stop, errors):
         pipe.close()
 
 
-def current_job():
-    require(os.name == "nt", "Capped execution currently requires Windows")
-    import ctypes as c
-    from ctypes import wintypes as w
-    class Rate(c.Structure):
-        _fields_ = [("flags", w.DWORD), ("rate", w.DWORD)]
-    kernel = c.WinDLL("kernel32", use_last_error=True)
-    query = kernel.QueryInformationJobObject
-    query.argtypes = [w.HANDLE, c.c_int, c.c_void_p, w.DWORD, c.c_void_p]; query.restype = w.BOOL
-    rate = Rate()
-    require(bool(query(None, 15, c.byref(rate), c.sizeof(rate), None)) and (rate.flags, rate.rate) == (5, 2000),
-            "Worker is not inside the required 20% CPU job")
-    return {"cpu_percent": 20, "job_flags": rate.flags, "job_rate": rate.rate, "queried": True}
-
-
-def run(arguments, *, cwd, log_prefix, environment=None, timeout_s=1800, log_bytes=16 * 1024 * 1024, expected=0):
+def run(arguments, *, cwd, log_prefix, environment=None, timeout_s=1800, log_bytes=16 * 1024 * 1024, expected=0, aggregate=False):
     require(0 < timeout_s <= 86400 and 0 < log_bytes <= 64 * 1024 * 1024, "Command limits out of range")
     prefix = Path(log_prefix); prefix.parent.mkdir(parents=True, exist_ok=True)
     stdout, stderr = prefix.with_suffix(".stdout"), prefix.with_suffix(".stderr")
@@ -130,8 +230,11 @@ def run(arguments, *, cwd, log_prefix, environment=None, timeout_s=1800, log_byt
     began, child, job, workers = time.monotonic(), None, None, []
     stop, errors = threading.Event(), []
     try:
-        job = WindowsJob(); record["job"] = job.proof
+        job = WindowsJob(aggregate=aggregate); record["job"] = job.proof
         env = os.environ.copy(); env.update(environment or {})
+        if aggregate: env[AGGREGATE_JOB_ENV] = job.name
+        else:
+            require(env.get(AGGREGATE_JOB_ENV) == job.proof["aggregate"]["job_name"], "Aggregate binding cannot be overridden")
         child = subprocess.Popen(record["command"], cwd=cwd, env=env, stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=subprocess.CREATE_NO_WINDOW | 0x4)
         for pipe, path in ((child.stdout, stdout), (child.stderr, stderr)):

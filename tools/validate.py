@@ -263,7 +263,7 @@ def main():
             logdir.mkdir(); timeout = 1800
         print("Running serial checks in a 20% CPU job. Logs: " + str(logdir), flush=True)
         result = process.run([sys.executable, "-B", Path(__file__).resolve(), *sys.argv[1:]], cwd=e.ROOT,
-            log_prefix=logdir / "worker", timeout_s=timeout, expected=(0, 1, 2),
+            log_prefix=logdir / "worker", timeout_s=timeout, expected=(0, 1, 2), aggregate=True,
             environment={"GEOSONNAR_VALIDATION_WORKER": "1", "PYTHONDONTWRITEBYTECODE": "1"})
         print((logdir / "worker.stdout").read_text(encoding="utf-8", errors="replace"), end="")
         return result["returncode"]

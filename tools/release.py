@@ -127,6 +127,8 @@ def package(session):
 
 def verify_checks(checks, directory):
     from tools.validate import MEDIA, LARGE, DISCOVERY, ignored_inventory
+    from tools.process import verify_aggregate_proof, verify_command_proof
+    verify_aggregate_proof(checks["job"])
     commands = {}
     for item in checks["commands"]:
         path = verify(item, directory)
@@ -135,9 +137,8 @@ def verify_checks(checks, directory):
         require(name not in commands, "Duplicate command receipt")
         command = read(path)
         require(command["status"] == "passed" and command["returncode"] == command["expected_returncode"] and
-                command["cwd"] == checks["checkout_root"] and command["job"]["queried"] and
-                command["job"]["job_flags"] == 5 and command["job"]["job_rate"] == 2000 and
-                command["job"]["kill_on_close"] and command["job"]["below_normal_priority"], "Command/resource proof differs")
+                command["cwd"] == checks["checkout_root"], "Command/resource proof differs")
+        verify_command_proof(command["job"], checks["job"])
         require(len(command["logs"]) == 2, "Both command streams must be retained")
         streams = {}
         for stream, log in zip(("stdout", "stderr"), command["logs"]):
@@ -174,6 +175,7 @@ def verify_checks(checks, directory):
 
 
 def verify_release(directory, terminal=True):
+    from tools.process import verify_command_proof
     directory = ordinary(directory, True)
     proof = read(directory / "release/manifest.json")
     inventory = proof["artifacts"]
@@ -183,8 +185,8 @@ def verify_release(directory, terminal=True):
             set(files(directory / "release")) - {directory / "release/manifest.json"}, "Release inventory differs")
     for item in inventory: verify(item, directory)
     command = read(verify(proof["build_command"], directory))
-    require(command["status"] == "passed" and command["returncode"] == 0 and command["job"]["queried"] and
-            command["job"]["cpu_percent"] == 20 and command["command"] == BUILD_ARGUMENTS and
+    verify_command_proof(command["job"])
+    require(command["status"] == "passed" and command["returncode"] == 0 and command["command"] == BUILD_ARGUMENTS and
             all(command["environment_overrides"].get(key) == value for key, value in proof["build_environment"].items()),
             "Static/remapped build receipt differs")
     require("target-feature=+crt-static" in proof["build_environment"]["CARGO_ENCODED_RUSTFLAGS"] and
