@@ -1,6 +1,6 @@
 # 0.13 plan: organization and maintainability
 
-**Status: planned, not implemented.** Version 0.12 remains the downloadable experimental release.
+**Status: implementation and validation in progress.** Version 0.12 remains the downloadable experimental release until the 0.13 release gate is verified.
 
 The goal is to let a contributor locate a responsibility, understand its inputs and outputs, make a bounded change, and verify it from the public repository. Success means clearer ownership and reproducible work, not just smaller files or more folders.
 
@@ -27,7 +27,7 @@ These are starting points for inspection, not a mandate to split every large fil
 | **5. Organize tests and shared helpers** | Give unit, integration, numerical regression and optional data-heavy checks clear homes and commands. Move large inline test sections where this improves navigation. Consolidate duplicated setup without merging independent numerical oracles into production code. | A contributor can identify the appropriate test tier for a change. Existing coverage is mapped to its new location; no test is silently deleted, weakened or turned into an ignored test. |
 | **6. Simplify the documentation and release handoff** | Provide short user, contributor and research entry points. Keep historical evidence in an explicit archive/reference section. Document packaging, source manifests, resource limits and cleanup. | Links resolve in the exported source, the documented commands run from a fresh checkout, and the 0.13 release notes distinguish structural changes from any separately reviewed fixes. |
 
-The first implementation task is **milestone 1**, followed by the public validation workflow. This gives later refactors a shared map and a repeatable check instead of relying on one developer's workspace.
+The [architecture map](ARCHITECTURE.md), [compatibility checklist](COMPATIBILITY.md), [contributor guide](../CONTRIBUTING.md) and [test map](../tests/README.md) describe the implemented boundaries and how to verify them. Completion still requires the release gate below; files and documentation alone do not prove it.
 
 ## Rules for the refactor
 

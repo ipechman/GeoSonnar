@@ -35,13 +35,13 @@ See the [Windows guide](docs/WINDOWS_GUI.txt) for media setup, data import and t
 - Managed data, reusable flight indexes, background jobs and cancellation.
 - Saved cases, input identities, run history and a command-line pipeline.
 
-## Status: experimental 0.12
+## Status: experimental 0.13 development
 
-This release focuses on usability and search throughput. It adds clearer per-location progress and reuses or safely excludes repeated Doppler calculations. Lower Doppler error is better; higher thunder-envelope similarity is better. **Neither is a calibrated probability or a verified location.**
+The 0.13 work focuses on organization: clearer data and GUI responsibilities, a documented architecture, and public validation/release tools. It retains the reviewed-event workflow and search contracts introduced in earlier releases. Lower Doppler error is better; higher thunder-envelope similarity is better. **Neither is a calibrated probability or a verified location.**
 
-Next: **[0.13 — project organization and maintainability](docs/RELEASE_0_13_PLAN.md)**, with clearer module boundaries and a reproducible contributor workflow.
+For development, start with **[Contributing](CONTRIBUTING.md)**, the [architecture map](docs/ARCHITECTURE.md), and the [documentation index](docs/README.md). The [0.13 plan](docs/RELEASE_0_13_PLAN.md) tracks its completion criteria. Released downloads remain on the Releases page.
 
-Broad searches remain expensive. The next performance goal is **worldwide discovery followed by local refinement within 30 minutes**. That goal is **not achieved by 0.12**; see its [acceptance criteria and next steps](docs/ROADMAP.md).
+Broad searches remain expensive. The next performance goal is **worldwide discovery followed by local refinement within 30 minutes**. That goal remains open; see its [acceptance criteria and next steps](docs/ROADMAP.md).
 
 Historical lightning coverage varies by provider and region. Independent field accuracy and reliable false-match thresholds remain open work. Private recordings and downloaded datasets are not included in this repository.
 
