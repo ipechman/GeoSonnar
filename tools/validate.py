@@ -27,6 +27,7 @@ LARGE = "track_store::tests::indexed_store_accepts_more_than_two_million_points_
 CHILD = "gui::shutdown::tests::process_ownership::isolated_process_probe"
 PARENT = "gui::shutdown::tests::process_ownership::gui_exit_kills_owned_descendant_but_leaves_sibling_and_test_parent_alive"
 DISCOVERY = "existing_generated_discovery_reports_load_without_modifying_evidence"
+PROVIDER = "optional_preserved_provider_replays_match_independent_python_index_exactly"
 TERRAIN = ["cached_copernicus_and_egm96_match_independent_python_sampler",
            "cached_native_observer_grid_matches_all_independent_reference_heights"]
 CARGO_TEST = ["cargo", "test", "--offline", "--locked", "--features", "gui"]
@@ -45,7 +46,7 @@ def planned(tier):
 
 def ignored_inventory(names, passed):
     kinds = {LARGE: "explicit_synthetic_large_store", CHILD: "parent_owned_process_helper",
-             DISCOVERY: "optional_existing_discovery"}
+             DISCOVERY: "optional_existing_discovery", PROVIDER: "historical_external_provider"}
     kinds.update({name: "explicit_synthetic_media" for tests in MEDIA.values() for name in tests})
     kinds.update({name: "historical_external_terrain" for name in TERRAIN})
     e.require(len(set(names)) == len(names) and set(names) == set(kinds),
@@ -84,7 +85,9 @@ class Session:
             "stages": [{"id": name, "required": True, "status": "not_started"} for name in planned(args.tier)],
             "commands": [], "source_snapshot": [], "ignored_test_inventory": [],
             "optional_integrations": [{"name": name, "status": "not_requested",
-                "reason": "Historical external terrain/reference inputs are not part of clean-checkout validation"} for name in TERRAIN],
+                "reason": "Historical external terrain/reference inputs are not part of clean-checkout validation"} for name in TERRAIN] +
+                [{"name": PROVIDER, "kind": "historical_external_provider", "status": "not_requested",
+                  "reason": "Separately preserved provider replays and their independent index are not part of clean-checkout validation"}],
             "field_accuracy_validated": False, "interactive_gui_tested": False, "network_requested": False}
         if args.tier in ("integration", "release"):
             self.report["stages"].append({"id": "existing_discovery", "required": bool(args.discovery_report),

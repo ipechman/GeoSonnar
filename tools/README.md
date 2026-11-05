@@ -88,6 +88,20 @@ That option deliberately opens the supplied report's original media, requires
 the media tools, and is then a required stage. It is a compatibility check, not
 a new location-accuracy trial.
 
+The preserved-provider replay comparison also requires separately retained raw
+replays, aircraft traces and an independent index. Ordinary validation records it
+as `historical_external_provider` / `not_requested`; missing files never count as
+a successful comparison. These historical inputs are not required for a normal
+checkout, and the tools do not download or restore them. If you independently
+restore the fixtures declared by that test and deliberately want the comparison:
+
+```powershell
+cargo test --offline --locked --features gui --test adsblol_history_validation optional_preserved_provider_replays_match_independent_python_index_exactly -- --ignored --exact
+```
+
+An explicit invocation without its prerequisites fails. The existing record,
+aircraft, field-by-field and import-parity assertions are unchanged.
+
 ## Receipts and release contents
 
 `report.json` contains the stage inventory, actual executed test names/counts,

@@ -57,10 +57,15 @@ class PublicValidationControls(unittest.TestCase):
         with self.assertRaises(ValueError): e.python_tests(log.replace("OK (skipped=1)", "FAILED (failures=1)"))
 
     def test_ignored_shutdown_probe_is_not_an_optional_external_test(self):
-        names = [validate.LARGE, validate.CHILD, validate.DISCOVERY, *validate.TERRAIN,
+        names = [validate.LARGE, validate.CHILD, validate.DISCOVERY, validate.PROVIDER, *validate.TERRAIN,
                  *(name for group in validate.MEDIA.values() for name in group)]
         rows = validate.ignored_inventory(names, [validate.PARENT])
+        self.assertEqual(len(rows), 12)
         self.assertEqual(next(row for row in rows if row["name"] == validate.CHILD)["kind"], "parent_owned_process_helper")
+        provider = next(row for row in rows if row["name"] == validate.PROVIDER)
+        self.assertEqual(provider["kind"], "historical_external_provider")
+        self.assertEqual(provider["status"], "ignored_in_default_run")
+        with self.assertRaises(ValueError): validate.ignored_inventory([name for name in names if name != validate.PROVIDER], [validate.PARENT])
         with self.assertRaises(ValueError): validate.ignored_inventory(names, [])
         with self.assertRaises(ValueError): validate.ignored_inventory(names + ["new_ignored_test"], [validate.PARENT])
 

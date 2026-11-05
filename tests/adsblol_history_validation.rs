@@ -1043,12 +1043,14 @@ fn interrupted_attempt_is_accounted_and_retried_without_reusing_unreceipted_data
 }
 
 #[test]
+#[ignore = "Requires separately preserved provider replay inputs; run explicitly after restoring the declared fixtures"]
 fn optional_preserved_provider_replays_match_independent_python_index_exactly() {
     let root =
         Path::new(env!("CARGO_MANIFEST_DIR")).join("data/validation/field-esid103-tracks-002");
-    if !root.join("acquisition.json").is_file() {
-        return;
-    }
+    assert!(
+        root.join("acquisition.json").is_file(),
+        "This explicit provider comparison requires separately preserved replay inputs and their independent index"
+    );
     let request = HistoryRequest {
         utc_start: "2024-04-08T04:20:00Z".into(),
         utc_end: "2024-04-08T04:40:00Z".into(),

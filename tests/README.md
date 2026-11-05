@@ -10,7 +10,7 @@ The [public validation tool](../tools/README.md) provides repeatable tiers and r
 | GUI and launcher | `src/gui/**` under `#[cfg(test)]` | Headless egui frames, request preparation, generations, stale replies, editing and shutdown. No desktop window. |
 | Synthetic media | `audio_validation.rs`, `discovery_io_validation.rs`, ignored installed-helper checks in `review_media_validation.rs`, `gui_bridge_validation.rs`, `envelope_workflow_validation.rs` | Real FFmpeg/FFprobe with locally generated audio/video. Required when that integration tier is requested. |
 | Large storage | The explicitly ignored 2.1-million-point track-store control | Generated data, bounded disk/memory; run explicitly for a release. |
-| Historical / external data | Two ignored cached terrain controls; optional discovery-report audit | Separately acquired inputs. Unavailable or unrequested checks are never recorded as passes. |
+| Historical / external data | Two ignored cached terrain controls; an ignored preserved-provider replay comparison; optional discovery-report audit | Separately acquired inputs. Unavailable or unrequested checks are never recorded as passes. The provider comparison fails when explicitly requested without its inputs. |
 | Python tooling | `benchmarks/test_*.py`, `analysis/test_*.py`, `tools/test_*.py` | Packaging, runner failure handling, research contracts and public development-tool controls. |
 
 The ignored shutdown child-process probe is invoked by its parent test. It is not a missing optional-data test and should not be run as an ordinary standalone integration.

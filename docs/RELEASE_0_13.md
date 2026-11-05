@@ -10,6 +10,7 @@ This release concentrates on making the project easier to understand, verify and
 - The public development tools provide explicit quick, native, integration, Python, release, verification and owned-cleanup commands without historical local controller dependencies.
 - Contributor instructions, an architecture map, compatibility contracts and a test map provide current entry points. Older Windows instructions and validation narratives are preserved in historical documents.
 - Audio and discovery checks share a PCM fixture writer; their signal construction, assertions and numerical oracles remain independent.
+- A legacy provider-replay comparison is now explicitly ignored unless requested with its external inputs. Missing data can no longer make that comparison report a pass; its scientific assertions remain intact.
 
 ## Behavior and compatibility
 
