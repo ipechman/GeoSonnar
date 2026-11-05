@@ -19,6 +19,9 @@ close only the owned process tree. Non-Windows systems receive an explicit
 unsupported result rather than an uncapped fallback. Pure Python controls can
 still be invoked directly with `unittest` on other systems.
 
+The native tier finishes every test target even if one fails, so its retained
+log contains the full failure inventory. Any failed target still fails the tier.
+
 An uncapped host ownership job (for example, a CI host) is allowed and recorded.
 A known CPU-controlled immediate host job is refused rather than silently
 stacking quotas. More distant external host restrictions cannot be enumerated

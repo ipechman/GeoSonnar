@@ -168,7 +168,7 @@ class Session:
         # Several default audio tests also decode generated audio, so bind tools
         # here rather than treating only the explicitly ignored tests as media.
         helpers = self.helpers()
-        result = self.rust("native", [*CARGO_TEST, "--all-targets"], environment=self.helper_environment(helpers))
+        result = self.rust("native", [*CARGO_TEST, "--all-targets", "--no-fail-fast"], environment=self.helper_environment(helpers))
         for item in helpers.values(): e.verify(item)
         result["media_helpers"] = helpers
         return result

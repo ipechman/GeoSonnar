@@ -868,7 +868,7 @@ impl<'a> Cache<'a> {
             .ok_or("History transfer-size total overflow")?;
         let error = if bytes_count > limit {
             Some(
-                "Response exceeded its transfer allowance; excess data is retained and charged"
+                "Response exceeded its transfer allowance; overflow sentinel is retained and charged"
                     .into(),
             )
         } else {
