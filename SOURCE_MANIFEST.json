@@ -30,8 +30,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 77932,
-      "sha256": "4515a8f909d27d178d4b7b79b5ef9a9aaa6a47fd3393e25556aa8bebd45400b6"
+      "bytes": 4758,
+      "sha256": "5cd8b3dd2315942cc4bc46b737e68b6a500b219f30e47d781f054f108aeaead3"
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -879,6 +879,11 @@
       "sha256": "bf573a2e001ab570949023cd9145f9bc5fa6793295875f1a2c654e8a4e848149"
     },
     {
+      "path": "docs/PROJECT_REFERENCE.md",
+      "bytes": 78235,
+      "sha256": "f66b1a5796c63cb80b5a96456404ff72dceddcd041ff69e54d98c8b57e6bffd6"
+    },
+    {
       "path": "docs/REGIONAL_SEARCH.md",
       "bytes": 24960,
       "sha256": "9298496a5605a349098a610e121e0a9dcf4ade8105ab8ff7a5211506aef71f6b"
@@ -887,6 +892,11 @@
       "path": "docs/REGIONAL_WORKFLOW_PLAN.md",
       "bytes": 23082,
       "sha256": "7fea0afd920509cc99738503a1262e12da7183f0c926fe4914b16c40b5c46ee4"
+    },
+    {
+      "path": "docs/ROADMAP.md",
+      "bytes": 3728,
+      "sha256": "e071ba2b97cb75877ff5bed9900af86948e9a64c0523811726798b7866d12031"
     },
     {
       "path": "docs/STORM_VALIDATION.md",
